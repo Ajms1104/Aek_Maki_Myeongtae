@@ -1,7 +1,7 @@
 const worryRepository = require('../repositories/worryRepository');
-const amuletRepository = require('../repositories/amuletRepository');
-const llmClient = require('../external/llmClient');
-const crypto = require('crypto');
+//const amuletRepository = require('../repositories/amuletRepository');
+//const llmClient = require('../external/llmClient');
+//const crypto = require('crypto');
 
 exports.processWorry = async ({ userToken, content, category }) => {
   // 1. LLM 답변 생성

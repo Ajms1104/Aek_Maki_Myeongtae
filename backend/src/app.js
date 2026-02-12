@@ -1,9 +1,12 @@
+const path = require('path');
+const dotenv = require('dotenv');
+
+dotenv.config({ path: path.join(__dirname, '.env') });
+
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const worryRoutes = require('./routes/worryRoute');
-
-dotenv.config(); // .env 파일 로드
+const db = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
