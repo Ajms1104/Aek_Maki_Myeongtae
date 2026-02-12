@@ -16,4 +16,9 @@
 
 ---
 ## Frontend 설명
-```추후 추가 예정``` 
+- 프레임워크 : React native
+- 기본 실행 : ```npm run dev ```
+      -  안된다면 package.json 이 있는지 체크하고 / 없으면 ``` npm install @apps-in-toss/framework ```
+* 라이브러리
+``` npm install @toss/tds-react-native #Toss TDL(토스 아이콘) 설치
+``` 
