@@ -1,4 +1,3 @@
-
 # 1. 공통 의존성 및 핵심 
 node_modules/
 jspm_packages/
@@ -15,9 +14,9 @@ jspm_packages/
 .env.*
 *.pem
 
-
 # 3. 빌드 결과물 & 임시 파일
 dist/
+dist-ssr/
 build/
 out/
 .next/
@@ -25,17 +24,19 @@ out/
 .output/
 .swc
 
-# 4. frontend/Granite/React Native 관련
+# 4. frontend(Vite/React/TS/Granite) 관련 캐시
 .granite
-npm-debug.log
-yarn-error.log
+.vite/
+.eslintcache
+*.tsbuildinfo
+npm-debug.log*
+yarn-error.log*
 yarn-debug.log*
+pnpm-debug.log*
 
 # 5. 로그 파일 (서버 로그 등)
 logs
 *.log
-npm-debug.log*
-pnpm-debug.log*
 
 # 6. OS 및 에디터 설정 (맥/윈도우/VSCode)
 .DS_Store
