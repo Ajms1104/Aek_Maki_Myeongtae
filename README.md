@@ -33,3 +33,8 @@
 
 - 페이지별로 필요한 이미지(.svg , .webp 추천)나 페이지를 폴더 추가해서 정리해도 됨 (정리하고 나면 각 소스코드마다 경로 재설정 필요)
 ---
+## DB 안 될 경우
+- .env 파일 내용 확인 할 것(톡방에 있음)
+- backend/app.js 파일에서 아래 내용 확인 
+``` dotenv.config({ path: path.join(__dirname, '../.env') }); ```
+- pgAdmin 4에서 Database 만들었는지 확인하기 (DB_name : myeongtae)
