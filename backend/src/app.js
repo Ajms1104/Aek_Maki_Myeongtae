@@ -44,6 +44,25 @@ app.get('/api/admin/users',async(req,res)=>{
     res.status(500).send('Server')
   }
 })
+//3-4 고객센터 문의 조회  api
+app.get('/api/admin/support',async(req,res)=>{
+  try{
+    const{status}=req.query;
+    let query='select user_id, content,created,status from support ';
+    let values=[];
+    if(status && status!=='전체'){
+      query+=' Where status=$1 ';
+      values.push(status);
+
+    }
+    query+=' order by created desc';
+    const result=await pool.query(query,values);
+    res.status(200).json({success:true,data:result.rows});
+    }catch(err){
+      console.error('고객센터 문의 조회 오류:',err.message);
+      res.status(500).send('Server Error');
+    }
+  });
 
 app.listen(PORT, () => {
   console.log(`🐟 액막이 명태 서버가 ${PORT}번 포트에서 헤엄치는 중...`);
