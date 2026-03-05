@@ -1,5 +1,15 @@
 const adminService = require('../services/adminService');
 
+exports.getProbabilities = async (req, res) => {
+    try {
+        const result = await adminService.getProbabilities();
+        return res.status(200).json(result);
+    } catch (error) {
+        console.error('[AdminController] getProbabilities Error:', error);
+        return res.status(500).json({ error: '서버 에러' });
+    }
+};
+
 exports.updateAmuletProbability = async (req, res) => {
     try {
         const { id } = req.params;
@@ -16,7 +26,18 @@ exports.updateAmuletProbability = async (req, res) => {
         if (error.message === 'NOT_FOUND') {
             return res.status(404).json({ error: '해당 부적을 찾을 수 없습니다.' });
         }
-        console.error('[AdminController] Error:', error);
+        console.error('[AdminController] updateAmuletProbability Error:', error);
+        return res.status(500).json({ error: '서버 에러' });
+    }
+};
+
+exports.publishProbabilities = async (req, res) => {
+    try {
+        const { effectiveAt } = req.body;
+        const result = await adminService.publishProbabilities({ effectiveAt });
+        return res.status(200).json(result);
+    } catch (error) {
+        console.error('[AdminController] publishProbabilities Error:', error);
         return res.status(500).json({ error: '서버 에러' });
     }
 };

@@ -12,10 +12,12 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// 3-1. 부적 확률 수정
+// 부적 확률 관리
+router.get('/probabilities', verifyAdmin, adminController.getProbabilities);
 router.put('/amulets/:id/probability', verifyAdmin, adminController.updateAmuletProbability);
+router.post('/probabilities/publish', verifyAdmin, adminController.publishProbabilities);
 
-// 3-2. 부적 상세 관리 (CRUD)
+// 부적 상세 관리
 router.post('/amulets', verifyAdmin, upload.single('imageFile'), adminController.createAmulet);
 router.patch('/amulets/:id', verifyAdmin, upload.single('imageFile'), adminController.updateAmulet);
 router.delete('/amulets/:id', verifyAdmin, adminController.deleteAmulet);
