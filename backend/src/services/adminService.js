@@ -20,3 +20,31 @@ exports.updateProbability = async (id, weight) => {
         allAmulets
     };
 };
+
+exports.createAmulet = async ({ name, description, grade, file }) => {
+    const imageUrl = `/uploads/${file.filename}`;
+    const newAmulet = await amuletRepository.create({ name, description, grade, imageUrl });
+    return newAmulet;
+};
+
+exports.updateAmulet = async (id, { name, description, grade, file }) => {
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (description) updateData.description = description;
+    if (grade) updateData.grade = grade;
+    if (file) updateData.image_url = `/uploads/${file.filename}`;
+
+    const updatedAmulet = await amuletRepository.update(id, updateData);
+    if (!updatedAmulet) {
+        throw new Error('NOT_FOUND');
+    }
+    return updatedAmulet;
+};
+
+exports.deleteAmulet = async (id) => {
+    const deleted = await amuletRepository.deleteById(id);
+    if (!deleted) {
+        throw new Error('NOT_FOUND');
+    }
+    return true;
+};
