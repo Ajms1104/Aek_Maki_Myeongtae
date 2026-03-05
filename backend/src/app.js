@@ -1,13 +1,13 @@
 const path = require('path');
 const dotenv = require('dotenv');
 
-dotenv.config({ path: path.join(__dirname, '../.env') });
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const express = require('express');
 const cors = require('cors');
 const worryRoutes = require('./routes/worryRoute');
 const adminRoutes = require('./routes/adminRoute');
-const db = require('./db');
+const pool = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
