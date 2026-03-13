@@ -5,8 +5,12 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const express = require('express');
 const cors = require('cors');
+
 const worryRoutes = require('./routes/worryRoute');
 const adminRoutes = require('./routes/adminRoute');
+const authRoutes = require('./routes/authRoute');
+
+
 const pool = require('./db');
 const { nextTick } = require('process');
 
@@ -31,7 +35,7 @@ if (process.env.NODE_ENV !== 'production') {
 // API 경로 설정
 app.use('/api/v1/worry', worryRoutes);
 app.use('/api/v1/admin', adminRoutes);
-
+app.use('/api/v1/auth', authRoutes);
 
 //3-3 유저 전체 조회 api
 app.get('/api/admin/users',async(req,res)=>{
