@@ -15,6 +15,7 @@ exports.createWorry = async (req, res) => {
     
     return res.status(200).json(result);
   } catch (error) {
+    console.error('createWorry(worryController.js) 에러:', error); //터미널에서 error 확인할 수 있게 추가
     if (error.message === 'PROFANITY') return res.status(400).json({ error: '부적절한 단어 포함' });
     if (error.message === 'LLM_ERROR') return res.status(503).json({ error: '명태가 답변 준비 중 에러가 났어요.' });
     

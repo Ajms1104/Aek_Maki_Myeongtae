@@ -1,3 +1,4 @@
+//amulet = 부적 | 부적관련 Repository
 const db = require('../db');
 
 // 확률 조회
@@ -126,4 +127,39 @@ exports.findById = async (id) => {
   const query = 'SELECT id AS "amuletId", name, description, grade, image_url AS "imageUrl", weight FROM amulets WHERE id = $1';
   const result = await db.query(query, [id]);
   return result.rows[0];
+};
+
+// amuletRepository.js 맨 아래에 추가
+
+// 전체 부적 조회 (worryService용)
+exports.getAll = async () => {
+  const query = `
+    SELECT id, name, grade, image_url AS "imageUrl", weight 
+    FROM amulets 
+    WHERE weight > 0
+    ORDER BY id ASC
+  `;
+  const result = await db.query(query);
+  return result.rows;
+};
+
+// 유저가 해당 부적 보유 여부 확인
+exports.checkUserHas = async (userId, amuletId) => {
+  const query = `
+    SELECT 1 FROM user_amulets 
+    WHERE user_id = $1 AND amulet_id = $2
+  `;
+  const result = await db.query(query, [userId, amuletId]);
+  return result.rows.length > 0;
+};
+
+// 유저에게 부적 지급
+exports.giveToUser = async (userId, amuletId) => {
+  const query = `
+    INSERT INTO user_amulets (user_id, amulet_id, count)
+    VALUES ($1, $2, 1)
+    ON CONFLICT (user_id, amulet_id)
+    DO UPDATE SET count = user_amulets.count + 1, updated_at = NOW()
+  `;
+  await db.query(query, [userId, amuletId]);
 };
