@@ -1,3 +1,11 @@
+-- 유저 테이블
+CREATE TABLE IF NOT EXISTS users (
+  id            SERIAL PRIMARY KEY,
+  toss_user_key BIGINT UNIQUE NOT NULL,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_seen_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- 부적 테이블
 CREATE TABLE IF NOT EXISTS amulets (
   id           SERIAL PRIMARY KEY,

@@ -2,7 +2,7 @@ const worryService = require('../services/worryService');
 
 exports.createWorry = async (req, res) => {
   try {
-    const userToken = req.headers.authorization;
+    const userId=req.user.userId;
     const { content, category } = req.body;
 
     // 기본적인 밸리데이션
