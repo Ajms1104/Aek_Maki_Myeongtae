@@ -1,3 +1,5 @@
+'use strict';
+
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
@@ -5,20 +7,198 @@ const path = require('path');
 const adminController = require('../controllers/adminController');
 const { verifyAdmin } = require('../middlewares/adminAuthMiddleware');
 
-// 파일 저장 설정
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, 'uploads/'),
-    filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
+  destination: (req, file, cb) => cb(null, 'uploads/'),
+  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
 });
 const upload = multer({ storage });
 
-// 부적 확률 관리
+/**
+ * @swagger
+ * tags:
+ *   name: Admin
+ *   description: 관리자 전용 API (Admin JWT 필요)
+ */
+
+/**
+ * @swagger
+ * /api/v1/admin/probabilities:
+ *   get:
+ *     summary: 부적 확률 목록 조회
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 부적 확률 목록
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   name:
+ *                     type: string
+ *                   probability:
+ *                     type: number
+ *       401:
+ *         description: 관리자 인증 실패
+ */
 router.get('/probabilities', verifyAdmin, adminController.getProbabilities);
+
+/**
+ * @swagger
+ * /api/v1/admin/amulets/{id}/probability:
+ *   put:
+ *     summary: 부적 확률 수정
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 부적 ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - probability
+ *             properties:
+ *               probability:
+ *                 type: number
+ *                 example: 0.15
+ *     responses:
+ *       200:
+ *         description: 확률 수정 완료
+ *       400:
+ *         description: 잘못된 요청
+ *       401:
+ *         description: 관리자 인증 실패
+ *       404:
+ *         description: 부적 없음
+ */
 router.put('/amulets/:id/probability', verifyAdmin, adminController.updateAmuletProbability);
+
+/**
+ * @swagger
+ * /api/v1/admin/probabilities/publish:
+ *   post:
+ *     summary: 부적 확률 발행 (드래프트 -> 적용)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 발행 완료
+ *       401:
+ *         description: 관리자 인증 실패
+ */
 router.post('/probabilities/publish', verifyAdmin, adminController.publishProbabilities);
 
-// 부적 상세 관리
+/**
+ * @swagger
+ * /api/v1/admin/amulets:
+ *   post:
+ *     summary: 부적 생성
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - grade
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: 합격 명태
+ *               grade:
+ *                 type: string
+ *                 enum: [COMMON, RARE, EPIC, LEGENDARY]
+ *               description:
+ *                 type: string
+ *               imageFile:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       201:
+ *         description: 부적 생성 완료
+ *       400:
+ *         description: 잘못된 요청
+ *       401:
+ *         description: 관리자 인증 실패
+ */
 router.post('/amulets', verifyAdmin, upload.single('imageFile'), adminController.createAmulet);
+
+/**
+ * @swagger
+ * /api/v1/admin/amulets/{id}:
+ *   patch:
+ *     summary: 부적 수정
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               grade:
+ *                 type: string
+ *                 enum: [COMMON, RARE, EPIC, LEGENDARY]
+ *               description:
+ *                 type: string
+ *               imageFile:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: 수정 완료
+ *       401:
+ *         description: 관리자 인증 실패
+ *       404:
+ *         description: 부적 없음
+ *   delete:
+ *     summary: 부적 삭제
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 삭제 완료
+ *       401:
+ *         description: 관리자 인증 실패
+ *       404:
+ *         description: 부적 없음
+ */
 router.patch('/amulets/:id', verifyAdmin, upload.single('imageFile'), adminController.updateAmulet);
 router.delete('/amulets/:id', verifyAdmin, adminController.deleteAmulet);
 

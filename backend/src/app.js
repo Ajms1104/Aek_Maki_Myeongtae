@@ -1,7 +1,7 @@
 const path = require('path');
 const dotenv = require('dotenv');
 
-dotenv.config({ path: path.join(__dirname, '.env') });
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const express = require('express');
 const cors = require('cors');
@@ -10,6 +10,10 @@ const adminRoutes = require('./routes/adminRoute');
 const pool = require('./db');
 const { nextTick } = require('process');
 
+//Swagger 
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./configuration/swagger'); //Swagger 설정문서 위치
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -17,9 +21,18 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+
+//Swagger UI 설정
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  console.log(`📋🐟 액막이 명태 API 문서: http://localhost:${PORT}/api-docs`);
+}
+
 // API 경로 설정
 app.use('/api/v1/worry', worryRoutes);
 app.use('/api/v1/admin', adminRoutes);
+
+
 //3-3 유저 전체 조회 api
 app.get('/api/admin/users',async(req,res)=>{
   try{
@@ -48,6 +61,8 @@ app.get('/api/admin/users',async(req,res)=>{
     res.status(500).send('Server')
   }
 })
+
+
 //3-4 고객센터 문의 조회  api
 app.get('/api/admin/support',async(req,res)=>{
   try{
@@ -67,6 +82,8 @@ app.get('/api/admin/support',async(req,res)=>{
       res.status(500).send('Server Error');
     }
   });
+
+
   //1-1 고객센터 문의 등록 api
   app.post('/api/admin/support/tickets',(req,res)=>{
     //const authHeather=req.headers['authorization'];
@@ -89,6 +106,7 @@ app.get('/api/admin/support',async(req,res)=>{
     message:"성공적으로 접수되었습니다."
   });
   });
+
   //1-2 내 문의사항조회
   app.get('/api/admin/support/tickets',async(req,res)=>{
     //const authHeather=req.headers['authorization'];
@@ -131,6 +149,8 @@ app.get('/api/admin/support',async(req,res)=>{
   res.status(500).send('Server Error');
 }
 });
+
+
   //1-3 공지사항조회
   app.get('/api/announcements', async(req,res)=>{
     try{
