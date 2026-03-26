@@ -3,7 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const worryController = require('../controllers/worryController');
-const authMiddleware = require('../middlewares/authMiddleware'); 
+const authMiddleware = require('../middlewares/authMiddleware');
 
 /**
  * @swagger
@@ -77,5 +77,39 @@ const authMiddleware = require('../middlewares/authMiddleware');
  *         description: 잘못된 요청
  */
 router.post('/consume', authMiddleware, worryController.createWorry); // ✅ authMiddleware 추가
+
+
+/**
+ * @swagger
+ * /api/v1/worry/amulets/{userAmuletId}/download:
+ *   get:
+ *     summary: 내 부적 다운로드
+ *     description: 유저가 소유한 부적을 이미지 파일로 다운로드합니다.
+ *     tags: [Worry]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userAmuletId
+ *         required: true
+ *         description: 고유 ID
+ *     responses:
+ *       200:
+ *         description: 성공적으로 파일 전송됨
+ *         content:
+ *           image/png:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       401:
+ *         description: 토큰이 만료되었거나 올바르지 않음
+ *       404:
+ *         description: 파일을 찾을 수 없거나 다운로드 권한이 없음
+ *         content:
+ *           application/json:
+ *             example: { "error": "부적을 찾을 수 없거나 소유 권한이 없습니다." }
+ */
+router.get('/amulets/:userAmuletId/download', authMiddleware, worryController.downloadMyAmulet);
+
 
 module.exports = router;
