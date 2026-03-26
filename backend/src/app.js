@@ -1,7 +1,7 @@
 const path = require('path');
 const dotenv = require('dotenv');
 
-dotenv.config({ path: path.join(__dirname, '../.env') });
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const express = require('express');
 const cors = require('cors');
@@ -68,7 +68,7 @@ app.get('/api/admin/users',async(req,res)=>{
 
 
 //3-4 고객센터 문의 조회  api
-app.get('/api/admin/support',async(req,res)=>{
+app.get('/api/support',async(req,res)=>{
   try{
     const{status}=req.query;
     let query='select user_id, content,created,status from support ';
@@ -89,9 +89,9 @@ app.get('/api/admin/support',async(req,res)=>{
 
 
   //1-1 고객센터 문의 등록 api
-  app.post('/api/admin/support/tickets',(req,res)=>{
+  app.post('/api/support/tickets',async(req,res)=>{
     //const authHeather=req.headers['authorization'];
-    const{userId,title,content,replyEmail}=req.body;
+    const{user_id,title,content,reply_email}=req.body;
 
     /*if(!authHeather){
       return res.status(401).json({
@@ -103,16 +103,25 @@ app.get('/api/admin/support',async(req,res)=>{
       message:"제목과 내용을 모두 입력해주세요."
     });
   }
-  const ticketid=crypto.randomUUID();
+  try{
+    const query=`insert into support(user_id,title,content,reply_email) values($1,$2,$3,$4) returning id as "ticketId"`;
+    const values=[user_id,title,content,reply_email];
+    const {rows}=await pool.query(query,values);
+    const ticketid=rows[0].id;
 
   return res.status(201).json({
     ticketId:ticketid,
     message:"성공적으로 접수되었습니다."
   });
-  });
+  }
+  catch(err){
+    console.error('고객센터 문의 등록 오류:',err.message);
+    res.status(500).send('Server Error');
+  }
+});
 
   //1-2 내 문의사항조회
-  app.get('/api/admin/support/tickets',async(req,res)=>{
+  app.get('/api/support/tickets',async(req,res)=>{
     //const authHeather=req.headers['authorization'];
     const cursor=req.query.cursor;
     const limit = parseInt(req.query.limit) || 20;
@@ -177,6 +186,53 @@ app.get('/api/admin/support',async(req,res)=>{
       res.status(500).send('Server Error');
     }
   });
+  //5-1 문의리스트 조회(관리자)
+    app.get('/api/admin/support/tickets',async(req,res)=>{
+      try{
+        const{status ='ALL',cursor,limit=50} =req.query;
+        const adminToken=req.headers.authorization;
+        // if(!adminToken) return res.status(401).json({message:"Unauthorized"});
+
+        const lastId=cursor ? parseInt(cursor) :99999999;
+        const queryLimit=parseInt(limit)>50?50: parseInt(limit);
+
+        const query = `
+        select id as "ticketId", user_id as "userid",title,status,created as "createdat"
+        from support where ($1 ='ALL' or status =$1) and id <$2
+        order by id desc limit $3`;
+        const values=[status,lastId, queryLimit];
+        const {rows}=await pool.query(query, values);
+        res.json({
+          items: rows,nextCursor: rows.length>0? rows[rows.length-1].ticketId :null});
+        }catch(err){
+          console.error(err);
+          res.status(500).json({message: "Server Error"});
+        }
+        });
+  //5-2 문의상태변경/답변등록(관리자)
+  app.patch('/api/admin/support/tickets/:ticketId',async(req,res)=>{
+    const{ticketId}=req.params;
+    const{status,replyContent}=req.body;
+    try{
+      let finalStatus = status;
+      if(replyContent&&!status){
+        finalStatus ='Done';
+      }
+      const query=`
+      update support set status=coalesce($1,status),reply_content=coalesce($2,reply_content),
+      updated_at=now() where id=$3 returning id as "ticketId",status,reply_content as "replycontent",updated_at as "updatedat"
+      `;
+      const values=[finalStatus,replyContent,ticketId];
+      const {rows}= await pool.query(query,values);
+      if(rows.length===0){
+        return res.status(404).json({message:"문의를 찾을수없음"});
+      }
+      res.json(rows[0]);
+      }catch(err){
+        console.error(err);
+        res.status(500).json({message:"server error"});
+      }
+    });
 
 app.listen(PORT, () => {
   console.log(`🐟 액막이 명태 서버가 ${PORT}번 포트에서 헤엄치는 중...`);
