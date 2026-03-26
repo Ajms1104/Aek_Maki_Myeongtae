@@ -26,7 +26,7 @@ exports.createWorry = async (req, res) => {
 
 exports.downloadMyAmulet = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const { userAmuletId } = req.params;
     const { filePath, fileName } = await worryService.getAmuletDownloadInfo(userId, userAmuletId);
     return res.download(filePath, fileName, (err) => {
