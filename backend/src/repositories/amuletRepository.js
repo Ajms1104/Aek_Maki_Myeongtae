@@ -163,3 +163,15 @@ exports.giveToUser = async (userId, amuletId) => {
   `;
   await db.query(query, [userId, amuletId]);
 };
+
+// 유저의 부적 소유권 확인 및 이미지 정보 조회
+exports.findUserAmuletWithOwner = async (userId, userAmuletId) => {
+  const query = `
+        SELECT a.image_url, a.name
+        FROM user_amulets ua
+        JOIN amulets a ON ua.amulet_id = a.id
+        WHERE ua.user_id = $1 AND ua.id = $2
+    `;
+  const result = await db.query(query, [userId, userAmuletId]);
+  return result.rows[0];
+};
