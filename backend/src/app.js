@@ -10,7 +10,6 @@ const worryRoutes = require('./routes/worryRoute');
 const adminRoutes = require('./routes/adminRoute');
 const authRoutes = require('./routes/authRoute');
 
-
 const pool = require('./db');
 const { nextTick } = require('process');
 
