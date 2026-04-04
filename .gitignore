@@ -16,6 +16,9 @@ jspm_packages/
 # toss mTLS 인증서
 certs/
 *.pem
+*.crt
+*.key
+
 # 3. 빌드 결과물 & 임시 파일
 dist/
 dist-ssr/

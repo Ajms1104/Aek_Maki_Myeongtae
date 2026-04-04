@@ -24,7 +24,7 @@ const upload = multer({ storage });
  * @swagger
  * /api/v1/admin/probabilities:
  *   get:
- *     summary: 부적 확률 목록 조회
+ *     summary: 관리자 - 부적 확률 목록 조회
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
@@ -53,7 +53,7 @@ router.get('/probabilities', verifyAdmin, adminController.getProbabilities);
  * @swagger
  * /api/v1/admin/amulets/{id}/probability:
  *   put:
- *     summary: 부적 확률 수정
+ *     summary: 관리자 - 부적 확률 수정
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
@@ -92,7 +92,7 @@ router.put('/amulets/:id/probability', verifyAdmin, adminController.updateAmulet
  * @swagger
  * /api/v1/admin/probabilities/publish:
  *   post:
- *     summary: 부적 확률 발행 (드래프트 -> 적용)
+ *     summary: 관리자 - 부적 확률 발행 (드래프트 -> 적용)
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
@@ -108,7 +108,7 @@ router.post('/probabilities/publish', verifyAdmin, adminController.publishProbab
  * @swagger
  * /api/v1/admin/amulets:
  *   post:
- *     summary: 부적 생성
+ *     summary: 관리자 - 부적 생성
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
@@ -147,7 +147,7 @@ router.post('/amulets', verifyAdmin, upload.single('imageFile'), adminController
  * @swagger
  * /api/v1/admin/amulets/{id}:
  *   patch:
- *     summary: 부적 수정
+ *     summary: 관리자 - 부적 수정
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
@@ -180,8 +180,9 @@ router.post('/amulets', verifyAdmin, upload.single('imageFile'), adminController
  *         description: 관리자 인증 실패
  *       404:
  *         description: 부적 없음
+ * 
  *   delete:
- *     summary: 부적 삭제
+ *     summary: 관리자 - 부적 삭제
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
@@ -201,5 +202,114 @@ router.post('/amulets', verifyAdmin, upload.single('imageFile'), adminController
  */
 router.patch('/amulets/:id', verifyAdmin, upload.single('imageFile'), adminController.updateAmulet);
 router.delete('/amulets/:id', verifyAdmin, adminController.deleteAmulet);
+
+
+/**
+ * @swagger
+ * /api/v1/admin/users:
+ *   get:
+ *     summary: 관리자 - 전체 유저 리스트 조회
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 유저 목록
+ */
+router.get('/users', verifyAdmin, adminController.getUsers);
+
+/**
+ * @swagger
+ * /api/v1/admin/users/{userId}:
+ *   get:
+ *     summary: 관리자 - 개별 유저 상세 조회
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 유저 상세
+ *       404:
+ *         description: 유저 없음
+ */
+router.get('/users/:userId', verifyAdmin, adminController.getUserDetail);
+
+/**
+ * @swagger
+ * /api/v1/admin/support/tickets:
+ *   get:
+ *     summary: 관리자 - 문의 리스트 조회
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           default: ALL
+ *       - in: query
+ *         name: cursor
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *     responses:
+ *       200:
+ *         description: 문의 목록
+ */
+router.get('/support/tickets', verifyAdmin, adminController.getSupportTickets);
+
+/**
+ * @swagger
+ * /api/v1/admin/support/tickets/{ticketId}:
+ *   patch:
+ *     summary: 관리자 - 문의 상태 변경/답변 등록 
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: ticketId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *               replyContent:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: 수정 완료
+ *       404:
+ *         description: 문의 없음
+ */
+router.patch('/support/tickets/:ticketId', verifyAdmin, adminController.updateSupportTicket);
+
 
 module.exports = router;
