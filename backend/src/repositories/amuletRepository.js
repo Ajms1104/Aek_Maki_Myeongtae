@@ -175,3 +175,69 @@ exports.findUserAmuletWithOwner = async (userId, userAmuletId) => {
   const result = await db.query(query, [userId, userAmuletId]);
   return result.rows[0];
 };
+
+// 전체 부적 카탈로그 (도감용)
+exports.findAllCatalog = async () => {
+  const { rows } = await db.query(
+    `SELECT id, name, grade, image_url AS "imageUrl",
+            silhouette_image_url AS "silhouetteImageUrl", description
+     FROM amulets
+     WHERE is_active = TRUE
+     ORDER BY grade, name`
+  );
+  return rows;
+};
+
+// 유저 인벤토리 조회
+exports.findUserInventory = async (userId) => {
+  const { rows } = await db.query(
+    `SELECT ua.amulet_id AS "amuletId", ua.count,
+            ua.first_acquired_at AS "firstAcquiredAt",
+            a.name, a.grade, a.image_url AS "imageUrl"
+     FROM user_amulets ua
+     JOIN amulets a ON a.id = ua.amulet_id
+     WHERE ua.user_id = $1
+     ORDER BY ua.first_acquired_at DESC`,
+    [userId]
+  );
+  return rows;
+};
+
+// 카탈로그 + 보유 조합 (도감 조회용)
+exports.findCollection = async (userId) => {
+  const { rows } = await db.query(
+    `SELECT a.id, a.name, a.grade,
+            a.image_url AS "imageUrl",
+            a.silhouette_image_url AS "silhouetteImageUrl",
+            a.description,
+            CASE WHEN ua.amulet_id IS NOT NULL THEN false ELSE true END AS "isLocked",
+            COALESCE(ua.count, 0) AS count
+     FROM amulets a
+     LEFT JOIN user_amulets ua ON ua.amulet_id = a.id AND ua.user_id = $1
+     WHERE a.is_active = TRUE
+     ORDER BY a.grade, a.name`,
+    [userId]
+  );
+  return rows;
+};
+
+// 유저 부적 단건 조회 (다운로드용) - amulet_id 기준
+exports.findUserAmulet = async (userId, amuletId) => {
+  const { rows } = await db.query(
+    `SELECT ua.amulet_id AS "amuletId", ua.count,
+            a.name, a.grade, a.image_url AS "imageUrl"
+     FROM user_amulets ua
+     JOIN amulets a ON a.id = ua.amulet_id
+     WHERE ua.user_id = $1 AND ua.amulet_id = $2`,
+    [userId, amuletId]
+  );
+  return rows[0] || null;
+};
+
+// 다운로드 이력 저장
+exports.saveDownload = async (userId, amuletId) => {
+  await db.query(
+    `INSERT INTO amulet_downloads (user_id, amulet_id) VALUES ($1, $2)`,
+    [userId, amuletId]
+  );
+};

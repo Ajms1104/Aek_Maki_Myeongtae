@@ -89,3 +89,59 @@ exports.deleteAmulet = async (req, res) => {
         return res.status(500).json({ error: '서버 에러' });
     }
 };
+
+// 전체 유저 리스트 조회
+exports.getUsers = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const search = req.query.search || '';
+    const limit = 10;
+    const offset = (page - 1) * limit;
+
+    const result = await adminService.getUsers({ page, search, limit, offset });
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error('[AdminController] getUsers 에러:', err);
+    return res.status(500).json({ error: '서버 에러' });
+  }
+};
+
+// 유저 상세 조회
+exports.getUserDetail = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const result = await adminService.getUserDetail(userId);
+    if (!result) return res.status(404).json({ error: '유저를 찾을 수 없습니다.' });
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error('[AdminController] getUserDetail 에러:', err);
+    return res.status(500).json({ error: '서버 에러' });
+  }
+};
+
+// 관리자 - 문의 리스트 조회
+exports.getSupportTickets = async (req, res) => {
+  try {
+    const { status = 'ALL', cursor, limit = 50 } = req.query;
+    const queryLimit = Math.min(parseInt(limit), 50);
+    const result = await adminService.getSupportTickets({ status, cursor, limit: queryLimit });
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error('[AdminController] getSupportTickets 에러:', err);
+    return res.status(500).json({ error: '서버 에러' });
+  }
+};
+
+// 관리자 - 문의 상태 변경/답변 등록
+exports.updateSupportTicket = async (req, res) => {
+  try {
+    const { ticketId } = req.params;
+    const { status, replyContent } = req.body;
+    const result = await adminService.updateSupportTicket({ ticketId, status, replyContent });
+    if (!result) return res.status(404).json({ error: '문의를 찾을 수 없습니다.' });
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error('[AdminController] updateSupportTicket 에러:', err);
+    return res.status(500).json({ error: '서버 에러' });
+  }
+};
