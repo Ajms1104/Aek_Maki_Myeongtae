@@ -53,3 +53,18 @@ INSERT INTO amulets (name, description, grade, weight, draft_weight) VALUES
 
 -- 확률 버전 초기값
 INSERT INTO probability_configs (version) VALUES (1);
+--공지사항 테이블 
+create table announcements(announcement_id serial primary key,
+title varchar(255) not null, content text not null, is_urgent boolean default false, start_at timestamp not null default current_timestamp,end_at timestamp,created_at timestamp default current_timestamp);
+
+--고객센터문의 테이블
+create table support(
+id serial primary key,
+user_id varchar(255) not null,
+title varchar(255) not null,
+content Text not null,
+reply_email varchar(255),
+reply_content text,
+status varchar(50) default '답변대기',
+created timestamp default current_timestamp,
+updated_at timestamp default current_timestamp);

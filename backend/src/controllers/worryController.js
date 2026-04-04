@@ -2,7 +2,7 @@ const worryService = require('../services/worryService');
 
 exports.createWorry = async (req, res) => {
   try {
-    const userId=req.user.userId;
+    const userId = req.user.userId;
     const { content, category } = req.body;
 
     // 기본적인 밸리데이션
@@ -12,13 +12,32 @@ exports.createWorry = async (req, res) => {
 
     // 서비스 레이어로 전달
     const result = await worryService.processWorry({ userToken, content, category });
-    
+
     return res.status(200).json(result);
   } catch (error) {
     console.error('createWorry(worryController.js) 에러:', error); //터미널에서 error 확인할 수 있게 추가
     if (error.message === 'PROFANITY') return res.status(400).json({ error: '부적절한 단어 포함' });
     if (error.message === 'LLM_ERROR') return res.status(503).json({ error: '명태가 답변 준비 중 에러가 났어요.' });
-    
+
     return res.status(500).json({ error: '서버 내부 에러' });
+  }
+};
+
+
+exports.downloadMyAmulet = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { userAmuletId } = req.params;
+    const { filePath, fileName } = await worryService.getAmuletDownloadInfo(userId, userAmuletId);
+    return res.download(filePath, fileName, (err) => {
+      if (err) {
+        console.error('[WorryController] download error:', err.message);
+        if (!res.headersSent) {
+          res.status(500).json({ error: '파일 다운로드에 실패했습니다.' });
+        }
+      }
+    });
+  } catch (error) {
+    return res.status(error.status || 500).json({ error: error.message });
   }
 };
