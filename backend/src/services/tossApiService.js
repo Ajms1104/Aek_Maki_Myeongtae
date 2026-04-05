@@ -30,6 +30,13 @@ const tossAxios = createTossAxiosInstance();
 
 /*authorizationCode + referrer → 토스 accessToken + userKey 교환 */
 exports.exchangeAuthorizationCode = async (authorizationCode, referrer) => {
+  // 0. 만약에 KEY가 없을 경우
+  if (MOCK_MODE) {
+    console.warn('[MOCK] exchangeAuthorizationCode 스킵 - 더미 userKey 반환');
+    return { userKey: 999000001 };
+  }
+
+
   // 1: authorizationCode → accessToken
   const tokenRes = await tossAxios.post(
     '/api-partner/v1/apps-in-toss/user/oauth2/generate-token',

@@ -21,6 +21,8 @@ exports.createConsultation = async (req, res) => {
     return res.status(200).json(result);
   } catch (err) {
     console.error('createConsultation 에러:', err);
+    if (err.code === 'PROFANITY') return res.status(400).json({ error: err.message });
+    if (err.message === 'LLM_ERROR') return res.status(503).json({ error: '명태가 답변 준비 중 에러가 났어요.' });
     return res.status(500).json({ error: '서버 내부 에러' });
   }
 };
