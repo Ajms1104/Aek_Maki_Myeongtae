@@ -180,7 +180,7 @@ router.post('/amulets', verifyAdmin, upload.single('imageFile'), adminController
  *         description: 관리자 인증 실패
  *       404:
  *         description: 부적 없음
- * 
+ *
  *   delete:
  *     summary: 관리자 - 부적 삭제
  *     tags: [Admin]
