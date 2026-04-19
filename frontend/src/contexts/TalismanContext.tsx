@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import type { Talisman } from '../types';
 import { INITIAL_TALISMAN_DATA, HIDDEN_TALISMAN_DATA, STORAGE_KEYS } from '../constants/talisman';
 import { storage } from '../utils/storage';
+import { createConsultation } from '../utils/api';
 
 interface TalismanContextType {
   talismanData: Talisman[];
@@ -10,12 +11,30 @@ interface TalismanContextType {
   wish: string;
   loadingStep: number;
   justUnlockedHidden: boolean;
+  consultationResult: ConsultationResult | null;
+  isLoading: boolean;
+  error: string | null;
   setWish: (wish: string) => void;
   setLoadingStep: (step: number) => void;
   setJustUnlockedHidden: (unlocked: boolean) => void;
   handlePaymentComplete: (productType: 'credit' | 'hidden') => void;
   unlockHiddenInState: () => void; // 연출 완료 후 호출할 함수 추가
   resetWish: () => void;
+  submitWish: () => Promise<void>;
+}
+
+interface ConsultationResult {
+  consultationId: number;
+  status: string;
+  reply: string;
+  amulet: {
+    id: number;
+    name: string;
+    imageUrl: string;
+    grade: string;
+    isNew: boolean;
+  };
+  deleteAt: string;
 }
 
 export const TalismanContext = createContext<TalismanContextType | undefined>(undefined);
@@ -40,6 +59,25 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [wish, setWish] = useState<string>('');
   const [loadingStep, setLoadingStep] = useState(0);
   const [justUnlockedHidden, setJustUnlockedHidden] = useState(false);
+  const [consultationResult, setConsultationResult] = useState<ConsultationResult | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submitWish = useCallback(async () => {
+    if (!wish || wish.length < 5) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await createConsultation(wish);
+      setConsultationResult(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '오류가 발생했어요.');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [wish]);
+
 
   useEffect(() => {
     storage.set(STORAGE_KEYS.TALISMAN_DATA, talismanData);
@@ -87,6 +125,8 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
   const resetWish = useCallback(() => {
     setWish('');
     setLoadingStep(0);
+    setConsultationResult(null);
+    setError(null); 
   }, []);
 
   return (
@@ -96,12 +136,16 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
       wish,
       loadingStep,
       justUnlockedHidden,
+      consultationResult, 
+      isLoading,         
+      error,              
       setWish,
       setLoadingStep,
       setJustUnlockedHidden,
       handlePaymentComplete,
       unlockHiddenInState,
-      resetWish
+      resetWish,
+      submitWish,
     }}>
       {children}
     </TalismanContext.Provider>

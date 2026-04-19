@@ -3,50 +3,51 @@ CREATE TABLE IF NOT EXISTS users (
   id            SERIAL PRIMARY KEY,
   toss_user_key BIGINT UNIQUE NOT NULL,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  last_seen_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  last_seen_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  deleted_at    TIMESTAMPTZ,
+  is_deleted    BOOLEAN NOT NULL DEFAULT FALSE
 );
-
--- 유저 테이블에 탈퇴 관련 컬럼 추가
-ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN NOT NULL DEFAULT FALSE;
 
 -- 부적 테이블
 CREATE TABLE IF NOT EXISTS amulets (
-  id           SERIAL PRIMARY KEY,
-  name         VARCHAR(100) NOT NULL,
-  description  TEXT,
-  grade        VARCHAR(20) NOT NULL CHECK (grade IN ('COMMON', 'RARE', 'EPIC', 'LEGENDARY')),
-  image_url    TEXT,
-  weight       INTEGER NOT NULL DEFAULT 100,
-  draft_weight INTEGER NOT NULL DEFAULT 100,
-  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  id                   SERIAL PRIMARY KEY,
+  name                 VARCHAR(100) NOT NULL,
+  description          TEXT,
+  grade                VARCHAR(20) NOT NULL CHECK (grade IN ('common', 'rare', 'legend')),
+  image_url            TEXT,
+  silhouette_image_url TEXT,
+  weight               INTEGER NOT NULL DEFAULT 100,
+  draft_weight         INTEGER NOT NULL DEFAULT 100,
+  is_active            BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 유저 부적 다운로드 이력 테이블 (중복 다운로드 방지)
-CREATE TABLE IF NOT EXISTS amulet_downloads (
-  id          SERIAL PRIMARY KEY,
-  user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  amulet_id   INTEGER NOT NULL REFERENCES amulets(id),
-  downloaded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- 유저 부적 인벤토리 테이블
+-- 유저 부적 인벤토리
 CREATE TABLE IF NOT EXISTS user_amulets (
-  user_id    VARCHAR(255) NOT NULL,
-  amulet_id  INTEGER NOT NULL REFERENCES amulets(id),
-  count      INTEGER NOT NULL DEFAULT 1,
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  user_id           VARCHAR(255) NOT NULL,
+  amulet_id         INTEGER NOT NULL REFERENCES amulets(id),
+  count             INTEGER NOT NULL DEFAULT 1,
+  first_acquired_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (user_id, amulet_id)
 );
 
--- 확률 버전 관리 테이블
+-- 부적 다운로드 이력
+CREATE TABLE IF NOT EXISTS amulet_downloads (
+  id            SERIAL PRIMARY KEY,
+  user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  amulet_id     INTEGER NOT NULL REFERENCES amulets(id),
+  downloaded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 확률 버전 관리
 CREATE TABLE IF NOT EXISTS probability_configs (
   id         SERIAL PRIMARY KEY,
   version    INTEGER NOT NULL DEFAULT 1,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 확률 예약 테이블
+-- 확률 예약
 CREATE TABLE IF NOT EXISTS amulet_probability_schedules (
   id           SERIAL PRIMARY KEY,
   version      INTEGER NOT NULL,
@@ -56,54 +57,152 @@ CREATE TABLE IF NOT EXISTS amulet_probability_schedules (
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 테스트용 부적 데이터 4개
-INSERT INTO amulets (name, description, grade, weight, draft_weight) VALUES
-  ('합격 명태',  '시험 합격을 도와주는 명태', 'COMMON',    100, 100),
-  ('취업 명태',  '취업 성공을 도와주는 명태', 'RARE',       50,  50),
-  ('연애 명태',  '좋은 인연을 불러오는 명태', 'EPIC',       20,  20),
-  ('대박 명태',  '인생 대박을 터뜨려주는 명태', 'LEGENDARY',  5,   5);
-
--- 확률 버전 초기값
-INSERT INTO probability_configs (version) VALUES (1);
-
---공지사항 테이블 
-create table announcements(announcement_id serial primary key,
-title varchar(255) not null, content text not null, is_urgent boolean default false, start_at timestamp not null default current_timestamp,end_at timestamp,created_at timestamp default current_timestamp);
-
---고객센터문의 테이블
-create table support(
-id serial primary key,
-user_id varchar(255) not null,
-title varchar(255) not null,
-content Text not null,
-reply_email varchar(255),
-reply_content text,
-status varchar(50) default '답변대기',
-created timestamp default current_timestamp,
-updated_at timestamp default current_timestamp);
-
---고민관련 테이블
+-- 고민 테이블
 CREATE TABLE IF NOT EXISTS consultations (
-  id          SERIAL PRIMARY KEY,
-  user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  category    VARCHAR(50),
-  content     TEXT NOT NULL,
-  preview     VARCHAR(100) NOT NULL,
-  reply       TEXT,
-  status      VARCHAR(10) NOT NULL DEFAULT 'PENDING'
-                CHECK (status IN ('PENDING', 'DONE', 'FAILED')),
-  reaction    VARCHAR(10) DEFAULT 'NONE'
-                CHECK (reaction IN ('LIKE', 'DISLIKE', 'NONE')),
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  delete_at   TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '30 days')
+  id         SERIAL PRIMARY KEY,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  category   VARCHAR(50),
+  content    TEXT NOT NULL,
+  preview    VARCHAR(100) NOT NULL,
+  reply      TEXT,
+  status     VARCHAR(10) NOT NULL DEFAULT 'PENDING'
+               CHECK (status IN ('PENDING', 'DONE', 'FAILED')),
+  reaction   VARCHAR(10) DEFAULT 'NONE'
+               CHECK (reaction IN ('LIKE', 'DISLIKE', 'NONE')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  delete_at  TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '30 days')
 );
 
-CREATE INDEX idx_consultations_user_id ON consultations(user_id);
-CREATE INDEX idx_consultations_delete_at ON consultations(delete_at);
+CREATE INDEX IF NOT EXISTS idx_consultations_user_id ON consultations(user_id);
+CREATE INDEX IF NOT EXISTS idx_consultations_delete_at ON consultations(delete_at);
 
--- 상담-부적 연결 테이블
+-- 상담-부적 연결
 CREATE TABLE IF NOT EXISTS consultation_amulets (
   consultation_id INTEGER NOT NULL REFERENCES consultations(id) ON DELETE CASCADE,
   amulet_id       INTEGER NOT NULL REFERENCES amulets(id),
   PRIMARY KEY (consultation_id, amulet_id)
 );
+
+-- 공지사항
+CREATE TABLE IF NOT EXISTS announcements (
+  announcement_id SERIAL PRIMARY KEY,
+  title           VARCHAR(255) NOT NULL,
+  content         TEXT NOT NULL,
+  is_urgent       BOOLEAN DEFAULT FALSE,
+  start_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  end_at          TIMESTAMP,
+  created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 고객센터 문의
+CREATE TABLE IF NOT EXISTS support (
+  id            SERIAL PRIMARY KEY,
+  user_id       VARCHAR(255) NOT NULL,
+  title         VARCHAR(255) NOT NULL,
+  content       TEXT NOT NULL,
+  reply_email   VARCHAR(255),
+  reply_content TEXT,
+  status        VARCHAR(50) DEFAULT '답변대기',
+  created       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 일반 명태 (확률 100)
+INSERT INTO amulets (name, grade, image_url, weight, draft_weight) VALUES
+  ('윙크 명태',       'common', '/uploads/common/common_amulet_01.png', 100, 100),
+  ('깜짝 명태',       'common', '/uploads/common/common_amulet_02.png', 100, 100),
+  ('겁먹은 명태',     'common', '/uploads/common/common_amulet_03.png', 100, 100),
+  ('화난 명태',       'common', '/uploads/common/common_amulet_04.png', 100, 100),
+  ('반짝이는 명태',   'common', '/uploads/common/common_amulet_05.png', 100, 100),
+  ('슬픈 명태',       'common', '/uploads/common/common_amulet_06.png', 100, 100),
+  ('메롱 명태',       'common', '/uploads/common/common_amulet_07.png', 100, 100),
+  ('기본 명태',       'common', '/uploads/common/common_amulet_08.png', 100, 100),
+  ('잠자는 명태',     'common', '/uploads/common/common_amulet_09.png', 100, 100),
+  ('사악한 명태',     'common', '/uploads/common/common_amulet_10.png', 100, 100),
+  ('짝사랑 명태',     'common', '/uploads/common/common_amulet_11.png', 100, 100),
+  ('뽀뽀 명태',       'common', '/uploads/common/common_amulet_12.png', 100, 100),
+  ('승리자 명태',     'common', '/uploads/common/common_amulet_13.png', 100, 100),
+  ('초롱초롱 명태',   'common', '/uploads/common/common_amulet_14.png', 100, 100),
+  ('익살 명태',       'common', '/uploads/common/common_amulet_15.png', 100, 100),
+  ('노곤 명태',       'common', '/uploads/common/common_amulet_16.png', 100, 100),
+  ('배부른 명태',     'common', '/uploads/common/common_amulet_17.png', 100, 100),
+  ('감탄 명태',       'common', '/uploads/common/common_amulet_18.png', 100, 100),
+  ('반장대소 명태',   'common', '/uploads/common/common_amulet_19.png', 100, 100),
+  ('식은땀 명태',     'common', '/uploads/common/common_amulet_20.png', 100, 100),
+  ('명상 명태',       'common', '/uploads/common/common_amulet_21.png', 100, 100),
+  ('부끄 명태',       'common', '/uploads/common/common_amulet_22.png', 100, 100),
+  ('열정 명태',       'common', '/uploads/common/common_amulet_23.png', 100, 100),
+  ('비웃는 명태',     'common', '/uploads/common/common_amulet_24.png', 100, 100),
+  ('의욕제로 명태', 'common', '/uploads/common/common_amulet_25.png', 100, 100),
+  ('흥얼 명태',       'common', '/uploads/common/common_amulet_26.png', 100, 100),
+  ('도파민 명태',     'common', '/uploads/common/common_amulet_27.png', 100, 100),
+  ('의심 명태',       'common', '/uploads/common/common_amulet_28.png', 100, 100),
+  ('발랄 명태',       'common', '/uploads/common/common_amulet_29.png', 100, 100),
+  ('밤샌 명태',       'common', '/uploads/common/common_amulet_30.png', 100, 100),
+  ('피곤 명태',       'common', '/uploads/common/common_amulet_31.png', 100, 100);
+
+-- rare 등급 (weight: 40)
+INSERT INTO amulets (name, grade, image_url, weight, draft_weight) VALUES
+  ('천문학자 명태',     'rare', '/uploads/rare/rare_amulet_01.png', 40, 40),
+  ('패션디자이너 명태', 'rare', '/uploads/rare/rare_amulet_02.png', 40, 40),
+  ('건축가 명태',       'rare', '/uploads/rare/rare_amulet_03.png', 40, 40),
+  ('보석감정사 명태',   'rare', '/uploads/rare/rare_amulet_04.png', 40, 40),
+  ('엔지니어 명태',     'rare', '/uploads/rare/rare_amulet_05.png', 40, 40),
+  ('해양학자 명태',     'rare', '/uploads/rare/rare_amulet_06.png', 40, 40),
+  ('기상학자 명태',     'rare', '/uploads/rare/rare_amulet_07.png', 40, 40),
+  ('고고학자 명태',     'rare', '/uploads/rare/rare_amulet_08.png', 40, 40),
+  ('플로리스트 명태',   'rare', '/uploads/rare/rare_amulet_09.png', 40, 40),
+  ('스쿠버다이버 명태', 'rare', '/uploads/rare/rare_amulet_10.png', 40, 40),
+  ('연주가 명태',       'rare', '/uploads/rare/rare_amulet_11.png', 40, 40),
+  ('공원관리자 명태',   'rare', '/uploads/rare/rare_amulet_12.png', 40, 40),
+  ('정비사 명태',       'rare', '/uploads/rare/rare_amulet_13.png', 40, 40),
+  ('파티시에 명태',     'rare', '/uploads/rare/rare_amulet_14.png', 40, 40),
+  ('안전관리자 명태',   'rare', '/uploads/rare/rare_amulet_15.png', 40, 40),
+  ('우주비행사 명태',   'rare', '/uploads/rare/rare_amulet_16.png', 40, 40),
+  ('교사 명태',         'rare', '/uploads/rare/rare_amulet_17.png', 40, 40),
+  ('재즈음악가 명태',   'rare', '/uploads/rare/rare_amulet_18.png', 40, 40),
+  ('영화감독 명태',     'rare', '/uploads/rare/rare_amulet_19.png', 40, 40),
+  ('수의사 명태',       'rare', '/uploads/rare/rare_amulet_20.png', 40, 40),
+  ('승무원 명태',       'rare', '/uploads/rare/rare_amulet_21.png', 40, 40),
+  ('집배원 명태',       'rare', '/uploads/rare/rare_amulet_22.png', 40, 40),
+  ('정원사 명태',       'rare', '/uploads/rare/rare_amulet_23.png', 40, 40),
+  ('해커 명태',         'rare', '/uploads/rare/rare_amulet_24.png', 40, 40),
+  ('의사 명태',         'rare', '/uploads/rare/rare_amulet_25.png', 40, 40),
+  ('소방관 명태',       'rare', '/uploads/rare/rare_amulet_26.png', 40, 40),
+  ('경찰관 명태',       'rare', '/uploads/rare/rare_amulet_27.png', 40, 40),
+  ('판사 명태',         'rare', '/uploads/rare/rare_amulet_28.png', 40, 40),
+  ('설계사 명태',       'rare', '/uploads/rare/rare_amulet_29.png', 40, 40),
+  ('헤어디자이너 명태', 'rare', '/uploads/rare/rare_amulet_30.png', 40, 40),
+  ('메이크업아티스트 명태', 'rare', '/uploads/rare/rare_amulet_31.png', 40, 40),
+  ('네일아티스트 명태', 'rare', '/uploads/rare/rare_amulet_32.png', 40, 40),
+  ('회계사 명태',       'rare', '/uploads/rare/rare_amulet_33.png', 40, 40),
+  ('조향사 명태',       'rare', '/uploads/rare/rare_amulet_34.png', 40, 40),
+  ('재판사 명태',       'rare', '/uploads/rare/rare_amulet_35.png', 40, 40),
+  ('개발자 명태',       'rare', '/uploads/rare/rare_amulet_36.png', 40, 40),
+  ('사서 명태',         'rare', '/uploads/rare/rare_amulet_37.png', 40, 40);
+
+-- legend 등급 (weight: 10)
+INSERT INTO amulets (name, grade, image_url, weight, draft_weight) VALUES
+  ('태양 명태',   'legend', '/uploads/legend/legend_amulet_01.png', 10, 10),
+  ('무지개 명태', 'legend', '/uploads/legend/legend_amulet_02.png', 10, 10),
+  ('황금 명태',   'legend', '/uploads/legend/legend_amulet_03.png', 10, 10),
+  ('구름 명태',   'legend', '/uploads/legend/legend_amulet_04.png', 10, 10),
+  ('번개 명태',   'legend', '/uploads/legend/legend_amulet_05.png', 10, 10),
+  ('수호신 명태', 'legend', '/uploads/legend/legend_amulet_06.png', 10, 10),
+  ('얼음 명태',   'legend', '/uploads/legend/legend_amulet_07.png', 10, 10),
+  ('불꽃 명태',   'legend', '/uploads/legend/legend_amulet_08.png', 10, 10),
+  ('밤 명태',     'legend', '/uploads/legend/legend_amulet_09.png', 10, 10),
+  ('보석 명태',   'legend', '/uploads/legend/legend_amulet_10.png', 10, 10),
+  ('사탕 명태',   'legend', '/uploads/legend/legend_amulet_11.png', 10, 10),
+  ('모래 명태',   'legend', '/uploads/legend/legend_amulet_12.png', 10, 10),
+  ('바람 명태', 'legend', '/uploads/legend/legend_amulet_13.png', 10, 10),
+  ('어둠 명태',   'legend', '/uploads/legend/legend_amulet_14.png', 10, 10),
+  ('화산 명태',   'legend', '/uploads/legend/legend_amulet_15.png', 10, 10),
+  ('숲 명태',     'legend', '/uploads/legend/legend_amulet_16.png', 10, 10);
+
+
+-- id 시퀀스 재설정
+SELECT setval('amulets_id_seq', (SELECT MAX(id) FROM amulets));
+
+-- 확률 버전 초기값
+INSERT INTO probability_configs (version) VALUES (1);
