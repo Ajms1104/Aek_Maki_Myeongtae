@@ -18,6 +18,8 @@ import * as C from '../styles/commonStyles';
 import * as O from '../styles/overlayStyles';
 import { useNavigation } from '../hooks/useNavigation';
 import { useTalisman } from '../hooks/useTalisman';
+import { loginWithToss } from '../utils/auth'; 
+import { tokenStorage } from '../utils/api';  
 
 const pulseGreen = keyframes`
   0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.4); }
@@ -242,7 +244,18 @@ const MainStep: React.FC = () => {
 
       <C.FixedButtonGroup style={{ paddingBottom: '32px' }}>
         <C.MainButton 
-          onClick={() => navigateTo('input')}
+          onClick={async () => {
+              // 이미 로그인된 경우 바로 이동
+              if (tokenStorage.get()) {
+                navigateTo('input');
+                return;
+              }
+              // 토스 로그인 후 이동
+              const success = await loginWithToss();
+                if (success) {
+                navigateTo('input');}
+              }
+            }
           style={{ 
             height: '52px', 
             fontSize: '16px', 

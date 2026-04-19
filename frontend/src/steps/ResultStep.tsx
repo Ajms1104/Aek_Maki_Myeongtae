@@ -8,6 +8,7 @@ import * as C from '../styles/commonStyles';
 import { useNavigation } from '../hooks/useNavigation';
 import { useUI } from '../hooks/useUI';
 import { useTypingEffect } from '../hooks/useTypingEffect';
+import { useTalisman } from '../hooks/useTalisman'
 
 const floatingAnimation = keyframes`
   0%, 100% { transform: translateY(0); }
@@ -65,7 +66,8 @@ const ResultStep: React.FC = () => {
   const { navigateTo } = useNavigation();
   const { triggerToast } = useUI();
   const [isFlying, setIsFlying] = useState(false);
-  const comment = "이 부적이 불운을 끊어줄 거예요.\n걱정은 명태에게 맡기고 푹 쉬세요.";
+  const { consultationResult } = useTalisman();
+  const comment = consultationResult?.reply ?? "명태가 답변을 준비 중이에요...";
   const { displayedText } = useTypingEffect(comment, 60);
 
   return (

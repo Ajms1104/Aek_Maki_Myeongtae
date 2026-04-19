@@ -27,7 +27,7 @@ const ErrorBadge = styled.span`
 `;
 
 const InputStep: React.FC = () => {
-  const { wish, setWish } = useTalisman();
+  const { wish, setWish, submitWish } = useTalisman();
   const { navigateTo } = useNavigation();
 
   return (
@@ -112,7 +112,15 @@ const InputStep: React.FC = () => {
         <C.ButtonGroup style={{ paddingBottom: '32px' }}>
           <C.MainButton
             disabled={wish.length < 5}
-            onClick={() => navigateTo('loading')}
+            onClick={async () => {
+              try {
+                navigateTo('loading');
+                await submitWish();
+                navigateTo('result');
+              } catch (err) {
+                navigateTo('input');
+              }
+              }}
             style={{ 
               height: '56px',
               fontSize: '17px',
