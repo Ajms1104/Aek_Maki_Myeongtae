@@ -8,7 +8,7 @@ export type Step =
   | 'customer_service'
   | 'inquiry';
 
-export type Grade = 'hidden' | 'legend' | 'hero' | 'rare' | 'common';
+export type Grade = 'legend' | 'rare' | 'common';
 
 export interface Talisman {
   id: number;
