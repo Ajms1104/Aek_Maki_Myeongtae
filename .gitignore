@@ -56,5 +56,3 @@ coverage/
 .vercel
 .serverless
 
-# 8. 부적 이미지 노출 방지
-backend/uploads/
