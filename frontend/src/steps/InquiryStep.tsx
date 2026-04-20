@@ -11,7 +11,7 @@ const InquiryStep: React.FC = () => {
   const { navigateTo } = useNavigation();
   const { openDialog } = useUI();
   const [content, setContent] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false); 
+  const [, setIsSubmitting] = useState(false); 
 
   const handleSubmit = async () => {
     if (content.trim().length < 10) return;

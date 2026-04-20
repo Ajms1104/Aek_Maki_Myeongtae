@@ -26,7 +26,7 @@ const CollectionStep: React.FC = () => {
 
   const displayData = useMemo(() => {
     return [...talismanData]
-      .filter(t => t.grade !== 'hidden')
+      .filter(t => t.grade !== 'legend')
       .sort((a, b) => (gradePriority[a.grade] ?? 99) - (gradePriority[b.grade] ?? 99));
   }, [talismanData]);
 

@@ -2,7 +2,7 @@ import React, { createContext, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import type { DialogConfig } from '../types';
 
-interface UIContextType {
+export interface UIContextType {
   showToast: boolean;
   isMenuOpen: boolean;
   dialogConfig: DialogConfig;
