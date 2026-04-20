@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
+import main_fish from '../assets/main_image.png';
 import {
   IoArchiveOutline,
   IoHelpCircleOutline,
@@ -20,6 +21,7 @@ import { useNavigation } from '../hooks/useNavigation';
 import { useTalisman } from '../hooks/useTalisman';
 import { loginWithToss } from '../utils/auth'; 
 import { tokenStorage } from '../utils/api';  
+
 
 const pulseGreen = keyframes`
   0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.4); }
@@ -115,9 +117,9 @@ const MainStep: React.FC = () => {
               }}
             >
               <img
-                src="/main_fish.png"
+                src={main_fish}
                 alt="AI 명태"
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                style={{ width: '500%', height: '170%', objectFit: 'contain' }}
               />
               <div style={{
                 position: 'absolute',

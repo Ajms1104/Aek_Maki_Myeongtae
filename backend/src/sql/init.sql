@@ -107,7 +107,15 @@ CREATE TABLE IF NOT EXISTS support (
   updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 일반 명태 (확률 100)
+-- 기존 데이터 삭제 후 id 1부터 다시 시작
+DELETE FROM consultation_amulets;
+DELETE FROM user_amulets;
+DELETE FROM amulets;
+
+-- 시퀀스 1부터 리셋
+ALTER SEQUENCE amulets_id_seq RESTART WITH 1;
+
+-- common 등급 (weight: 100)
 INSERT INTO amulets (name, grade, image_url, weight, draft_weight) VALUES
   ('윙크 명태',       'common', '/uploads/common/common_amulet_01.png', 100, 100),
   ('깜짝 명태',       'common', '/uploads/common/common_amulet_02.png', 100, 100),
@@ -133,7 +141,7 @@ INSERT INTO amulets (name, grade, image_url, weight, draft_weight) VALUES
   ('부끄 명태',       'common', '/uploads/common/common_amulet_22.png', 100, 100),
   ('열정 명태',       'common', '/uploads/common/common_amulet_23.png', 100, 100),
   ('비웃는 명태',     'common', '/uploads/common/common_amulet_24.png', 100, 100),
-  ('의욕제로 명태', 'common', '/uploads/common/common_amulet_25.png', 100, 100),
+  ('의욕제로 명태',   'common', '/uploads/common/common_amulet_25.png', 100, 100),
   ('흥얼 명태',       'common', '/uploads/common/common_amulet_26.png', 100, 100),
   ('도파민 명태',     'common', '/uploads/common/common_amulet_27.png', 100, 100),
   ('의심 명태',       'common', '/uploads/common/common_amulet_28.png', 100, 100),
@@ -143,43 +151,43 @@ INSERT INTO amulets (name, grade, image_url, weight, draft_weight) VALUES
 
 -- rare 등급 (weight: 40)
 INSERT INTO amulets (name, grade, image_url, weight, draft_weight) VALUES
-  ('천문학자 명태',     'rare', '/uploads/rare/rare_amulet_01.png', 40, 40),
-  ('패션디자이너 명태', 'rare', '/uploads/rare/rare_amulet_02.png', 40, 40),
-  ('건축가 명태',       'rare', '/uploads/rare/rare_amulet_03.png', 40, 40),
-  ('보석감정사 명태',   'rare', '/uploads/rare/rare_amulet_04.png', 40, 40),
-  ('엔지니어 명태',     'rare', '/uploads/rare/rare_amulet_05.png', 40, 40),
-  ('해양학자 명태',     'rare', '/uploads/rare/rare_amulet_06.png', 40, 40),
-  ('기상학자 명태',     'rare', '/uploads/rare/rare_amulet_07.png', 40, 40),
-  ('고고학자 명태',     'rare', '/uploads/rare/rare_amulet_08.png', 40, 40),
-  ('플로리스트 명태',   'rare', '/uploads/rare/rare_amulet_09.png', 40, 40),
-  ('스쿠버다이버 명태', 'rare', '/uploads/rare/rare_amulet_10.png', 40, 40),
-  ('연주가 명태',       'rare', '/uploads/rare/rare_amulet_11.png', 40, 40),
-  ('공원관리자 명태',   'rare', '/uploads/rare/rare_amulet_12.png', 40, 40),
-  ('정비사 명태',       'rare', '/uploads/rare/rare_amulet_13.png', 40, 40),
-  ('파티시에 명태',     'rare', '/uploads/rare/rare_amulet_14.png', 40, 40),
-  ('안전관리자 명태',   'rare', '/uploads/rare/rare_amulet_15.png', 40, 40),
-  ('우주비행사 명태',   'rare', '/uploads/rare/rare_amulet_16.png', 40, 40),
-  ('교사 명태',         'rare', '/uploads/rare/rare_amulet_17.png', 40, 40),
-  ('재즈음악가 명태',   'rare', '/uploads/rare/rare_amulet_18.png', 40, 40),
-  ('영화감독 명태',     'rare', '/uploads/rare/rare_amulet_19.png', 40, 40),
-  ('수의사 명태',       'rare', '/uploads/rare/rare_amulet_20.png', 40, 40),
-  ('승무원 명태',       'rare', '/uploads/rare/rare_amulet_21.png', 40, 40),
-  ('집배원 명태',       'rare', '/uploads/rare/rare_amulet_22.png', 40, 40),
-  ('정원사 명태',       'rare', '/uploads/rare/rare_amulet_23.png', 40, 40),
-  ('해커 명태',         'rare', '/uploads/rare/rare_amulet_24.png', 40, 40),
-  ('의사 명태',         'rare', '/uploads/rare/rare_amulet_25.png', 40, 40),
-  ('소방관 명태',       'rare', '/uploads/rare/rare_amulet_26.png', 40, 40),
-  ('경찰관 명태',       'rare', '/uploads/rare/rare_amulet_27.png', 40, 40),
-  ('판사 명태',         'rare', '/uploads/rare/rare_amulet_28.png', 40, 40),
-  ('설계사 명태',       'rare', '/uploads/rare/rare_amulet_29.png', 40, 40),
-  ('헤어디자이너 명태', 'rare', '/uploads/rare/rare_amulet_30.png', 40, 40),
-  ('메이크업아티스트 명태', 'rare', '/uploads/rare/rare_amulet_31.png', 40, 40),
-  ('네일아티스트 명태', 'rare', '/uploads/rare/rare_amulet_32.png', 40, 40),
-  ('회계사 명태',       'rare', '/uploads/rare/rare_amulet_33.png', 40, 40),
-  ('조향사 명태',       'rare', '/uploads/rare/rare_amulet_34.png', 40, 40),
-  ('재판사 명태',       'rare', '/uploads/rare/rare_amulet_35.png', 40, 40),
-  ('개발자 명태',       'rare', '/uploads/rare/rare_amulet_36.png', 40, 40),
-  ('사서 명태',         'rare', '/uploads/rare/rare_amulet_37.png', 40, 40);
+  ('천문학자 명태',       'rare', '/uploads/rare/rare_amulet_01.png', 40, 40),
+  ('패션디자이너 명태',   'rare', '/uploads/rare/rare_amulet_02.png', 40, 40),
+  ('건축가 명태',         'rare', '/uploads/rare/rare_amulet_03.png', 40, 40),
+  ('보석감정사 명태',     'rare', '/uploads/rare/rare_amulet_04.png', 40, 40),
+  ('엔지니어 명태',       'rare', '/uploads/rare/rare_amulet_05.png', 40, 40),
+  ('해양학자 명태',       'rare', '/uploads/rare/rare_amulet_06.png', 40, 40),
+  ('기상학자 명태',       'rare', '/uploads/rare/rare_amulet_07.png', 40, 40),
+  ('고고학자 명태',       'rare', '/uploads/rare/rare_amulet_08.png', 40, 40),
+  ('플로리스트 명태',     'rare', '/uploads/rare/rare_amulet_09.png', 40, 40),
+  ('스쿠버다이버 명태',   'rare', '/uploads/rare/rare_amulet_10.png', 40, 40),
+  ('연주가 명태',         'rare', '/uploads/rare/rare_amulet_11.png', 40, 40),
+  ('공원관리자 명태',     'rare', '/uploads/rare/rare_amulet_12.png', 40, 40),
+  ('정비사 명태',         'rare', '/uploads/rare/rare_amulet_13.png', 40, 40),
+  ('파티시에 명태',       'rare', '/uploads/rare/rare_amulet_14.png', 40, 40),
+  ('안전관리자 명태',     'rare', '/uploads/rare/rare_amulet_15.png', 40, 40),
+  ('우주비행사 명태',     'rare', '/uploads/rare/rare_amulet_16.png', 40, 40),
+  ('교사 명태',           'rare', '/uploads/rare/rare_amulet_17.png', 40, 40),
+  ('재즈음악가 명태',     'rare', '/uploads/rare/rare_amulet_18.png', 40, 40),
+  ('영화감독 명태',       'rare', '/uploads/rare/rare_amulet_19.png', 40, 40),
+  ('수의사 명태',         'rare', '/uploads/rare/rare_amulet_20.png', 40, 40),
+  ('승무원 명태',         'rare', '/uploads/rare/rare_amulet_21.png', 40, 40),
+  ('집배원 명태',         'rare', '/uploads/rare/rare_amulet_22.png', 40, 40),
+  ('정원사 명태',         'rare', '/uploads/rare/rare_amulet_23.png', 40, 40),
+  ('해커 명태',           'rare', '/uploads/rare/rare_amulet_24.png', 40, 40),
+  ('의사 명태',           'rare', '/uploads/rare/rare_amulet_25.png', 40, 40),
+  ('소방관 명태',         'rare', '/uploads/rare/rare_amulet_26.png', 40, 40),
+  ('경찰관 명태',         'rare', '/uploads/rare/rare_amulet_27.png', 40, 40),
+  ('판사 명태',           'rare', '/uploads/rare/rare_amulet_28.png', 40, 40),
+  ('설계사 명태',         'rare', '/uploads/rare/rare_amulet_29.png', 40, 40),
+  ('헤어디자이너 명태',   'rare', '/uploads/rare/rare_amulet_30.png', 40, 40),
+  ('메이크업아티스트 명태','rare', '/uploads/rare/rare_amulet_31.png', 40, 40),
+  ('네일아티스트 명태',   'rare', '/uploads/rare/rare_amulet_32.png', 40, 40),
+  ('회계사 명태',         'rare', '/uploads/rare/rare_amulet_33.png', 40, 40),
+  ('조향사 명태',         'rare', '/uploads/rare/rare_amulet_34.png', 40, 40),
+  ('재판사 명태',         'rare', '/uploads/rare/rare_amulet_35.png', 40, 40),
+  ('개발자 명태',         'rare', '/uploads/rare/rare_amulet_36.png', 40, 40),
+  ('사서 명태',           'rare', '/uploads/rare/rare_amulet_37.png', 40, 40);
 
 -- legend 등급 (weight: 10)
 INSERT INTO amulets (name, grade, image_url, weight, draft_weight) VALUES
@@ -195,14 +203,10 @@ INSERT INTO amulets (name, grade, image_url, weight, draft_weight) VALUES
   ('보석 명태',   'legend', '/uploads/legend/legend_amulet_10.png', 10, 10),
   ('사탕 명태',   'legend', '/uploads/legend/legend_amulet_11.png', 10, 10),
   ('모래 명태',   'legend', '/uploads/legend/legend_amulet_12.png', 10, 10),
-  ('바람 명태', 'legend', '/uploads/legend/legend_amulet_13.png', 10, 10),
+  ('바람 명태',   'legend', '/uploads/legend/legend_amulet_13.png', 10, 10),
   ('어둠 명태',   'legend', '/uploads/legend/legend_amulet_14.png', 10, 10),
   ('화산 명태',   'legend', '/uploads/legend/legend_amulet_15.png', 10, 10),
   ('숲 명태',     'legend', '/uploads/legend/legend_amulet_16.png', 10, 10);
 
-
--- id 시퀀스 재설정
+-- 시퀀스 재설정
 SELECT setval('amulets_id_seq', (SELECT MAX(id) FROM amulets));
-
--- 확률 버전 초기값
-INSERT INTO probability_configs (version) VALUES (1);

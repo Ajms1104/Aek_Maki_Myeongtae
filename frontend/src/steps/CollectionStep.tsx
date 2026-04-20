@@ -1,101 +1,60 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { IoFileTrayFullOutline, IoSparkles } from 'react-icons/io5';
-import styled from 'styled-components';
+import React, { useState, useMemo } from 'react';
+import { IoFileTrayFullOutline } from 'react-icons/io5';
 import * as L from '../styles/layoutStyles';
 import * as S from '../styles/stepStyles';
 import * as C from '../styles/commonStyles';
-import * as A from '../styles/animations';
 import type { Talisman } from '../types/index';
 import { GRADE_COLORS } from '../constants/talisman';
 import { TalismanDetailModal } from '../components/Overlays';
 import { useNavigation } from '../hooks/useNavigation';
 import { useTalisman } from '../hooks/useTalisman';
-
-// 해금 시 봉인 장막 스타일
-const SealedOverlay = styled.div`
-  position: absolute;
-  inset: 0;
-  background-color: rgba(25, 31, 40, 0.95);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-  border-radius: 22px;
-  
-  .sparkle-icon {
-    animation: ${A.pulse} 1s infinite;
-    color: rgba(255, 255, 255, 0.4);
-  }
-`;
-
-// 빛의 폭발 효과 스타일
-const BurstEffect = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 120px;
-  height: 120px;
-  background: radial-gradient(circle, #fff 0%, rgba(49, 130, 246, 0.2) 50%, rgba(255, 215, 0, 0) 100%);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 20;
-  animation: ${A.lightRadial} 1s ease-out forwards;
-`;
+import { tokenStorage } from '../utils/api';
 
 const CollectionStep: React.FC = () => {
   const { resetToMain, navigateTo } = useNavigation();
-  const { talismanData, justUnlockedHidden, setJustUnlockedHidden, unlockHiddenInState } = useTalisman();
+  const { talismanData } = useTalisman();
   const [selectedTalisman, setSelectedTalisman] = useState<Talisman | null>(null);
-  const [revealStage, setRevealStage] = useState<'none' | 'sealed' | 'shaking' | 'burst' | 'done'>('none');
 
-  useEffect(() => {
-    if (justUnlockedHidden) {
-      const initTimer = setTimeout(() => setRevealStage('sealed'), 0);
-      const shakeTimer = setTimeout(() => setRevealStage('shaking'), 800);
-      const burstTimer = setTimeout(() => {
-        setRevealStage('burst');
-        unlockHiddenInState(); // 빛이 터지는 시점에 실제 데이터를 해금 상태로 변경
-      }, 1800);
-      const doneTimer = setTimeout(() => {
-        setRevealStage('done');
-        setJustUnlockedHidden(false);
-      }, 3200);
-      
-      const resetTimer = setTimeout(() => {
-        setRevealStage('none');
-      }, 4700);
-      
-      return () => {
-        clearTimeout(initTimer);
-        clearTimeout(shakeTimer);
-        clearTimeout(burstTimer);
-        clearTimeout(doneTimer);
-        clearTimeout(resetTimer);
-      };
-    }
-  }, [justUnlockedHidden, setJustUnlockedHidden, unlockHiddenInState]);
+  // ✅ 컴포넌트 안에서 로그인 체크
+  const isLoggedIn = !!tokenStorage.get();
 
-  // 상용 기획: 해금 전 히든은 아예 노출하지 않음
+  const gradePriority: Record<string, number> = {
+    legend: 0,
+    rare: 1,
+    common: 2,
+  };
+
   const displayData = useMemo(() => {
-    const gradePriority: Record<string, number> = {
-      hidden: 0,
-      legend: 1,
-      hero: 2,
-      rare: 3,
-      common: 4,
-    };
-
     return [...talismanData]
-      // 연출 중(justUnlockedHidden)일 때는 잠겨있더라도 히든을 보여줘야 함
-      .filter(t => t.grade !== 'hidden' || t.unlocked || justUnlockedHidden) 
+      .filter(t => t.grade !== 'hidden')
       .sort((a, b) => (gradePriority[a.grade] ?? 99) - (gradePriority[b.grade] ?? 99));
-  }, [talismanData, justUnlockedHidden]);
+  }, [talismanData]);
 
   const unlockedCount = useMemo(() => talismanData.filter((t) => t.unlocked).length, [talismanData]);
-  const totalCount = useMemo(() => talismanData.length, [talismanData]);
+  const totalCount = useMemo(() => displayData.length, [displayData]);
+
+  // ✅ 로그인 안 된 경우
+  if (!isLoggedIn) {
+    return (
+      <L.Content style={{ alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', padding: '40px 24px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🐟</div>
+          <div style={{ fontSize: '18px', fontWeight: 700, color: '#191f28', marginBottom: '8px' }}>
+            로그인이 필요해요
+          </div>
+          <div style={{ fontSize: '14px', color: '#6b7684', marginBottom: '32px' }}>
+            보관함을 보려면 토스 로그인을 해주세요
+          </div>
+          <C.MainButton onClick={() => navigateTo('main')}>
+            메인으로 이동
+          </C.MainButton>
+        </div>
+      </L.Content>
+    );
+  }
 
   return (
-    <L.Content $shake={revealStage === 'shaking'}>
+    <L.Content>
       <L.Title style={{ textAlign: 'left', width: '100%', marginBottom: '20px' }}>
         나의 보관함
       </L.Title>
@@ -154,36 +113,20 @@ const CollectionStep: React.FC = () => {
         {/* 부적 그리드 */}
         <S.TalismanGrid>
           {displayData.map((item) => {
-            const isHidden = item.grade === 'hidden';
-            // 연출 중인 히든 부적은 burst 단계 이전까지 강제로 잠금 상태 UI를 보여줌
-            const isEffecting = isHidden && revealStage !== 'none' && revealStage !== 'burst' && revealStage !== 'done';
-            const isVisuallyUnlocked = item.unlocked && !isEffecting;
-            const currentRevealStage = (isHidden && revealStage !== 'none') ? revealStage : 'none';
-
+            const isVisuallyUnlocked = item.unlocked;
             return (
-              <div key={item.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+              <div key={item.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <S.TalismanCard
                   $unlocked={isVisuallyUnlocked}
                   $bgColor={isVisuallyUnlocked ? GRADE_COLORS[item.grade].bg : GRADE_COLORS[item.grade].sub}
-                  $isHidden={isHidden}
-                  $revealStage={currentRevealStage}
-                  onClick={() => (revealStage === 'done' || revealStage === 'none') ? setSelectedTalisman(item) : null}
+                  $isHidden={false}
+                  $revealStage="none"
+                  onClick={() => setSelectedTalisman(item)}
                 >
                   <img src={item.img} alt={item.name} />
-                  
-                  {currentRevealStage !== 'none' && (
-                    <>
-                      {(currentRevealStage === 'sealed' || currentRevealStage === 'shaking') && (
-                        <SealedOverlay>
-                          <IoSparkles className="sparkle-icon" size={32} />
-                        </SealedOverlay>
-                      )}
-                      {currentRevealStage === 'burst' && <BurstEffect />}
-                    </>
-                  )}
                 </S.TalismanCard>
                 <div style={{ marginTop: '10px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: '#333d4b' }}>
-                  {(isVisuallyUnlocked && (revealStage === 'none' || revealStage === 'done')) ? item.name : '???'}
+                  {isVisuallyUnlocked ? item.name : '???'}
                 </div>
               </div>
             );
