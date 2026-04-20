@@ -4,11 +4,10 @@ import styled, { keyframes, css } from 'styled-components';
 import * as L from '../styles/layoutStyles';
 import * as S from '../styles/stepStyles';
 import * as C from '../styles/commonStyles';
-
 import { useNavigation } from '../hooks/useNavigation';
 import { useUI } from '../hooks/useUI';
 import { useTypingEffect } from '../hooks/useTypingEffect';
-import { useTalisman } from '../hooks/useTalisman'
+import { useTalisman } from '../hooks/useTalisman';
 
 const floatingAnimation = keyframes`
   0%, 100% { transform: translateY(0); }
@@ -29,7 +28,6 @@ const SpeechBubble = styled.div`
   margin-bottom: 24px;
   border: 1px solid #f2f4f6;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
-  
   &::after {
     content: '';
     position: absolute;
@@ -65,15 +63,21 @@ const AnimatedCardWrapper = styled(S.ResultCardWrapper)<{ $isFlying: boolean }>`
 const ResultStep: React.FC = () => {
   const { navigateTo } = useNavigation();
   const { triggerToast } = useUI();
+  const { consultationResult } = useTalisman(); // ✅ 한 번만 선언
   const [isFlying, setIsFlying] = useState(false);
-  const { consultationResult } = useTalisman();
-  const comment = consultationResult?.reply ?? "명태가 답변을 준비 중이에요...";
+
+  // ✅ 컴포넌트 안으로 이동
+  const amuletImageUrl = consultationResult?.amulet?.imageUrl
+    ? `http://localhost:3000${consultationResult.amulet.imageUrl}`
+    : '/result_image.png';
+
+  const comment = consultationResult?.reply ?? '명태가 답변을 준비 중이에요...';
   const { displayedText } = useTypingEffect(comment, 60);
 
   return (
     <L.Content style={{ display: 'flex', flexDirection: 'column', overflow: 'visible', paddingTop: '40px' }}>
       <div style={{ textAlign: 'center', marginBottom: '36px' }}>
-        <div style={{ 
+        <div style={{
           display: 'inline-flex',
           alignItems: 'center',
           gap: '8px',
@@ -92,22 +96,20 @@ const ResultStep: React.FC = () => {
 
       <AnimatedCardWrapper $isFlying={isFlying} style={{ marginBottom: '40px' }}>
         <S.ImageBox $bg="#fff9e6" $glow={true}>
-          <img src="/talisman_sun.png" alt="부적" style={{ width: '85%' }} />
+          <img src={amuletImageUrl} alt={consultationResult?.amulet?.name ?? '부적'} style={{ width: '85%' }} />
         </S.ImageBox>
       </AnimatedCardWrapper>
 
       <SpeechBubble style={{ marginTop: '10px' }}>
-        <p
-          style={{
-            color: '#191f28',
-            textAlign: 'center',
-            lineHeight: 1.6,
-            fontSize: '16px',
-            fontWeight: 600,
-            margin: 0,
-            whiteSpace: 'pre-wrap',
-          }}
-        >
+        <p style={{
+          color: '#191f28',
+          textAlign: 'center',
+          lineHeight: 1.6,
+          fontSize: '16px',
+          fontWeight: 600,
+          margin: 0,
+          whiteSpace: 'pre-wrap',
+        }}>
           {displayedText}
           <TypingCursor $visible={displayedText.length < comment.length} />
         </p>
@@ -116,18 +118,8 @@ const ResultStep: React.FC = () => {
       <div style={{ flex: 1 }} />
 
       <C.FixedButtonGroup>
-        <div
-          style={{
-            display: 'flex',
-            gap: '12px',
-            alignItems: 'center',
-            width: '100%',
-          }}
-        >
-          <C.MainButton
-            onClick={triggerToast}
-            style={{ flex: 1, height: '58px' }}
-          >
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', width: '100%' }}>
+          <C.MainButton onClick={triggerToast} style={{ flex: 1, height: '58px' }}>
             이미지 저장하기
           </C.MainButton>
           <button
@@ -151,17 +143,11 @@ const ResultStep: React.FC = () => {
               boxShadow: '0 4px 14px rgba(49, 130, 246, 0.15)',
               transition: 'transform 0.2s ease',
             }}
-            onMouseDown={(e) =>
-              (e.currentTarget.style.transform = 'scale(0.92)')
-            }
+            onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.92)')}
             onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
           >
             <IoArchiveOutline size={28} color="#3182f6" />
-            <IoSparkles
-              size={12}
-              color="#fcc419"
-              style={{ position: 'absolute', top: '8px', right: '8px' }}
-            />
+            <IoSparkles size={12} color="#fcc419" style={{ position: 'absolute', top: '8px', right: '8px' }} />
           </button>
         </div>
       </C.FixedButtonGroup>

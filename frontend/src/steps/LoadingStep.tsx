@@ -3,6 +3,7 @@ import { IoCheckmarkCircle } from 'react-icons/io5';
 import * as L from '../styles/layoutStyles';
 import * as S from '../styles/stepStyles';
 import { useTalisman } from '../hooks/useTalisman';
+import loading_fish from '../assets/loading_image.png';
 
 const LoadingStep: React.FC = () => {
   const { loadingStep } = useTalisman();
@@ -24,7 +25,7 @@ const LoadingStep: React.FC = () => {
         </L.Title>
         
         <div style={{ margin: '20px 0' }}>
-          <S.LoadingImage src="/loading_fish.png" alt="로딩 중" style={{ width: '200px' }} />
+          <S.LoadingImage src={loading_fish} alt="로딩 중" style={{ width: '200px' }} />
         </div>
       </div>
 

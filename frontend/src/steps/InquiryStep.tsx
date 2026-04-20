@@ -3,21 +3,49 @@ import * as L from '../styles/layoutStyles';
 import * as C from '../styles/commonStyles';
 import { useNavigation } from '../hooks/useNavigation';
 import { useUI } from '../hooks/useUI';
+import { tokenStorage } from '../utils/api'
+
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const InquiryStep: React.FC = () => {
   const { navigateTo } = useNavigation();
   const { openDialog } = useUI();
   const [content, setContent] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false); 
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (content.trim().length < 10) return;
 
-    // 실제 전송 로직은 인앱 토스 TDS 연동에 맞춰 추가하면 됩니다.
-    openDialog(
+     setIsSubmitting(true);
+    try {
+      // ✅ 백엔드 API 호출
+      const token = tokenStorage.get();
+      const res = await fetch(`${BASE_URL}/api/v1/support/tickets`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          title: '1:1 문의',
+          content: content.trim(),
+        }),
+      });
+
+    if(res.ok) {
+      openDialog(
       '문의가 접수되었어요',
       '보내주신 내용은 순차적으로 확인 후\n답변드릴게요.',
     );
     navigateTo('customer_service');
+    } else {
+      openDialog('전송 실패', '잠시 후 다시 시도해주세요');
+    }
+  } catch(err){
+    openDialog('오류 발생', '네트워크 연결을 확인해주세요.');
+  } finally{
+    setIsSubmitting(false);
+  }
   };
 
   const disabled = content.trim().length < 10;
