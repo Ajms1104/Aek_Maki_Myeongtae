@@ -2,7 +2,7 @@ import React, { createContext, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import type { Step, DialogConfig } from '../types';
 
-interface NavigationContextType {
+export interface NavigationContextType {
   step: Step;
   history: Step[];
   navigateTo: (nextStep: Step) => void;

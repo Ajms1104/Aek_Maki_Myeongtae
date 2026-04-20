@@ -5,7 +5,7 @@ import { INITIAL_TALISMAN_DATA, HIDDEN_TALISMAN_DATA, STORAGE_KEYS } from '../co
 import { storage } from '../utils/storage';
 import { createConsultation } from '../utils/api';
 
-interface TalismanContextType {
+export interface TalismanContextType {
   talismanData: Talisman[];
   credits: number;
   wish: string;
@@ -48,7 +48,7 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
     const savedData = storage.get(STORAGE_KEYS.TALISMAN_DATA, INITIAL_TALISMAN_DATA);
     const hasPass = storage.get('has_hidden_pass', false);
     if (!hasPass) {
-      return savedData.filter(t => t.grade !== 'hidden');
+      return savedData.filter(t => t.grade !== 'legend');
     }
     return savedData;
   });
@@ -118,7 +118,7 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
   // 연출 완료 시점에 실제 잠금 해제 처리
   const unlockHiddenInState = useCallback(() => {
     setTalismanData((prev) => 
-      prev.map(t => t.grade === 'hidden' ? { ...t, unlocked: true } : t)
+      prev.map(t => t.grade === 'legend' ? { ...t, unlocked: true } : t)
     );
   }, []);
 

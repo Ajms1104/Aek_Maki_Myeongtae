@@ -9,7 +9,7 @@ export const TalismanDetailModal: React.FC<{
   talisman: Talisman;
   onClose: () => void;
 }> = ({ talisman, onClose }) => {
-  const isHidden = talisman.grade === 'hidden';
+  const isHidden = talisman.grade === 'legend';
   const theme = GRADE_COLORS[talisman.grade];
   const description = talisman.unlocked
     ? '이 부적은 당신의 길에 찬란한 행운과 긍정적인 에너지를 불러올 거예요.'

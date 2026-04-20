@@ -28,6 +28,10 @@ out/
 .nuxt/
 .output/
 .swc
+#frontend 빌드(.ait 파일)
+../frontend/aek-maki-app.ait
+../frontend/granite-config.ts
+
 
 # 4. frontend(Vite/React/TS/Granite) 관련 캐시
 .granite
@@ -55,4 +59,3 @@ Thumbs.db
 coverage/
 .vercel
 .serverless
-

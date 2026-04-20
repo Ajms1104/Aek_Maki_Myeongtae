@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+.granite
+
+#frontend 빌드(.ait 파일)
+../frontend/aek-maki-app.ait
+../frontend/granite-config.ts
