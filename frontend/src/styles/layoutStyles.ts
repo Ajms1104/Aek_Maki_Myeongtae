@@ -2,15 +2,15 @@ import styled, { css } from 'styled-components';
 import * as A from './animations';
 
 export const Container = styled.div`
-  width: 375px;
-  height: 812px;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
   background-color: #ffffff;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
-  border-radius: 40px;
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: hidden;
+  overflow: hidden; /* 원천적으로 스크롤 방지 */
+  padding-top: 0; /* 토스 네이티브 바 공간을 고려해 0으로 설정 */
 `;
 
 export const Header = styled.header`

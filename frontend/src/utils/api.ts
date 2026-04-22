@@ -53,3 +53,18 @@ export const getCollection = () => request('/api/v1/amulets/collection');
 
 // 부적 도감 마스터 조회 (인증 불필요)
 export const getCatalog = () => request('/api/v1/amulets/catalog');
+
+// 관리자 전용 - 유저 목록 조회
+export const getAdminUsers = (page = 1, search = '') => 
+  request(`/api/v1/admin/users?page=${page}&search=${search}`);
+
+// 관리자 전용 - 유저 상세 조회
+export const getAdminUserDetail = (userId: string | number) => 
+  request(`/api/v1/admin/users/${userId}`);
+
+// 관리자 전용 - 유저 해금 상태 수동 변경 (백엔드 연동 대기)
+export const updateAdminUserUnlock = (userId: string | number, unlocked: boolean) => 
+  request(`/api/v1/admin/users/${userId}/unlock`, {
+    method: 'PATCH',
+    body: JSON.stringify({ unlocked }),
+  });

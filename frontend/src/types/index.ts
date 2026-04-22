@@ -6,7 +6,9 @@ export type Step =
   | 'collection'
   | 'payment'
   | 'customer_service'
-  | 'inquiry';
+  | 'inquiry'
+  | 'admin'
+  | 'admin_login';
 
 export type Grade = 'legend' | 'rare' | 'common';
 

@@ -274,3 +274,36 @@ export const UnlockOverlay = styled.div`
   animation: ${unlockSweep} 1.8s ease-in-out forwards;
   pointer-events: none;
 `;
+
+export const StepContainer = styled.div`
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0 24px;
+  overflow-y: auto;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+export const TitleArea = styled.div`
+  padding: 30px 0 20px;
+`;
+
+export const Title = styled.h1`
+  font-size: 26px;
+  font-weight: 800;
+  color: #191f28;
+  line-height: 1.4;
+  margin: 0;
+  white-space: pre-line;
+`;
+
+export const Description = styled.p`
+  font-size: 16px;
+  color: #4e5968;
+  line-height: 1.5;
+  margin: 12px 0 0;
+  white-space: pre-line;
+`;

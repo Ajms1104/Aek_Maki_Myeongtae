@@ -23,6 +23,8 @@ import CollectionStep from './steps/CollectionStep';
 import PaymentStep from './steps/PaymentStep';
 import CustomerServiceStep from './steps/CustomerServiceStep';
 import InquiryStep from './steps/InquiryStep';
+import AdminStep from './steps/AdminStep';
+import AdminLoginStep from './steps/AdminLoginStep';
 
 export default function App() {
   const {
@@ -39,6 +41,14 @@ export default function App() {
     dialogConfig,
     setDialogConfig,
   } = useUI();
+
+  // 앱 시작 시 관리자 모드 확인 (?admin=true 파라미터가 있을 경우)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('admin') === 'true') {
+      navigateTo('admin_login');
+    }
+  }, []);
 
   const resetToMain = () => {
     if (step === 'main') {
@@ -79,6 +89,10 @@ export default function App() {
         return <CustomerServiceStep />;
       case 'inquiry':
         return <InquiryStep />;
+      case 'admin':
+        return <AdminStep />;
+      case 'admin_login':
+        return <AdminLoginStep />;
       default:
         return <MainStep />;
     }
@@ -92,23 +106,6 @@ export default function App() {
           <IoCheckmarkCircle size={18} color="#3182f6" />
           <span>성공적으로 저장되었어요</span>
         </C.ToastContainer>
-
-        <L.Header>
-          <L.IconButton onClick={() => handleBack(setDialogConfig)}>
-            <IoArrowBack size={24} color="#191f28" />
-          </L.IconButton>
-          <div style={{ fontWeight: 700, fontSize: 17, color: '#191f28' }}>
-            액막이AI
-          </div>
-          <div style={{ display: 'flex', gap: '4px' }}>
-            <L.IconButton onClick={() => setIsMenuOpen(true)}>
-              <IoEllipsisHorizontal size={24} color="#191f28" />
-            </L.IconButton>
-            <L.IconButton onClick={resetToMain}>
-              <IoClose size={26} color="#191f28" />
-            </L.IconButton>
-          </div>
-        </L.Header>
 
         {CurrentStep}
 

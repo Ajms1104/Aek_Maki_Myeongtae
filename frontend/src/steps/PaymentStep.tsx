@@ -4,7 +4,9 @@ import {
   IoChevronForwardOutline,
   IoDiamondOutline,
   IoGiftOutline,
+  IoPlayCircleOutline,
 } from 'react-icons/io5';
+import { IntegratedAd } from '@apps-in-toss/web-framework';
 import styled from 'styled-components';
 import * as L from '../styles/layoutStyles';
 import * as S from '../styles/stepStyles';
@@ -39,19 +41,54 @@ const SuccessIconWrapper = styled.div`
 
 const PaymentStep: React.FC = () => {
   const { navigateTo } = useNavigation();
-  const { handlePaymentComplete } = useTalisman();
+  const { handlePaymentComplete, handleAdReward } = useTalisman();
   const { openDialog } = useUI();
   const [isSuccess, setIsSuccess] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<'credit' | 'hidden'>('hidden');
+  const [selectedProduct, setSelectedProduct] = useState<'credit' | 'hidden' | 'ad'>('hidden');
+  const [isAdLoading, setIsAdLoading] = useState(false);
 
-  const handlePayment = useCallback(() => {
-    // 1. 내부 성공 상태 전환 (데이터는 아직 업데이트 안함)
+  const handlePayment = useCallback(async () => {
+    if (selectedProduct === 'ad') {
+      try {
+        setIsAdLoading(true);
+
+        // 1. 사운드 일시정지 (정책 준수)
+        // 프로젝트에 오디오 객체가 있을 경우를 대비해 모든 오디오 요소를 찾아 일시정지
+        const allAudios = document.querySelectorAll('audio');
+        allAudios.forEach(audio => audio.pause());
+
+        // 2. 리워드 광고 로드 (테스트 ID 사용 - 정책 준수)
+        const ad = await IntegratedAd.load({
+          adUnitId: 'ait-ad-test-rewarded-id',
+        });
+        
+        // 3. 광고 재생
+        await ad.show();
+        
+        // 4. 광고 시청 완료 후 보상 지급
+        handleAdReward();
+        setIsSuccess(true);
+
+        // 5. 광고 종료 후 사운드 다시 재생 (정책 준수)
+        allAudios.forEach(audio => audio.play().catch(() => {})); // 브라우저 정책상 실패할 수 있으므로 에러 무시
+      } catch (error) {
+        console.error('광고 로드 실패:', error);
+        openDialog('알림', '광고를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.');
+      } finally {
+        setIsAdLoading(false);
+      }
+      return;
+    }
+
+    // 일반 결제 처리
     setIsSuccess(true);
-  }, []);
+  }, [selectedProduct, handleAdReward, openDialog]);
 
   const handleConfirmAndMove = useCallback(() => {
-    // 2. 이동 직전에 데이터 업데이트
-    handlePaymentComplete(selectedProduct);
+    if (selectedProduct !== 'ad') {
+      // 일반 결제 상품만 데이터 업데이트 (광고는 이미 지급됨)
+      handlePaymentComplete(selectedProduct);
+    }
     // 3. 이동
     navigateTo('collection');
   }, [selectedProduct, handlePaymentComplete, navigateTo]);
@@ -73,12 +110,15 @@ const PaymentStep: React.FC = () => {
           </SuccessIconWrapper>
           
           <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#191f28', marginBottom: '8px' }}>
-            {selectedProduct === 'hidden' ? '히든 패키지 도착!' : '충전 완료!'}
+            {selectedProduct === 'hidden' ? '히든 패키지 도착!' : 
+             selectedProduct === 'credit' ? '충전 완료!' : '보상 지급 완료!'}
           </h2>
           <p style={{ fontSize: '15px', color: '#4e5968', lineHeight: '1.5', marginBottom: '32px' }}>
             {selectedProduct === 'hidden'
               ? '신비로운 히든 명태들이\n보관함으로 배달되었어요.'
-              : '10 크레딧이 성공적으로\n충전되었습니다.'}
+              : selectedProduct === 'credit' 
+              ? '10 크레딧이 성공적으로\n충전되었습니다.'
+              : '광고 시청 보상으로\n1 크레딧이 지급되었습니다.'}
           </p>
           
           <C.MainButton
@@ -185,6 +225,37 @@ const PaymentStep: React.FC = () => {
             </div>
           </O.PaymentItem>
 
+          <O.PaymentItem
+            $active={selectedProduct === 'ad'}
+            onClick={() => setSelectedProduct('ad')}
+            style={{ padding: '20px', borderRadius: '24px', borderStyle: selectedProduct === 'ad' ? 'solid' : 'dashed', borderColor: selectedProduct === 'ad' ? '#3182f6' : '#e5e8eb' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                background: '#e5f9ed',
+                borderRadius: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <IoPlayCircleOutline size={24} color="#00d082" />
+              </div>
+              <div>
+                <div style={{ fontSize: '17px', fontWeight: 700, color: '#191f28', marginBottom: '2px' }}>
+                  광고 보고 1 크레딧 받기
+                </div>
+                <div style={{ fontSize: '13px', color: '#00d082', fontWeight: 800 }}>
+                  무료 충전
+                </div>
+              </div>
+            </div>
+            <div style={{ fontWeight: 800, fontSize: '18px', color: '#00d082' }}>
+              FREE
+            </div>
+          </O.PaymentItem>
+
           <div style={{
             padding: '8px 12px',
             fontSize: '14px',
@@ -208,7 +279,9 @@ const PaymentStep: React.FC = () => {
       <div style={{ flex: 1 }} />
 
       <C.FixedButtonGroup>
-        <C.MainButton onClick={handlePayment}>결제하기</C.MainButton>
+        <C.MainButton onClick={handlePayment} disabled={isAdLoading}>
+          {isAdLoading ? '광고 불러오는 중...' : selectedProduct === 'ad' ? '광고 보고 받기' : '결제하기'}
+        </C.MainButton>
       </C.FixedButtonGroup>
     </L.Content>
   );

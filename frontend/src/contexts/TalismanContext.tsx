@@ -18,6 +18,7 @@ export interface TalismanContextType {
   setLoadingStep: (step: number) => void;
   setJustUnlockedHidden: (unlocked: boolean) => void;
   handlePaymentComplete: (productType: 'credit' | 'hidden') => void;
+  handleAdReward: () => void;
   unlockHiddenInState: () => void; // 연출 완료 후 호출할 함수 추가
   resetWish: () => void;
   submitWish: () => Promise<void>;
@@ -115,6 +116,10 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   }, []);
 
+  const handleAdReward = useCallback(() => {
+    setCredits((c) => c + 1);
+  }, []);
+
   // 연출 완료 시점에 실제 잠금 해제 처리
   const unlockHiddenInState = useCallback(() => {
     setTalismanData((prev) => 
@@ -143,6 +148,7 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
       setLoadingStep,
       setJustUnlockedHidden,
       handlePaymentComplete,
+      handleAdReward,
       unlockHiddenInState,
       resetWish,
       submitWish,

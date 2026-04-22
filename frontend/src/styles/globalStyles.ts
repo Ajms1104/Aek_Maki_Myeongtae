@@ -15,10 +15,15 @@ export const GlobalStyle = createGlobalStyle`
     display: flex; 
     justify-content: center; 
     align-items: center; 
-    min-height: 100vh;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden; /* 전체 스크롤 차단 */
+    position: fixed; /* iOS 등에서 바운스 방지 */
+    width: 100%;
     font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
     -webkit-font-smoothing: antialiased; 
     letter-spacing: -0.4px;
+    touch-action: none; /* 제스처에 의한 스크롤 방지 */
   }
 
   button {

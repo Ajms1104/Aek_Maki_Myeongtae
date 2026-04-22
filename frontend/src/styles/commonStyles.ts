@@ -93,3 +93,36 @@ export const CollectionLink = styled.button`
     transform: scale(0.96);
   }
 `;
+
+export const InputGroup = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+`;
+
+export const Input = styled.input`
+  width: 100%;
+  height: 52px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid #e5e8eb;
+  background-color: #f9fafb;
+  font-size: 16px;
+  color: #191f28;
+  transition: border-color 0.2s;
+  &::placeholder {
+    color: #adb5bd;
+  }
+  &:focus {
+    outline: none;
+    border-color: #3182f6;
+  }
+`;
+
+export const Button = styled(MainButton)<{ $variant?: 'primary' | 'secondary' }>`
+  background: ${(props) =>
+    props.$variant === 'secondary'
+      ? '#f2f4f6'
+      : 'linear-gradient(90deg, #3182f6 0%, #3182f6 100%)'};
+  color: ${(props) => (props.$variant === 'secondary' ? '#4e5968' : '#ffffff')};
+`;
