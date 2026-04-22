@@ -37,6 +37,14 @@ const OnlineStatusDot = styled.div`
   animation: ${pulseGreen} 2s infinite;
 `;
 
+// 고민털어놓기는 고정, 나머지 스크롤 가능.
+const ScrollArea = styled.div` 
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 0 200px;
+`;
+
 const MainStep: React.FC = () => {
   const { navigateTo } = useNavigation();
   const { credits } = useTalisman();
@@ -50,8 +58,10 @@ const MainStep: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  return (
-    <L.Content style={{ paddingBottom: '120px', justifyContent: 'flex-start' }}>
+  return ( // 원래는 L.Content style={{ paddingBottom: '120px', justifyContent: 'flex-start' }}
+    <L.Content style={{ display: 'flex', justifyContent: 'flex-start', flexDirection: 'column', height: '100%', minHeight: 0, }}> 
+      
+      <ScrollArea> 
       <div style={{ width: '100%', paddingTop: '12px' }}>
         
         <div style={{
@@ -106,20 +116,23 @@ const MainStep: React.FC = () => {
 
           <div style={{ textAlign: 'center', position: 'relative', padding: '4px 0' }}>
             <div
-              style={{
+              style={{ // 이미지크기 변경
                 position: 'relative',
-                width: '76px',
-                height: '76px',
+                width: '180px', //원래는 76
+                height: '180px', //원래는 76
                 margin: '0 auto',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                overflow: 'hidden', // 이건추가
+                borderRadius: '12px', // 이건추가
+                background: '#fff8e8', // 이건추가
               }}
             >
               <img
                 src={main_fish}
                 alt="AI 명태"
-                style={{ width: '500%', height: '170%', objectFit: 'contain' }}
+                style={{ width: '100%', height: '100%', objectFit : 'contain', display: 'block'}} // 원래는 w : 500, h : 170, objectFit : 'contain' (display는 없음.)
               />
               <div style={{
                 position: 'absolute',
@@ -243,6 +256,7 @@ const MainStep: React.FC = () => {
           ))}
         </div>
       </div>
+      </ScrollArea>
 
       <C.FixedButtonGroup style={{ paddingBottom: '32px' }}>
         <C.MainButton 
