@@ -312,4 +312,71 @@ router.get('/support/tickets', verifyAdmin, adminController.getSupportTickets);
 router.patch('/support/tickets/:ticketId', verifyAdmin, adminController.updateSupportTicket);
 
 
+/**
+ * @swagger
+ * /api/v1/admin/users/{userId}/amulets:
+ *   get:
+ *     summary: 관리자 - 특정 유저의 보유 부적 조회
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 보유 부적 목록
+ *
+ *   post:
+ *     summary: 관리자 - 특정 유저에게 부적 지급
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [amuletId]
+ *             properties:
+ *               amuletId:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *         description: 지급 완료
+ */
+router.get('/users/:userId/amulets', verifyAdmin, adminController.getUserAmulets);
+router.post('/users/:userId/amulets', verifyAdmin, adminController.addAmuletToUser);
+
+/**
+ * @swagger
+ * /api/v1/admin/user-amulets/{userAmuletId}:
+ *   delete:
+ *     summary: 관리자 - 유저 보유 부적 회수
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userAmuletId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 회수 완료
+ */
+router.delete('/user-amulets/:userAmuletId', verifyAdmin, adminController.deleteUserAmulet);
+
+
 module.exports = router;

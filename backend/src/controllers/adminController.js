@@ -145,3 +145,46 @@ exports.updateSupportTicket = async (req, res) => {
     return res.status(500).json({ error: '서버 에러' });
   }
 };
+
+/**
+ * 사용자 부적 관리
+ */
+
+// 유저 보유 부적 목록 조회
+exports.getUserAmulets = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const result = await adminService.getUserAmulets(userId);
+    res.json(result);
+  } catch (error) {
+    console.error('[AdminController] getUserAmulets 에러:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// 유저에게 부적 강제 지급
+exports.addAmuletToUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { amuletId } = req.body;
+    if (!amuletId) return res.status(400).json({ error: '지급할 부적 ID가 필요합니다.' });
+    
+    await adminService.giveAmuletToUser(userId, amuletId);
+    res.status(201).json({ message: '부적이 성공적으로 지급되었습니다.' });
+  } catch (error) {
+    console.error('[AdminController] addAmuletToUser 에러:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// 유저 보유 부적 회수
+exports.deleteUserAmulet = async (req, res) => {
+  try {
+    const { userAmuletId } = req.params;
+    await adminService.revokeUserAmulet(userAmuletId);
+    res.json({ message: '부적이 성공적으로 회수되었습니다.' });
+  } catch (error) {
+    console.error('[AdminController] deleteUserAmulet 에러:', error);
+    res.status(error.status || 500).json({ error: error.message });
+  }
+};

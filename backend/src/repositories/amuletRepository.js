@@ -176,6 +176,35 @@ exports.findUserAmuletWithOwner = async (userId, userAmuletId) => {
   return result.rows[0];
 };
 
+// --- 관리자 전용 기능 추가 ---
+
+// 유저의 보유 부적 목록 상세 조회
+exports.findUserAmuletsByUserId = async (userId) => {
+  const query = `
+    SELECT 
+        ua.id AS "userAmuletId",
+        a.id AS "amuletId",
+        a.name,
+        a.grade,
+        ua.count,
+        ua.created_at AS "createdAt",
+        ua.updated_at AS "updatedAt"
+    FROM user_amulets ua
+    JOIN amulets a ON ua.amulet_id = a.id
+    WHERE ua.user_id = $1
+    ORDER BY ua.created_at DESC
+  `;
+  const result = await db.query(query, [userId]);
+  return result.rows;
+};
+
+// 유저 보유 부적 삭제 (회수)
+exports.removeUserAmulet = async (userAmuletId) => {
+  const query = 'DELETE FROM user_amulets WHERE id = $1 RETURNING id';
+  const result = await db.query(query, [userAmuletId]);
+  return result.rows.length > 0;
+};
+
 // 전체 부적 카탈로그 (도감용)
 exports.findAllCatalog = async () => {
   const { rows } = await db.query(
