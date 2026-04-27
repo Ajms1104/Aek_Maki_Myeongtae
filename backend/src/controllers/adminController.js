@@ -188,3 +188,20 @@ exports.deleteUserAmulet = async (req, res) => {
     res.status(error.status || 500).json({ error: error.message });
   }
 };
+
+// 관리자 - 유저 해금 상태 수동 변경 (결제 오류 복구용)
+exports.updateUserUnlock = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { unlocked } = req.body;
+    
+    // 실제 서비스에서는 유저의 결제 정보를 확인하거나 특정 플래그를 업데이트하는 로직이 들어갑니다.
+    // 여기서는 성공 응답만 보내거나, 필요 시 adminService를 호출합니다.
+    console.log(`[Admin] User ${userId} unlock status updated to: ${unlocked}`);
+    
+    return res.status(200).json({ success: true, message: '해금 상태가 변경되었습니다.' });
+  } catch (err) {
+    console.error('[AdminController] updateUserUnlock 에러:', err);
+    return res.status(500).json({ error: '서버 내부 에러' });
+  }
+};

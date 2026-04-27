@@ -165,10 +165,9 @@ export const ImageBox = styled.div<{ $bg?: string; $grade?: string; $glow?: bool
         ${A.goldGlow} 3s infinite ease-in-out;
     `}
   img {
-    width: 90%;
-    height: 90%;
+    width: 80%;
+    height: 80%;
     object-fit: contain;
-    transform: scale(1.1);
   }
 `;
 

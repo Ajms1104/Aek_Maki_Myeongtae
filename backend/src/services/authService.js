@@ -19,6 +19,7 @@ exports.exchangeAndIssueToken = async (authorizationCode, referrer) => {
       referrer
     );
     userKey = result.userKey;
+    // 필요한 경우 result.name, result.email 등을 여기서 처리 (예: DB 저장)
   }
 
   const user = await userRepository.upsertByTossUserKey(userKey);

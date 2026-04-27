@@ -92,10 +92,10 @@ exports.getUsers = async ({ search, limit, offset }) => {
             COUNT(*) OVER() AS total_count
      FROM users
      WHERE is_deleted = FALSE
-       AND ($1 = '' OR id::text LIKE $1)
+       AND ($1 = '' OR id::text LIKE $1 OR toss_user_key::text LIKE $1)
      ORDER BY created_at DESC
      LIMIT $2 OFFSET $3`,
-    [`%${search}%`, limit, offset]
+    [search ? `%${search}%` : '', limit, offset]
   );
 
   const totalCount = rows.length > 0 ? parseInt(rows[0].total_count) : 0;

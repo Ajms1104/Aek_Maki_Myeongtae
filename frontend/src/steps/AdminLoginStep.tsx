@@ -84,7 +84,10 @@ export default function AdminLoginStep() {
 
         {/* 테스트용 건너뛰기 (개발 중에만 사용) */}
         <div 
-          onClick={() => navigateTo('admin')}
+          onClick={() => {
+            tokenStorage.set('admin_test_key');
+            navigateTo('admin');
+          }}
           style={{ marginTop: '20px', textAlign: 'center', color: '#adb5bd', fontSize: '13px', cursor: 'pointer', textDecoration: 'underline' }}
         >
           (테스트용) 로그인 건너뛰기

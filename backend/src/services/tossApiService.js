@@ -3,9 +3,56 @@
 const https = require('https');
 const fs = require('fs');
 const axios = require('axios');
+const crypto = require('crypto');
 
 const TOSS_API_BASE = 'https://apps-in-toss-api.toss.im';
 const MOCK_MODE = !process.env.TOSS_CLIENT_CERT_PATH;
+
+/**
+ * 토스 사용자 정보 복호화 (AES-256-GCM)
+ * 문서 5번 항목 참조
+ */
+exports.decryptTossData = (encryptedText) => {
+  if (!encryptedText || MOCK_MODE) return encryptedText;
+
+  try {
+    const DECRYPT_KEY = process.env.TOSS_DECRYPT_KEY; // Base64 encoded
+    const AAD = process.env.TOSS_AAD || 'TOSS';      // Additional Authenticated Data
+
+    if (!DECRYPT_KEY) {
+      console.warn('[Toss API] 복호화 키가 설정되지 않아 복호화를 건너뜁니다.');
+      return encryptedText;
+    }
+
+    const IV_LENGTH = 12;
+    const TAG_LENGTH = 16;
+
+    // 1. 데이터 디코딩
+    const decoded = Buffer.from(encryptedText, 'base64');
+
+    // 2. IV(Nonce), 본문, Tag 분리
+    // 암호화된 데이터 구조: [IV(12bytes)][Ciphertext...][Tag(16bytes)]
+    const iv = decoded.slice(0, IV_LENGTH);
+    const tag = decoded.slice(decoded.length - TAG_LENGTH);
+    const ciphertext = decoded.slice(IV_LENGTH, decoded.length - TAG_LENGTH);
+
+    // 3. 복호화 설정
+    const key = Buffer.from(DECRYPT_KEY, 'base64');
+    const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+    
+    decipher.setAuthTag(tag);
+    decipher.setAAD(Buffer.from(AAD));
+
+    // 4. 복호화 실행
+    let decrypted = decipher.update(ciphertext, 'binary', 'utf8');
+    decrypted += decipher.final('utf8');
+
+    return decrypted;
+  } catch (err) {
+    console.error('[Toss API] 복호화 중 에러 발생:', err.message);
+    return null; // 또는 원래의 encryptedText 반환 선택
+  }
+};
 
 function createTossAxiosInstance() {
   if (MOCK_MODE) {
@@ -68,7 +115,12 @@ exports.exchangeAuthorizationCode = async (authorizationCode, referrer) => {
     throw error;
   }
 
-  const { userKey } = userRes.data.success;
+  const { userKey, name, email, gender } = userRes.data.success;
 
-  return { userKey };
+  return { 
+    userKey,
+    name: this.decryptTossData(name),
+    email: this.decryptTossData(email),
+    gender: this.decryptTossData(gender)
+  };
 };

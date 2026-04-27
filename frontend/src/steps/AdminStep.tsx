@@ -23,10 +23,9 @@ export default function AdminStep() {
       const data = await getAdminUsers(1, search);
       setUsers(data.users || []);
     } catch (err) {
-      setUsers([
-        { id: 1, tossUserKey: '82910001', credit: 5, createdAt: '2024-03-20' },
-        { id: 2, tossUserKey: '11020002', credit: 12, createdAt: '2024-03-21' },
-      ]);
+      console.error('[AdminStep] fetchUsers Error:', err);
+      alert('유저 목록을 불러오지 못했습니다: ' + (err instanceof Error ? err.message : '서버 연결 오류'));
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -38,17 +37,8 @@ export default function AdminStep() {
       setSelectedUser(detail);
       setEditCredit(detail.credit?.toString() || '0');
     } catch (err) {
-      setSelectedUser({
-        id: userId,
-        tossUserKey: '82910001',
-        credit: 5,
-        createdAt: '2024-03-20 10:00:00',
-        lastSeenAt: '2024-03-21 15:30:00',
-        amulets: [
-          { id: 1, name: '윙크 명태', grade: 'common', count: 2 }
-        ]
-      });
-      setEditCredit('5');
+      console.error('[AdminStep] handleSelectUser Error:', err);
+      alert('유저 상세 정보를 불러오지 못했습니다: ' + (err instanceof Error ? err.message : '서버 연결 오류'));
     }
   };
 

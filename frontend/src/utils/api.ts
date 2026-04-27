@@ -10,21 +10,31 @@ export const tokenStorage = {
 // 공통 fetch
 const request = async (url: string, options: RequestInit = {}) => {
   const token = tokenStorage.get();
-  const res = await fetch(`${BASE_URL}${url}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  });
+  const fullUrl = `${BASE_URL}${url}`;
+  console.log(`[API Request] ${options.method || 'GET'} ${fullUrl}`);
 
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ error: '서버 오류' }));
-    throw new Error(error.error || '서버 오류');
+  try {
+    const res = await fetch(fullUrl, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    });
+
+    console.log(`[API Response] ${res.status} ${fullUrl}`);
+
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({ error: '서버 오류' }));
+      throw new Error(error.error || '서버 오류');
+    }
+
+    return res.json();
+  } catch (err) {
+    console.error(`[API Error] ${fullUrl} :`, err);
+    throw err;
   }
-
-  return res.json();
 };
 
 // 토스 로그인 - authorizationCode 교환
@@ -62,7 +72,7 @@ export const getAdminUsers = (page = 1, search = '') =>
 export const getAdminUserDetail = (userId: string | number) => 
   request(`/api/v1/admin/users/${userId}`);
 
-// 관리자 전용 - 유저 해금 상태 수동 변경 (백엔드 연동 대기)
+// 관리자 전용 - 유저 해금 상태 수동 변경
 export const updateAdminUserUnlock = (userId: string | number, unlocked: boolean) => 
   request(`/api/v1/admin/users/${userId}/unlock`, {
     method: 'PATCH',

@@ -249,6 +249,7 @@ router.get('/users', verifyAdmin, adminController.getUsers);
  *         description: 유저 없음
  */
 router.get('/users/:userId', verifyAdmin, adminController.getUserDetail);
+router.patch('/users/:userId/unlock', verifyAdmin, adminController.updateUserUnlock);
 
 /**
  * @swagger

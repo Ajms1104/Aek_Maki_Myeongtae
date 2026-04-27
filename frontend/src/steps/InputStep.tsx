@@ -93,9 +93,9 @@ const InputStep: React.FC = () => {
               zIndex: 10,
             }}
           >
-            {wish.length > 0 && wish.length < 5 && (
+            {wish.length > 0 && wish.length < 10 && (
               <ErrorBadge>
-                최소 5자 이상 적어주세요
+                최소 10자 이상 적어주세요
               </ErrorBadge>
             )}
             <span style={{ 
@@ -111,13 +111,18 @@ const InputStep: React.FC = () => {
         
         <C.ButtonGroup style={{ paddingBottom: '32px' }}>
           <C.MainButton
-            disabled={wish.length < 5}
+            disabled={wish.length < 10}
             onClick={async () => {
               try {
                 navigateTo('loading');
-                await submitWish();
+                // 최소 2초는 로딩 화면을 보여주도록 보장
+                const [result] = await Promise.all([
+                  submitWish(),
+                  new Promise(resolve => setTimeout(resolve, 2500))
+                ]);
                 navigateTo('result');
               } catch (err) {
+                alert(err instanceof Error ? err.message : '전송에 실패했어요.');
                 navigateTo('input');
               }
               }}
