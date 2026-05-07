@@ -4,7 +4,9 @@
 
 const path = require('path');
 const dotenv = require('dotenv');
-dotenv.config({ path: path.join(__dirname, '.env') });
+// 프로젝트 루트의 .env와 src/.env 모두 시도
+dotenv.config(); 
+dotenv.config({ path: path.join(__dirname, '.env') }); 
 
 const express = require('express');
 const cors = require('cors');
@@ -16,6 +18,7 @@ const announcementRoutes = require('./routes/announcementRoute');
 const consultationRoutes = require('./routes/consultationRoute'); //고민사항
 const amuletRoutes = require('./routes/amuletRoute'); // 부적
 const meRoutes = require('./routes/meRoute');
+const paymentRoutes = require('./routes/paymentRoute');
 
 
 //Swagger 관련
@@ -42,7 +45,8 @@ app.use('/api/v1/support', supportRoutes);
 app.use('/api/v1/announcements', announcementRoutes);
 app.use('/api/v1/consultations', consultationRoutes);
 app.use('/api/v1/me', meRoutes);
-app.use('/api/v1/auth', meRoutes);
+app.use('/api/v1/amulets', amuletRoutes);
+app.use('/api/v1/payments', paymentRoutes);
 
 
 app.listen(PORT, () => {

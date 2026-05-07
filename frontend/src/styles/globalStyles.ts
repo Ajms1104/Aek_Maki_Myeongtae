@@ -21,7 +21,15 @@ export const GlobalStyle = createGlobalStyle`
     font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
     -webkit-font-smoothing: antialiased; 
     letter-spacing: -0.4px;
-    touch-action: none; /* 제스처에 의한 스크롤 방지 */
+    touch-action: manipulation; /* 기본 제스처 허용하되 스크롤은 컨테이너에서 제어 */
+    overscroll-behavior: none;
+  }
+
+  #root {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
   button {

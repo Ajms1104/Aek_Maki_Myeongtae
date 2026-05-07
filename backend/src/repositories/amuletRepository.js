@@ -143,6 +143,22 @@ exports.getAll = async () => {
   return result.rows;
 };
 
+// 유저가 아직 얻지 못한 부적 목록 조회
+exports.findUncollectedByUser = async (userId) => {
+  const query = `
+    SELECT id, name, grade, image_url AS "imageUrl", weight 
+    FROM amulets 
+    WHERE weight > 0 
+      AND grade != 'hidden'
+      AND id NOT IN (
+        SELECT amulet_id FROM user_amulets WHERE user_id = $1
+      )
+    ORDER BY id ASC
+  `;
+  const result = await db.query(query, [userId]);
+  return result.rows;
+};
+
 // 유저가 해당 부적 보유 여부 확인
 exports.checkUserHas = async (userId, amuletId) => {
   const query = `
@@ -239,12 +255,28 @@ exports.findCollection = async (userId) => {
             a.image_url AS "imageUrl",
             a.silhouette_image_url AS "silhouetteImageUrl",
             a.description,
-            CASE WHEN ua.amulet_id IS NOT NULL THEN false ELSE true END AS "isLocked",
-            COALESCE(ua.count, 0) AS count
+            CASE 
+              WHEN a.grade = 'hidden' THEN false
+              WHEN ua.amulet_id IS NOT NULL THEN false 
+              ELSE true 
+            END AS "isLocked",
+            CASE
+              WHEN a.grade = 'hidden' THEN COALESCE(ua.count, 1)
+              ELSE COALESCE(ua.count, 0)
+            END AS count
      FROM amulets a
      LEFT JOIN user_amulets ua ON ua.amulet_id = a.id AND ua.user_id = $1
-     WHERE a.is_active = TRUE
-     ORDER BY a.grade, a.name`,
+     LEFT JOIN users u ON u.id = $1
+     WHERE (a.grade != 'hidden' AND a.is_active = TRUE)
+        OR (a.grade = 'hidden' AND u.has_hidden_pass = TRUE)
+     ORDER BY 
+       CASE a.grade 
+         WHEN 'hidden' THEN 1
+         WHEN 'legend' THEN 2 
+         WHEN 'rare' THEN 3 
+         WHEN 'common' THEN 4 
+         ELSE 5 
+       END, a.name`,
     [userId]
   );
   return rows;

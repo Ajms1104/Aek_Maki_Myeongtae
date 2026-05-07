@@ -19,6 +19,7 @@ import * as C from '../styles/commonStyles';
 import * as O from '../styles/overlayStyles';
 import { useNavigation } from '../hooks/useNavigation';
 import { useTalisman } from '../hooks/useTalisman';
+import { useUI } from '../hooks/useUI';
 import { loginWithToss } from '../utils/auth'; 
 import { tokenStorage } from '../utils/api';  
 
@@ -37,19 +38,35 @@ const OnlineStatusDot = styled.div`
   animation: ${pulseGreen} 2s infinite;
 `;
 
-// 고민털어놓기는 고정, 나머지 스크롤 가능.
-const ScrollArea = styled.div` 
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 12px 0 200px;
-`;
-
 const MainStep: React.FC = () => {
   const { navigateTo } = useNavigation();
-  const { credits } = useTalisman();
-  const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const { credits, handleAttendanceReward, refreshCollection, setCredits } = useTalisman();
+  const { openDialog, triggerToast } = useUI();
   const [visitorCount, setVisitorCount] = useState(37421);
+  const [isHelpOpen, setIsHelpOpen] = useState(false); // ✅ 누락된 상태 추가
+
+  // ✅ 앱 진입 및 로그인 성공 시 출석 보상 체크
+  useEffect(() => {
+    const checkAttendance = async () => {
+      const token = tokenStorage.get();
+      // JWT 형식인지 확인 (모의 로그인 포함)
+      if (!token) return;
+
+      console.log('[Main] 출석 체크 시도...');
+      const message = await handleAttendanceReward();
+      if (message) {
+        triggerToast(message, 'success');
+        // 크레딧 최신화
+        await refreshCollection();
+      }
+    };
+
+    // 마운트 시 체크 및 1초 후 재확인 (자동 로그인 대응)
+    checkAttendance();
+    const retryTimer = setTimeout(checkAttendance, 1500); 
+
+    return () => clearTimeout(retryTimer);
+  }, [handleAttendanceReward, triggerToast, refreshCollection]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -58,10 +75,9 @@ const MainStep: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  return ( // 원래는 L.Content style={{ paddingBottom: '120px', justifyContent: 'flex-start' }}
-    <L.Content style={{ display: 'flex', justifyContent: 'flex-start', flexDirection: 'column', height: '100%', minHeight: 0, }}> 
+  return (
+    <L.Content style={{ display: 'flex', justifyContent: 'flex-start', flexDirection: 'column', height: '100%', minHeight: 0 }}> 
       
-      <ScrollArea> 
       <div style={{ width: '100%', paddingTop: '12px' }}>
         
         <div style={{
@@ -116,23 +132,23 @@ const MainStep: React.FC = () => {
 
           <div style={{ textAlign: 'center', position: 'relative', padding: '4px 0' }}>
             <div
-              style={{ // 이미지크기 변경
+              style={{
                 position: 'relative',
-                width: '180px', //원래는 76
-                height: '180px', //원래는 76
+                width: '180px', 
+                height: '180px', 
                 margin: '0 auto',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                overflow: 'hidden', // 이건추가
-                borderRadius: '12px', // 이건추가
-                background: '#fff8e8', // 이건추가
+                overflow: 'hidden', 
+                borderRadius: '12px', 
+                background: '#fff8e8', 
               }}
             >
               <img
                 src={main_fish}
                 alt="AI 명태"
-                style={{ width: '100%', height: '100%', objectFit : 'contain', display: 'block'}} // 원래는 w : 500, h : 170, objectFit : 'contain' (display는 없음.)
+                style={{ width: '100%', height: '100%', objectFit : 'contain', display: 'block'}} 
               />
               <div style={{
                 position: 'absolute',
@@ -189,13 +205,6 @@ const MainStep: React.FC = () => {
               sub: '누구에게도 말 못 한 고민을 적어보세요.',
               icon: <IoChatbubblesOutline size={20} color="#a25df5" />,
               color: '#f4edff'
-            },
-            {
-              id: 3,
-              title: '마음 정리하기',
-              sub: 'AI 명태가 당신의 마음을 차분히 정리해요.',
-              icon: <IoHardwareChipOutline size={20} color="#fcc419" />,
-              color: '#fff9e6'
             },
             {
               id: 4,
@@ -256,22 +265,45 @@ const MainStep: React.FC = () => {
           ))}
         </div>
       </div>
-      </ScrollArea>
 
       <C.FixedButtonGroup style={{ paddingBottom: '32px' }}>
         <C.MainButton 
           onClick={async () => {
-              // 이미 로그인된 경우 바로 이동
-              if (tokenStorage.get()) {
+              const hasToken = !!tokenStorage.get();
+              
+              if (hasToken) {
+                if (credits <= 0) {
+                  openDialog('크레딧 부족', '고민을 털어놓으려면 크레딧이 필요해요. 충전소로 이동할까요?', {
+                    showCancel: true,
+                    onConfirm: () => navigateTo('payment')
+                  });
+                  return;
+                }
                 navigateTo('input');
                 return;
               }
-              // 토스 로그인 후 이동
-              const success = await loginWithToss();
-                if (success) {
-                navigateTo('input');}
-              }
+// 토스 로그인 후 이동
+const result = await loginWithToss();
+if (result && result.user) {
+  // 도감 데이터 동기화
+  await refreshCollection();
+
+  // ✅ 중요: 로그인 성공 직후 출석 보상 체크
+  const message = await handleAttendanceReward();
+  if (message) {
+    triggerToast(message, 'success');
+  }
+
+  if (typeof result.user.credits === 'number') {
+    // 출석 보상이 지급되었다면 최신 크레딧으로 다시 갱신될 것임
+    // (result.user.credits는 로그인 시점의 0일 것)
+  }
+
+  // 보상 처리 후 잠시 대기하여 상태 반영 보장
+  setTimeout(() => navigateTo('input'), 500);
+}
             }
+          }
           style={{ 
             height: '52px', 
             fontSize: '16px', 

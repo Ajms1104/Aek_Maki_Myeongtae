@@ -1,27 +1,39 @@
 import { exchangeTossToken } from './api';
 
-export const loginWithToss = async (): Promise<boolean> => {
+export const loginWithToss = async (): Promise<any> => {
   try {
     console.log('[Toss Login] 시작...');
     
-    // @ts-ignore
-    const tossResult = await window.TossPayments?.appLogin?.().catch(() => null);
+    const sdk = (window as any).TossPayments;
     
-    const { authorizationCode, referrer } = tossResult ?? { 
-      authorizationCode: 'mock_code_' + Date.now(), 
-      referrer: 'sandbox' 
-    };
+    // ✅ 로컬 환경(SDK 없음) 대응: mock_code를 사용하여 자동 로그인
+    if (!sdk || typeof sdk.appLogin !== 'function') {
+      console.warn('[Toss Login] 토스 앱 환경이 아닙니다. 모의 로그인을 시도합니다.');
+      try {
+        const result = await exchangeTossToken('mock_code', 'DEFAULT');
+        console.log('[Toss Login] 모의 로그인 성공');
+        return result;
+      } catch (mockErr) {
+        console.error('[Toss Login] 모의 로그인 실패:', mockErr);
+        return null;
+      }
+    }
 
-    console.log('[Toss Login] 인증 코드 확보:', { authorizationCode, referrer });
+    // 2. 실제 토스 앱 로그인
+    const tossResult = await sdk.appLogin();
+    
+    if (!tossResult || !tossResult.authorizationCode) {
+      throw new Error('인증 코드가 없습니다.');
+    }
 
+    const { authorizationCode, referrer } = tossResult;
     const result = await exchangeTossToken(authorizationCode, referrer);
-    console.log('[Toss Login] 백엔드 토큰 교환 성공:', result);
-    
-    return true;
+    console.log('[Toss Login] 백엔드 토큰 교환 성공');
+
+    return result;
   } catch (err) {
-    console.error('[Toss Login] 실패 상세:', err);
-    // 에러 내용을 알림으로 표시 (디버깅용)
-    alert('로그인에 실패했습니다: ' + (err instanceof Error ? err.message : String(err)));
-    return false;
+    console.error('[Toss Login] 실패:', err);
+    // 실제 유저에게는 에러 알림을 띄우지 않고 로그만 남김 (App.tsx에서 리다이렉트로 처리)
+    return null;
   }
 };

@@ -1,5 +1,6 @@
 const db = require('../db');
 const amuletRepository = require('../repositories/amuletRepository');
+const userRepository = require('../repositories/userRepository');
 
 // 관리자 - 확률 조회
 exports.getProbabilities = async () => {
@@ -109,10 +110,19 @@ exports.getUsers = async ({ search, limit, offset }) => {
   };
 };
 
+// 관리자 - 유저 크레딧 수정
+exports.updateUserCredit = async (userId, credits) => {
+  const updatedCredits = await userRepository.updateCredit(userId, credits);
+  if (updatedCredits === null) {
+    throw new Error('NOT_FOUND');
+  }
+  return { userId, credits: updatedCredits };
+};
+
 // 관리자 - 유저 상세 조회
 exports.getUserDetail = async (userId) => {
   const { rows } = await db.query(
-    `SELECT id, toss_user_key AS "tossUserKey",
+    `SELECT id, toss_user_key AS "tossUserKey", credits AS "credit",
             created_at AS "createdAt", last_seen_at AS "lastSeenAt",
             is_deleted AS "isDeleted"
      FROM users WHERE id = $1`,

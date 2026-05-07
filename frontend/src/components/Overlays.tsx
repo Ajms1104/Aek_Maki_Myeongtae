@@ -9,8 +9,10 @@ export const TalismanDetailModal: React.FC<{
   talisman: Talisman;
   onClose: () => void;
 }> = ({ talisman, onClose }) => {
-  const isHidden = talisman.grade === 'legend';
   const theme = GRADE_COLORS[talisman.grade];
+  const isHiddenGrade = talisman.grade === 'hidden';
+  const isLegendGrade = talisman.grade === 'legend';
+  
   const description = talisman.unlocked
     ? '이 부적은 당신의 길에 찬란한 행운과 긍정적인 에너지를 불러올 거예요.'
     : '아직 숨겨져 있는 신비로운 부적입니다.';
@@ -27,12 +29,11 @@ export const TalismanDetailModal: React.FC<{
           }}
           onClick={onClose}
         >
-          {/* 모달 우측 상단 X 표시 색상을 진하게 변경 */}
           <IoCloseCircle size={32} color="#000000" />
         </div>
 
         <O.ModalImageContainer
-          $isHidden={isHidden}
+          $isHidden={isHiddenGrade} // 히든 등급일 때만 무지개 효과
           $unlocked={talisman.unlocked}
           $bg={talisman.unlocked ? theme.bg : '#f2f4f6'}
         >
@@ -54,7 +55,7 @@ export const TalismanDetailModal: React.FC<{
             color: '#191f28',
           }}
         >
-          {talisman.unlocked ? talisman.name : '숨겨져 있는 부적'}
+          {talisman.unlocked ? `${talisman.name} (${talisman.count}개)` : '숨겨져 있는 부적'}
         </h2>
 
         <O.DescriptionBox>
@@ -76,9 +77,10 @@ export const TalismanDetailModal: React.FC<{
           style={{
             width: '100%',
             marginTop: '24px',
-            background: isHidden
+            background: isHiddenGrade
               ? 'linear-gradient(90deg, #ffb3ba 0%, #bae1ff 100%)'
-              : '#3182f6',
+              : theme.text, // 등급별 포인트 색상 적용 (legend는 보라색)
+            color: (talisman.grade === 'common') ? '#191f28' : 'white'
           }}
         >
           확인

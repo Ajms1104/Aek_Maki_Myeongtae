@@ -24,29 +24,42 @@ export const MainButton = styled.button`
   }
 `;
 
-export const ToastContainer = styled.div<{ $show: boolean }>`
-  position: absolute;
-  bottom: 110px;
+export const ToastContainer = styled.div<{ $show: boolean; $type?: 'success' | 'error' | 'info' }>`
+  position: fixed;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
-  background: rgba(51, 61, 75, 0.95);
-  backdrop-filter: blur(8px);
+  background: ${(props) => 
+    props.$type === 'error' ? 'rgba(255, 68, 82, 0.98)' : 
+    props.$type === 'info' ? 'rgba(33, 37, 41, 0.98)' : 
+    'rgba(33, 37, 41, 0.98)'};
+  backdrop-filter: blur(12px);
   color: #ffffff;
-  padding: 14px 24px;
-  border-radius: 24px;
-  font-size: 14px;
-  font-weight: 600;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
-  z-index: 10000;
+  padding: 20px 32px;
+  border-radius: 28px;
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.25);
+  z-index: 20000;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  white-space: nowrap;
+  gap: 12px;
+  white-space: pre-wrap;
+  text-align: center;
+  min-width: 280px;
+  max-width: 80%;
+  pointer-events: none;
   
   opacity: ${(props) => (props.$show ? 1 : 0)};
   visibility: ${(props) => (props.$show ? 'visible' : 'hidden')};
-  transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  transform: ${(props) => (props.$show ? 'translate(-50%, 0)' : 'translate(-50%, 20px)')};
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform: ${(props) => (props.$show ? 'translate(-50%, -50%) scale(1)' : 'translate(-50%, -40%) scale(0.9)')};
+
+  svg {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 4px;
+  }
 `;
 
 export const ButtonGroup = styled.div`

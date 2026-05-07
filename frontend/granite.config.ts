@@ -1,20 +1,24 @@
 import { defineConfig } from '@apps-in-toss/web-framework/config';
 
 export default defineConfig({
-  appName: 'aek-maki-app',
+  appName: 'aekmagi-ai',
   brand: {
-    displayName: '액막이 AI', // 화면에 노출될 앱의 한글 이름으로 바꿔주세요.
-    primaryColor: '#3182F6', // 화면에 노출될 앱의 기본 색상으로 바꿔주세요.
-    icon: '../assets/main_app_logo.png', // 화면에 노출될 앱의 아이콘 이미지 주소로 바꿔주세요.
+    displayName: '액막이 AI', 
+    primaryColor: '#3182F6', 
+    icon: './src/assets/main_app_logo.png',
   },
   web: {
     host: 'localhost',
     port: 5173,
     commands: {
-      dev: 'vite',
+      dev: 'vite --host',
       build: 'tsc -b && vite build',
     },
   },
   permissions: [],
+  navigationBar: {
+    withBackButton: true, // ✅ 토스 네이티브 뒤로가기 버튼 활성화!
+    withHomeButton: true, 
+  },
   outdir: 'dist',
 });

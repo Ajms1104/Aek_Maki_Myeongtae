@@ -1,11 +1,15 @@
 -- 유저 테이블
 CREATE TABLE IF NOT EXISTS users (
-  id            SERIAL PRIMARY KEY,
-  toss_user_key BIGINT UNIQUE NOT NULL,
-  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  last_seen_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  deleted_at    TIMESTAMPTZ,
-  is_deleted    BOOLEAN NOT NULL DEFAULT FALSE
+  id              SERIAL PRIMARY KEY,
+  toss_user_key   BIGINT UNIQUE NOT NULL,
+  credits         INTEGER NOT NULL DEFAULT 0,
+  has_hidden_pass BOOLEAN NOT NULL DEFAULT FALSE,
+  last_attendance_at TIMESTAMPTZ,
+  last_ad_watched_at TIMESTAMPTZ,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_seen_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  deleted_at      TIMESTAMPTZ,
+  is_deleted      BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- 부적 테이블
@@ -13,7 +17,7 @@ CREATE TABLE IF NOT EXISTS amulets (
   id                   SERIAL PRIMARY KEY,
   name                 VARCHAR(100) NOT NULL,
   description          TEXT,
-  grade                VARCHAR(20) NOT NULL CHECK (grade IN ('common', 'rare', 'legend')),
+  grade                VARCHAR(20) NOT NULL CHECK (grade IN ('common', 'rare', 'legend', 'hidden')),
   image_url            TEXT,
   silhouette_image_url TEXT,
   weight               INTEGER NOT NULL DEFAULT 100,
@@ -22,14 +26,19 @@ CREATE TABLE IF NOT EXISTS amulets (
   created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- 기존 제약 조건이 'hidden'을 포함하지 않을 경우를 대비해 업데이트
+ALTER TABLE amulets DROP CONSTRAINT IF EXISTS amulets_grade_check;
+ALTER TABLE amulets ADD CONSTRAINT amulets_grade_check CHECK (grade IN ('common', 'rare', 'legend', 'hidden'));
+
 -- 유저 부적 인벤토리
 CREATE TABLE IF NOT EXISTS user_amulets (
-  user_id           VARCHAR(255) NOT NULL,
+  id                SERIAL PRIMARY KEY,
+  user_id           INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   amulet_id         INTEGER NOT NULL REFERENCES amulets(id),
   count             INTEGER NOT NULL DEFAULT 1,
   first_acquired_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  PRIMARY KEY (user_id, amulet_id)
+  UNIQUE (user_id, amulet_id)
 );
 
 -- 부적 다운로드 이력
@@ -97,7 +106,7 @@ CREATE TABLE IF NOT EXISTS announcements (
 -- 고객센터 문의
 CREATE TABLE IF NOT EXISTS support (
   id            SERIAL PRIMARY KEY,
-  user_id       VARCHAR(255) NOT NULL,
+  user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   title         VARCHAR(255) NOT NULL,
   content       TEXT NOT NULL,
   reply_email   VARCHAR(255),
@@ -207,6 +216,14 @@ INSERT INTO amulets (name, grade, image_url, weight, draft_weight) VALUES
   ('어둠 명태',   'legend', '/uploads/legend/legend_amulet_14.png', 10, 10),
   ('화산 명태',   'legend', '/uploads/legend/legend_amulet_15.png', 10, 10),
   ('숲 명태',     'legend', '/uploads/legend/legend_amulet_16.png', 10, 10);
+
+-- hidden 등급 (weight: 0, 결제로만 획득)
+INSERT INTO amulets (name, grade, image_url, weight, draft_weight) VALUES
+  ('개발자 명태 #1', 'hidden', '/uploads/rare/rare_amulet_36.png', 0, 0),
+  ('개발자 명태 #2', 'hidden', '/uploads/rare/rare_amulet_36.png', 0, 0),
+  ('개발자 명태 #3', 'hidden', '/uploads/rare/rare_amulet_36.png', 0, 0),
+  ('개발자 명태 #4', 'hidden', '/uploads/rare/rare_amulet_36.png', 0, 0),
+  ('개발자 명태 #5', 'hidden', '/uploads/rare/rare_amulet_36.png', 0, 0);
 
 -- 시퀀스 재설정
 SELECT setval('amulets_id_seq', (SELECT MAX(id) FROM amulets));

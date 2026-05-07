@@ -9,9 +9,10 @@ const MOCK_MODE = !process.env.TOSS_CLIENT_CERT_PATH;
 exports.exchangeAndIssueToken = async (authorizationCode, referrer) => {
   let userKey;
 
-  if (MOCK_MODE) {
-    console.warn('[MOCK] 토스 API 스킵 - 개발용 더미 userKey 반환');
-    userKey = 999000001;
+  // ✅ 로컬 테스트용 모의 로그인 로직
+  if (authorizationCode === 'mock_code') {
+    console.log('[Auth] 모의 로그인 모드 (테스트 유저)');
+    userKey = 12345678; 
   } else {
     // 실제 토스 API 호출
     const result = await tossApiService.exchangeAuthorizationCode(
@@ -19,7 +20,6 @@ exports.exchangeAndIssueToken = async (authorizationCode, referrer) => {
       referrer
     );
     userKey = result.userKey;
-    // 필요한 경우 result.name, result.email 등을 여기서 처리 (예: DB 저장)
   }
 
   const user = await userRepository.upsertByTossUserKey(userKey);
@@ -35,6 +35,8 @@ exports.exchangeAndIssueToken = async (authorizationCode, referrer) => {
     expiresIn: '7d',
     user: {
       userId: user.id,
+      credits: user.credits,
+      hasHiddenPass: user.has_hidden_pass,
       createdAt: user.created_at,
     },
   };

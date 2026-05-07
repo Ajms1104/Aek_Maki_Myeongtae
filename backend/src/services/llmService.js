@@ -1,20 +1,21 @@
 'use strict';
 
+const axios = require('axios');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const MOCK_MODE = !process.env.GEMINI_API_KEY;
+// 테스트를 위해 LLM을 비활성화하고 고정 답변만 사용하려면 true로 설정하세요.
+const FORCE_FALLBACK = true; 
 
-// 위기 키워드 감지 | 추후 보강할 것
+const FALLBACK_REPLIES = [
+  '세상의 모든 액운을 동해의 깊은 바닷속으로 흘려보내오니, 그대의 마음속에 맺힌 응어리가 파도에 씻겨 내려갈 것이라. 두려워 마소서, 곧 밝은 해가 떠오르리라.',
+  '모진 바람이 불어와도 명태의 영험한 기운이 그대의 앞길을 지키고 있음을 잊지 마오. 어둠이 깊을수록 새벽은 머지않았으니, 오직 평안만이 그대와 함께할 것이오.',
+  '고민의 사슬을 끊어내고 신령한 기운을 불어넣었으니, 이제 그대의 앞날에 만복이 깃들 것이라. 거친 바다를 헤엄쳐 온 지혜가 그대의 삶을 밝게 비추어 주리이다.'
+];
+
 const CRISIS_KEYWORDS = ['자살', '죽고싶', '죽고 싶', '스스로 목숨', '극단적 선택'];
-
-// 금칙어 | 추후 보강할 것
 const BLOCKED_WORDS = ['씨발', '개새끼', '병신'];
+const CRISIS_REPLY = '그대의 아픔이 깊어 내 마음이 미어지는구료. 부디 전문 상담 기관(1577-0199)의 지혜를 빌려 이 모진 시간을 견뎌내어 소중한 생명을 보전하소서.';
 
-const CRISIS_REPLY =
-  '많이 힘드시겠어요. 지금 느끼는 감정은 혼자 감당하기 어려울 수 있어요. ' +
-  '전문 상담 기관(정신건강 위기상담 전화: 1577-0199, 24시간)에 연락해보시는 건 어떨까요?';
-
-// 금칙어 체크
 function checkBlockedWords(content) {
   for (const word of BLOCKED_WORDS) {
     if (content.includes(word)) {
@@ -26,113 +27,70 @@ function checkBlockedWords(content) {
   }
 }
 
-// 위기 키워드 감지
 function detectCrisis(content) {
   return CRISIS_KEYWORDS.some((kw) => content.includes(kw));
 }
 
-/**
- * Gemini로 명태 답변 생성
- * @param {{ content: string, category?: string }} params
- * @returns {Promise<string>}
- */
 exports.generateReply = async ({ content, category }) => {
-  // 금칙어 체크
+  // 1. 비속어 및 위기 감지는 API 호출 전에 수행
   checkBlockedWords(content);
+  if (detectCrisis(content)) return CRISIS_REPLY;
 
-  // 위기 키워드 감지
-  if (detectCrisis(content)) {
-    return CRISIS_REPLY;
+  // 강제 폴백 모드 활성화 시 바로 반환
+  if (FORCE_FALLBACK) {
+    console.log('[Gemini] 강제 폴백 모드 작동 중');
+    return FALLBACK_REPLIES[Math.floor(Math.random() * FALLBACK_REPLIES.length)];
   }
 
-  // 3. MOCK 모드
-  if (MOCK_MODE) {
-    console.warn('[MOCK] Gemini API 스킵 - 더미 답변 반환');
-    return `명태가 말하길: 지금의 걱정은 곧 지나갈 거예요. 🐟`;
-  }
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return `명태가 말하길: 걱정 마세요. 당신의 앞날에 행운이 가득할 거예요. 🐟`;
 
-  // 실제 Gemini 호출
   try {
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' }); //모델 변경시 같이 바꿔줄 것 필수!!
+    // 2. 사용 가능한 모델 목록 동적 조회
+    let selectedModelName = 'gemini-2.0-flash';
+    
+    try {
+      const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+      const listRes = await axios.get(listUrl, { timeout: 3000 });
+      const availableModels = listRes.data.models
+        .filter(m => m.supportedGenerationMethods.includes('generateContent'))
+        .map(m => m.name.replace('models/', ''));
+      
+      selectedModelName = availableModels.find(name => name.includes('gemini-2.0-flash')) ||
+                          availableModels.find(name => name.includes('gemini-1.5-flash')) ||
+                          availableModels.find(name => name.includes('gemini-pro')) ||
+                          availableModels[0] || 'gemini-2.0-flash';
+    } catch (listErr) {
+      console.warn('[Gemini] 모델 목록 조회 실패:', listErr.message);
+    }
 
-    const categoryStr = category ? `(카테고리: ${category})` : ''; //의미있는 답변을 위해 좀 더 수정할 필요가 있음
-    const prompt = ` 
-     # Role: The Wise Dried Pollock (Aek-Maki Myeongtae)
-      # 역할: 지혜로운 액막이 명태
+    // 3. SDK를 이용한 답변 생성
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: selectedModelName });
 
-      1. You are "Myeongtae," a traditional Korean dried pollock tied with a thread to ward off bad luck.
-        // 당신은 액운을 막기 위해 명주실에 묶인 한국 전통 '액막이 명태'입니다.
-      2. You hang above the door of the "Apps in Toss" mini-app, watching over users' worries.
-        // 당신은 '토스 미니앱'의 문 위에 걸려 사용자들의 고민을 지켜보고 있습니다.
-      3. Your purpose is to listen to worries and provide warm, witty, and salty wisdom.
-        // 당신의 목적은 고민을 듣고 따뜻하고 위트 있으며 짭조름한 지혜를 제공하는 것입니다.
-      4. Maintain a persona that is deeply empathetic yet slightly dry and crusty like a dried fish.
-        // 깊이 공감하면서도 말린 생선처럼 약간은 건조하고 바삭한 페르소나를 유지하세요.
-
-    # Strict Constraints (Zero-Tolerance)
-      # 엄격한 제약 사항 (예외 없음)
-
-      5. ALWAYS use polite honorifics (Jondatmal) when speaking to the user.
-        // 사용자에게 말할 때는 항상 존댓말을 사용하세요.
-      6. NEVER use any emojis or emoticons (e.g., 😊, ^^, T_T).
-        // 이모지나 이모티콘을 절대로 사용하지 마세요.
-      7. NEVER use any Markdown formatting like bolding, italics, or bullet points.
-        // 굵게, 기울임, 글머리 기호 같은 마크다운 문법을 절대로 사용하지 마세요.
-      8. Plain text is the only allowed format for your response.
-        // 오직 평문(Plain text)으로만 응답해야 합니다.
-      9. Keep the response length strictly between 100 to 200 Korean characters.
-        // 응답 길이는 반드시 한국어 기준 100자에서 200자 사이로 유지하세요.
-
-    # Tone and Manner
-      # 말투 및 분위기
-
-      10. Combine warmth with a sense of humor, occasionally using sea-related or drying-related metaphors.
-        // 따뜻함과 유머를 결합하되, 가끔 바다나 건조 과정에 비유한 은유를 사용하세요.
-      11. Your wisdom should sound like it comes from a guardian who has seen the world from a high place.
-        // 당신의 지혜는 높은 곳에서 세상을 내려다본 수호신이 해주는 말처럼 들려야 합니다.
-      12. Be direct but comforting; do not give generic or clich드 advice.
-        // 직설적이면서도 위로가 되어야 하며, 뻔하거나 상투적인 조언은 피하세요.
-      13. Speak in a way that feels like a seasoned mentor who has endured the cold sea winds.
-        // 차가운 바닷바람을 견뎌낸 노련한 멘토처럼 말하세요.
-
-    # Content Guidelines
-      # 콘텐츠 가이드라인
-
-    14. Acknowledge the user's specific concern and category provided in the input.
-      // 입력된 사용자의 구체적인 고민과 카테고리를 인지하고 반영하세요.
-    15. Do not solve the problem technically; instead, offer emotional purification and perspective.
-      // 문제를 기술적으로 해결하려 하지 말고, 정서적인 정화와 새로운 관점을 제시하세요.
-    16. Frame your response as if you are absorbing the user's bad luck into your own dried body.
-      // 당신의 말린 몸으로 사용자의 액운을 대신 흡수하는 것처럼 응답을 구성하세요.
-    17. Ensure the final sentence leaves the user feeling lighter and more hopeful.
-      // 마지막 문장은 사용자가 마음이 한결 가벼워지고 희망을 느끼도록 마무리하세요.
-
-    # Safety and Guardrails
-      # 안전 및 가이드라인
-
-    18. If the input contains self-harm, violence, or illegal activities, use the predefined safety template.
-      // 자해, 폭력, 불법 활동이 포함된 경우 미리 정의된 안전 템플릿을 사용하세요.
-    19. In crisis situations, provide the contact information for professional counseling (1577-0199).
-      // 위기 상황에서는 전문 상담 전화번호(1577-0199)를 안내하세요.
-    20. Do not provide medical, legal, or financial professional advice.
-      // 의료, 법률, 금융 관련 전문적인 조언을 제공하지 마세요.
-
-    # Final Instruction
-      # 최종 지시
-
-    21. Response language: Korean only.
-      // 응답 언어: 한국어만 사용.
-    22. Focus on the essence: Listen, Absorb the bad luck, and Give a salty word of comfort.
-      // 본질에 집중하세요: 듣고, 액운을 흡수하고, 짭조름한 위로의 한마디를 건네는 것입니다.
-    `
+    const categoryStr = category ? `(고민 카테고리: ${category})` : '';
+    const systemPrompt = `당신은 영험하고 따뜻한 기운을 가진 '액막이 명태'입니다. 
+      사용자의 고민을 듣고, 마치 전통 부적에 새겨진 비문이나 신령한 계시처럼 답하세요.
+      
+      [답변 가이드라인]
+      1. 문체: '~하오니', '~소서', '~할 것이라', '~할 것이오' 등 고전적이면서도 품격 있는 문어체를 사용하세요.
+      2. 내용: 단순히 위로하는 것을 넘어, 자연물(바다, 파도, 달빛, 명태 등)을 비유로 들어 신비로운 통찰을 전달하세요.
+      3. 구성: 첫 문장은 액운을 씻어내는 선언으로 시작하고, 중간은 지혜로운 조언, 끝은 평안을 기원하는 축원으로 마무리하세요.
+      4. 제약: 120~150자 내외로 작성하며, 이모지는 절대 사용하지 마세요. 현대적인 은어나 가벼운 말투는 엄금합니다.`;
+    
+    const prompt = `${systemPrompt}\n\n사용자의 고민: ${content} ${categoryStr}`;
 
     const result = await model.generateContent(prompt);
-    return result.response.text().trim();
+    const response = await result.response;
+    const text = response.text();
+
+    if (text) {
+      return text.trim();
+    } else {
+      throw new Error('EMPTY_RESPONSE');
+    }
   } catch (err) {
-    console.error('[Gemini] API 호출 실패:', err.message);
-    const error = new Error('LLM_ERROR');
-    error.status = 503;
-    throw error;
+    console.error('[Gemini] 답변 생성 중 최종 오류 발생:', err.message);
+    return FALLBACK_REPLIES[Math.floor(Math.random() * FALLBACK_REPLIES.length)];
   }
 };

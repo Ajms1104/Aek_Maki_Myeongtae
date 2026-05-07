@@ -111,6 +111,7 @@ export const ScrollArea = styled.div`
   flex: 1;
   overflow-y: auto;
   padding-bottom: 110px;
+  touch-action: pan-y; /* 수직 스크롤 허용 */
   &::-webkit-scrollbar {
     display: none;
   }
@@ -182,30 +183,43 @@ export const PaymentList = styled.div`
 export const TalismanCard = styled.div<{
   $unlocked: boolean;
   $bgColor: string;
+  $rotate?: number;
   $isHidden?: boolean;
   $revealStage?: 'none' | 'sealed' | 'shaking' | 'burst' | 'done';
 }>`
   width: 100%;
-  aspect-ratio: 1 / 1.3;
-  border-radius: 22px;
+  aspect-ratio: 1 / 1.2;
+  border-radius: 12px; /* 부적 종이 느낌을 위해 라운드 축소 */
   position: relative;
   background: ${(props) => props.$bgColor};
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  overflow: visible; /* 그림자가 잘리지 않게 */
+  border: 1px solid rgba(0, 0, 0, 0.06);
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: rotate(${(props) => props.$rotate || 0}deg);
+  
+  /* 종이 질감 그림자 */
+  box-shadow: 
+    0 2px 5px rgba(0, 0, 0, 0.05),
+    0 8px 15px rgba(0, 0, 0, 0.05);
+
+  &:hover {
+    transform: rotate(0deg) translateY(-5px) scale(1.05);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+  }
 
   img {
-    width: 90%;
-    height: 90%;
+    width: 85%;
+    height: 85%;
     object-fit: contain;
     filter: ${(props) =>
-      props.$unlocked ? 'none' : 'grayscale(100%) brightness(0.8)'};
-    opacity: ${(props) => (props.$unlocked ? 1 : 0.3)};
+      props.$unlocked ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.05))' : 'grayscale(100%) brightness(0.9)'};
+    opacity: ${(props) => (props.$unlocked ? 1 : 0.2)};
   }
 
   ${(props) =>

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import * as S from '../styles/stepStyles';
 import * as C from '../styles/commonStyles';
-import { getAdminUsers, getAdminUserDetail, updateAdminUserUnlock } from '../utils/api';
+import { getAdminUsers, getAdminUserDetail, updateAdminUserUnlock, updateAdminUserCredit } from '../utils/api';
 import { 
   IoArrowBack, IoSearch, IoCheckmarkCircleOutline 
 } from 'react-icons/io5';
@@ -42,9 +42,21 @@ export default function AdminStep() {
     }
   };
 
-  const handleUpdateCredit = () => {
-    alert(`유저 #${selectedUser.id}의 크레딧을 ${editCredit}으로 변경합니다.`);
-    setSelectedUser({ ...selectedUser, credit: parseInt(editCredit) });
+  const handleUpdateCredit = async () => {
+    if (!selectedUser) return;
+    const newCredit = parseInt(editCredit);
+    if (isNaN(newCredit) || newCredit < 0) {
+      alert('올바른 크레딧 값을 입력해주세요.');
+      return;
+    }
+
+    try {
+      await updateAdminUserCredit(selectedUser.id, newCredit);
+      alert(`유저 #${selectedUser.id}의 크레딧이 ${newCredit}으로 변경되었습니다.`);
+      setSelectedUser({ ...selectedUser, credit: newCredit });
+    } catch (err) {
+      alert('크레딧 수정에 실패했습니다: ' + (err instanceof Error ? err.message : '서버 오류'));
+    }
   };
 
   const handleManualUnlock = async () => {

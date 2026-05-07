@@ -189,6 +189,27 @@ exports.deleteUserAmulet = async (req, res) => {
   }
 };
 
+// 관리자 - 유저 크레딧 수정
+exports.updateUserCredit = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { credits } = req.body;
+
+    if (credits === undefined || isNaN(credits) || credits < 0) {
+      return res.status(400).json({ error: '올바른 크레딧 값을 입력해주세요.' });
+    }
+
+    const result = await adminService.updateUserCredit(userId, credits);
+    return res.status(200).json(result);
+  } catch (err) {
+    if (err.message === 'NOT_FOUND') {
+      return res.status(404).json({ error: '유저를 찾을 수 없습니다.' });
+    }
+    console.error('[AdminController] updateUserCredit 에러:', err);
+    return res.status(500).json({ error: '서버 에러' });
+  }
+};
+
 // 관리자 - 유저 해금 상태 수동 변경 (결제 오류 복구용)
 exports.updateUserUnlock = async (req, res) => {
   try {

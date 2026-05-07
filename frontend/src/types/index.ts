@@ -10,7 +10,7 @@ export type Step =
   | 'admin'
   | 'admin_login';
 
-export type Grade = 'legend' | 'rare' | 'common';
+export type Grade = 'legend' | 'rare' | 'common' | 'hidden';
 
 export interface Talisman {
   id: number;
@@ -18,6 +18,7 @@ export interface Talisman {
   img: string;
   name: string;
   grade: Grade;
+  count: number;
 }
 
 export interface DialogConfig {

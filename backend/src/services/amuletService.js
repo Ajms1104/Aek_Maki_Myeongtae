@@ -1,6 +1,7 @@
 'use strict';
 
 const amuletRepository = require('../repositories/amuletRepository');
+const userRepository = require('../repositories/userRepository');
 const path = require('path');
 const fs = require('fs');
 
@@ -22,12 +23,22 @@ exports.getMyAmulets = async (userId) => {
 // 유저 부적 도감 조회 (카탈로그 + 보유 조합)
 exports.getCollection = async (userId) => {
   const items = await amuletRepository.findCollection(userId);
+  const user = await userRepository.findById(userId);
+
   const totalCount = items.length;
   const ownedCount = items.filter((i) => !i.isLocked).length;
   const collectionRate =
     totalCount > 0 ? Math.round((ownedCount / totalCount) * 100) : 0;
 
-  return { collectionRate, totalCount, ownedCount, items };
+  return { 
+    collectionRate, 
+    totalCount, 
+    ownedCount, 
+    credits: user ? user.credits : 0, // 크레딧 추가
+    hasHiddenPass: user ? user.has_hidden_pass : false,
+    lastAdWatchedAt: user ? user.last_ad_watched_at : null,
+    items 
+  };
 };
 
 // 내 부적 다운로드

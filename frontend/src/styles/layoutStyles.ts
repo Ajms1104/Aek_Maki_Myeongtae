@@ -3,6 +3,8 @@ import * as A from './animations';
 
 export const Container = styled.div`
   width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
   height: 100vh;
   height: 100dvh;
   background-color: #ffffff;
@@ -11,20 +13,31 @@ export const Container = styled.div`
   position: relative;
   overflow: hidden; /* 원천적으로 스크롤 방지 */
   padding-top: 0; /* 토스 네이티브 바 공간을 고려해 0으로 설정 */
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
 `;
 
 export const Header = styled.header`
-  padding: 56px 20px 12px;
+  padding: 0 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   z-index: 1000;
   position: sticky;
   top: 0;
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: #ffffff;
+  height: 56px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  flex-shrink: 0;
+`;
+
+export const NavTitle = styled.div`
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 17px;
+  font-weight: 700;
+  color: #191f28;
+  pointer-events: none; /* 클릭 방해 금지 */
 `;
 
 export const IconButton = styled.button`
@@ -54,7 +67,7 @@ export const Content = styled.main<{ $shake?: boolean }>`
   ${(props) =>
     props.$shake &&
     css`
-      animation: ${A.contentShake} 0.1s infinite;
+      animation: ${A.shake} 0.1s infinite;
     `}
 `;
 
