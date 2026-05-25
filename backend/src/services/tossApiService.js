@@ -47,6 +47,12 @@ function createTossAxiosInstance() {
 const tossAxios = createTossAxiosInstance();
 
 exports.exchangeAuthorizationCode = async (authorizationCode, referrer) => {
+  
+  if (MOCK_MODE) {
+    console.warn('[MOCK] exchangeAuthorizationCode 스킵 - 더미 userKey 반환');
+    return { userKey: 999000001, name: '테스트유저', email: null, gender: null };
+  }
+
   // 인증서의 CN 값인 'aekmagi-ai'를 파트너 ID로 사용합니다.
   const partnerId = process.env.TOSS_PARTNER_ID || 'aekmagi-ai';
 
