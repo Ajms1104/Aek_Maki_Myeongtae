@@ -7,13 +7,15 @@ const llmService = require('./llmService');
 
 // 고민 등록 + 부적 발급
 exports.createConsultation = async ({ userId, content, category }) => {
-  // 1. 크레딧 차감 시도
   const remainingCredits = await userRepository.deductCredit(userId, 1);
   if (remainingCredits === null) {
     const err = new Error('크레딧이 부족합니다.');
     err.status = 403;
     throw err;
   }
+
+   // const remainingCredits = 999; // AI 테스트시 사용할 것, 위의 코드는 주석처리하고
+
 
   // 2. preview 생성
   const preview = content.slice(0, 50) + (content.length > 50 ? '...' : '');
@@ -26,7 +28,7 @@ exports.createConsultation = async ({ userId, content, category }) => {
     preview,
   });
 
-  // Gemini 답변 생성
+  // GPT 답변 생성
   const reply = await llmService.generateReply({ content, category });
 
   // 4. 부적 뽑기 (중복 방지 로직 적용)
