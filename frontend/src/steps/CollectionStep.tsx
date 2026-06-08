@@ -27,13 +27,6 @@ const CollectionStep: React.FC = () => {
 
   const isLoggedIn = !!tokenStorage.get();
 
-  const getFullImageUrl = (path: string) => {
-    if (!path) return '/result_image.png';
-    if (path.startsWith('http')) return path;
-    const host = window.location.hostname;
-    return `http://${host}:8080${path}`;
-  };
-
   const handleManualRefresh = async () => {
     if (isRefreshing) return;
     setIsRefreshing(true);
@@ -94,7 +87,6 @@ const CollectionStep: React.FC = () => {
 
   return (
     <L.Content style={{ padding: 0 }}>
-      {/* ✅ 상단 여백 축소 (내비게이션 바 아래 자연스럽게 위치) */}
       <div style={{ padding: '12px 24px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <L.Title style={{ textAlign: 'left', margin: 0, fontSize: '26px', fontWeight: 900 }}>나의 보관함</L.Title>
         <button onClick={handleManualRefresh} disabled={isRefreshing} style={{ background: 'none', display: 'flex', alignItems: 'center', gap: '4px', color: '#8b95a1', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
@@ -122,8 +114,6 @@ const CollectionStep: React.FC = () => {
             const isCurrentlyUnlocking = (item.grade === 'hidden' && justUnlockedHidden);
             const isVisuallyUnlocked = isCurrentlyUnlocking ? revealStage === 'done' : item.unlocked;
             const currentRevealStage = isCurrentlyUnlocking ? revealStage : 'none';
-            
-            // 인덱스를 기반으로 미세하게 각도 조절 (예: -2도 ~ 2도)
             const rotation = ((index * 7) % 5) - 2;
 
             return (
@@ -141,7 +131,12 @@ const CollectionStep: React.FC = () => {
                   }}
                 >
                   {isVisuallyUnlocked ? (
-                    <img src={getFullImageUrl(item.img)} alt={item.name} />
+                    <img 
+                      src={item.img} 
+                      alt={item.name} 
+                      loading="lazy" 
+                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                    />
                   ) : (
                     <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <img src={main_fish} alt="잠금" style={{ width: '60%', opacity: 0.05, filter: 'grayscale(1)' }} />
@@ -160,11 +155,6 @@ const CollectionStep: React.FC = () => {
                       </div>
                     </div>
                   )}
-                  {isVisuallyUnlocked && item.count > 1 && (
-                    <div style={{ position: 'absolute', top: '-6px', right: '-6px', backgroundColor: '#3182f6', color: 'white', fontSize: '11px', fontWeight: 900, padding: '2px 8px', borderRadius: '100px', border: '2.5px solid #ffffff', zIndex: 2, boxShadow: '0 2px 6px rgba(49, 130, 246, 0.3)' }}>
-                      {item.count}
-                    </div>
-                  )}
                 </S.TalismanCard>
                 <div style={{ marginTop: '12px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: isVisuallyUnlocked ? '#333d4b' : '#adb5bd', transform: `rotate(${rotation}deg)` }}>
                   {isVisuallyUnlocked ? item.name : '미해금'}
@@ -176,11 +166,11 @@ const CollectionStep: React.FC = () => {
       </S.ScrollArea>
 
       <C.FixedButtonGroup style={{ paddingBottom: '32px' }}>
-        <C.MainButton onClick={resetToMain} style={{ background: '#f2f4f6', color: '#4e5968' }}>메인으로 돌아가기</C.MainButton>
+        <C.MainButton onClick={resetToMain} style={{ background: '#3182f6', color: '#ffffff' }}>메인으로 돌아가기</C.MainButton>
       </C.FixedButtonGroup>
 
       {selectedTalisman && (
-        <TalismanDetailModal talisman={{...selectedTalisman, img: getFullImageUrl(selectedTalisman.img)}} onClose={() => setSelectedTalisman(null)} />
+        <TalismanDetailModal talisman={selectedTalisman} onClose={() => setSelectedTalisman(null)} />
       )}
     </L.Content>
   );

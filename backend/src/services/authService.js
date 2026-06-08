@@ -6,23 +6,15 @@ const tossApiService = require('./tossApiService');
 
 const MOCK_MODE = !process.env.TOSS_CLIENT_CERT_PATH;
 
-exports.exchangeAndIssueToken = async (authorizationCode, referrer) => {
-  let userKey;
+exports.exchangeAndIssueToken = async (userHash, referrer) => {
+  // 프론트엔드에서 받은 식별키(hash)를 그대로 userKey로 사용합니다.
+  const userKey = userHash;
+  
+  console.log(`[Auth] 유저 식별키로 로그인 시도: ${userKey}`);
 
-  // ✅ 로컬 테스트용 모의 로그인 로직
-  if (authorizationCode === 'mock_code') {
-    console.log('[Auth] 모의 로그인 모드 (테스트 유저)');
-    userKey = 12345678; 
-  } else {
-    // 실제 토스 API 호출
-    const result = await tossApiService.exchangeAuthorizationCode(
-      authorizationCode,
-      referrer
-    );
-    userKey = result.userKey;
-  }
-
+  console.log(`[Auth] 유저 데이터 저장(upsert) 시도... userKey: ${userKey}`);
   const user = await userRepository.upsertByTossUserKey(userKey);
+  console.log(`[Auth] 유저 데이터 저장 완료: userId=${user.id}`);
 
   const accessToken = jwt.sign(
     { userId: user.id },

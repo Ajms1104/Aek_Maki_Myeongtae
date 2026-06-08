@@ -1,39 +1,43 @@
-import { exchangeTossToken } from './api';
+import { exchangeTossToken, remoteLog } from './api';
+import { getAnonymousKey } from '@apps-in-toss/web-framework';
 
+/**
+ * 토스 사용자 식별키를 발급받아 로그인을 시도합니다. (동의창 없음)
+ */
 export const loginWithToss = async (): Promise<any> => {
   try {
-    console.log('[Toss Login] 시작...');
+    console.log('[Toss Login] 식별키 발급 시작...');
     
-    const sdk = (window as any).TossPayments;
+    // 1. 토스 사용자 식별키 발급 (비게임 미니앱용)
+    const result = await getAnonymousKey();
     
-    // ✅ 로컬 환경(SDK 없음) 대응: mock_code를 사용하여 자동 로그인
-    if (!sdk || typeof sdk.appLogin !== 'function') {
-      console.warn('[Toss Login] 토스 앱 환경이 아닙니다. 모의 로그인을 시도합니다.');
+    if (!result || typeof result === 'string') {
+      throw new Error(`식별키 발급 실패: ${result || 'unknown'}`);
+    }
+
+    const hash = result.hash;
+    remoteLog(`[Toss Login] 식별키 수신 성공`);
+
+    // 2. 백엔드로 식별키(hash) 전달하여 JWT 발급
+    // 기존 exchangeTossToken 함수를 재사용하되, 첫 번째 인자로 hash를 넘깁니다.
+    const loginResult = await exchangeTossToken(hash, 'DEFAULT');
+    remoteLog('[Toss Login] 서비스 로그인 성공');
+
+    return loginResult;
+  } catch (err: any) {
+    console.error('[Toss Login] 실패:', err);
+    remoteLog(`[Toss Login] 에러: ${err.message || err}`, 'error');
+    
+    // 모의 로그인 폴백 (테스트 환경 또는 토스 앱이 아닌 경우)
+    if (err.message?.includes('not supported') || !window.navigator.userAgent.includes('Toss')) {
+      console.warn('[Toss Login] 테스트 환경 감지. 모의 로그인을 시도합니다.');
       try {
-        const result = await exchangeTossToken('mock_code', 'DEFAULT');
-        console.log('[Toss Login] 모의 로그인 성공');
-        return result;
+        const loginResult = await exchangeTossToken('mock_user_hash_123', 'DEFAULT');
+        return loginResult;
       } catch (mockErr) {
-        console.error('[Toss Login] 모의 로그인 실패:', mockErr);
         return null;
       }
     }
-
-    // 2. 실제 토스 앱 로그인
-    const tossResult = await sdk.appLogin();
-    
-    if (!tossResult || !tossResult.authorizationCode) {
-      throw new Error('인증 코드가 없습니다.');
-    }
-
-    const { authorizationCode, referrer } = tossResult;
-    const result = await exchangeTossToken(authorizationCode, referrer);
-    console.log('[Toss Login] 백엔드 토큰 교환 성공');
-
-    return result;
-  } catch (err) {
-    console.error('[Toss Login] 실패:', err);
-    // 실제 유저에게는 에러 알림을 띄우지 않고 로그만 남김 (App.tsx에서 리다이렉트로 처리)
     return null;
   }
 };

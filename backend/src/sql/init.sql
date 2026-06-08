@@ -1,8 +1,8 @@
 -- 유저 테이블
 CREATE TABLE IF NOT EXISTS users (
   id              SERIAL PRIMARY KEY,
-  toss_user_key   BIGINT UNIQUE NOT NULL,
-  credits         INTEGER NOT NULL DEFAULT 0,
+  toss_user_key   TEXT UNIQUE NOT NULL,
+  credits         INTEGER NOT NULL DEFAULT 1,
   has_hidden_pass BOOLEAN NOT NULL DEFAULT FALSE,
   last_attendance_at TIMESTAMPTZ,
   last_ad_watched_at TIMESTAMPTZ,
@@ -219,11 +219,11 @@ INSERT INTO amulets (name, grade, image_url, weight, draft_weight) VALUES
 
 -- hidden 등급 (weight: 0, 결제로만 획득)
 INSERT INTO amulets (name, grade, image_url, weight, draft_weight) VALUES
-  ('개발자 명태 #1', 'hidden', '/uploads/rare/rare_amulet_36.png', 0, 0),
-  ('개발자 명태 #2', 'hidden', '/uploads/rare/rare_amulet_36.png', 0, 0),
-  ('개발자 명태 #3', 'hidden', '/uploads/rare/rare_amulet_36.png', 0, 0),
-  ('개발자 명태 #4', 'hidden', '/uploads/rare/rare_amulet_36.png', 0, 0),
-  ('개발자 명태 #5', 'hidden', '/uploads/rare/rare_amulet_36.png', 0, 0);
+  ('Sourcandy 명태', 'hidden', '/uploads/hidden/hidden_amulet_01.png', 0, 0),
+  ('Moshu 명태',      'hidden', '/uploads/hidden/hidden_amulet_02.png', 0, 0),
+  ('LeeJin 명태',     'hidden', '/uploads/hidden/hidden_amulet_03.png', 0, 0),
+  ('Baldy 명태',      'hidden', '/uploads/hidden/hidden_amulet_04.png', 0, 0),
+  ('억만이 명태',     'hidden', '/uploads/hidden/hidden_amulet_05.png', 0, 0);
 
 -- 시퀀스 재설정
 SELECT setval('amulets_id_seq', (SELECT MAX(id) FROM amulets));

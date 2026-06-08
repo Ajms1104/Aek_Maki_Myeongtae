@@ -11,7 +11,7 @@ import * as C from './styles/commonStyles';
 import { useNavigation } from './hooks/useNavigation';
 import { useTalisman } from './hooks/useTalisman';
 import { useUI } from './hooks/useUI';
-import { tokenStorage } from './utils/api';
+import { tokenStorage, remoteLog } from './utils/api';
 import { loginWithToss } from './utils/auth';
 
 import { TossDialog } from './components/TossDialog';
@@ -39,39 +39,20 @@ export default function App() {
     setDialogConfig,
   } = useUI();
 
-  // ✅ 앱 시작 시 자동 로그인 시도
+  // ✅ [수정] 앱 시작 시 자동 로그인 제거 (사용자 경험 개선)
   useEffect(() => {
-    const initLogin = async () => {
-      // 이미 토큰이 있다면 동기화만 진행
+    const checkToken = async () => {
       if (tokenStorage.get()) {
-        await refreshCollection();
-        return;
-      }
-
-      // 관리자 모드 파라미터가 있으면 자동 로그인 건너뜀
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('admin') === 'true') return;
-
-      console.log('[App] 자동 로그인 시도...');
-      try {
-        const result = await loginWithToss();
-        if (result && result.user) {
-          console.log('[App] 자동 로그인 성공');
-          setCredits(result.user.credits);
-          setHasHiddenPass(result.user.hasHiddenPass);
+        remoteLog('[App] 기존 로그인 세션 확인 - 동기화 진행');
+        try {
           await refreshCollection();
-        }
-      } catch (err: any) {
-        console.warn('[App] 자동 로그인 실패 (비로그인 모드 유지)', err);
-        // 만약 유저 정보를 찾을 수 없다는 에러라면 토큰 삭제
-        if (err.message?.includes('찾을 수 없') || err.message?.includes('Unauthorized')) {
-            tokenStorage.remove();
-            console.log('[App] 무효한 토큰 삭제 완료');
+        } catch (e) {
+          remoteLog('[App] 세션 동기화 실패 (유효하지 않은 토큰 등)');
         }
       }
     };
-    initLogin();
-  }, [refreshCollection, setCredits, setHasHiddenPass]);
+    checkToken();
+  }, [refreshCollection]);
 
   // 인증 가드 (보호된 단계 접근 제어)
   useEffect(() => {

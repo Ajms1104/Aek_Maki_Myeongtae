@@ -19,6 +19,7 @@ const consultationRoutes = require('./routes/consultationRoute'); //고민사항
 const amuletRoutes = require('./routes/amuletRoute'); // 부적
 const meRoutes = require('./routes/meRoute');
 const paymentRoutes = require('./routes/paymentRoute');
+const debugRoutes = require('./routes/debugRoute');
 
 
 //Swagger 관련
@@ -30,7 +31,15 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// ✅ 이미지 정적 파일 서비스 (캐싱 및 CORS 설정 추가)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
+  maxAge: '30d', // 30일간 강력 캐싱
+  immutable: true,
+  setHeaders: (res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*'); // CDN 및 Canvas 합성 대응
+  }
+}));
 
 // Swagger UI
 if (process.env.NODE_ENV !== 'production') {
@@ -47,6 +56,7 @@ app.use('/api/v1/consultations', consultationRoutes);
 app.use('/api/v1/me', meRoutes);
 app.use('/api/v1/amulets', amuletRoutes);
 app.use('/api/v1/payments', paymentRoutes);
+app.use('/api/v1/debug', debugRoutes);
 
 
 app.listen(PORT, () => {

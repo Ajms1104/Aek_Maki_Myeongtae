@@ -4,9 +4,9 @@ const db = require('../db');
 
 // toss_user_key로 upsert
 exports.upsertByTossUserKey = async (tossUserKey) => {
-  const { rows } = await db.query( // 크레딧 설정..?
+  const { rows } = await db.query(
     `INSERT INTO users (toss_user_key, credits)
-     VALUES ($1, 0) 
+     VALUES ($1, 1) 
      ON CONFLICT (toss_user_key)
      DO UPDATE SET last_seen_at = NOW()
      RETURNING id, toss_user_key, credits, created_at, last_seen_at`,
@@ -19,7 +19,7 @@ exports.upsertByTossUserKey = async (tossUserKey) => {
 // userId로 조회
 exports.findById = async (userId) => {
   const { rows } = await db.query(
-    'SELECT id, toss_user_key, credits, has_hidden_pass, last_attendance_at, last_ad_watched_at, created_at FROM users WHERE id = $1',
+    'SELECT id, toss_user_key, credits, has_hidden_pass, last_attendance_at, last_ad_watched_at, created_at, is_deleted FROM users WHERE id = $1',
     [userId]
   );
   return rows[0] || null;

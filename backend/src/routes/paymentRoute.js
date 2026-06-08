@@ -37,39 +37,7 @@ router.post('/record', authMiddleware, async (req, res) => {
   }
 });
 
-// 광고 시청 보상 지급 (10분 쿨타임)
-router.post('/reward/ad', authMiddleware, async (req, res) => {
-  const userId = req.user.userId;
-  
-  try {
-    const user = await userRepository.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: '유저 정보를 찾을 수 없습니다.' });
-    }
-
-    const now = new Date();
-    if (user.last_ad_watched_at) {
-      const lastWatched = new Date(user.last_ad_watched_at);
-      const diffMinutes = (now.getTime() - lastWatched.getTime()) / (1000 * 60);
-      
-      if (diffMinutes < 10) {
-        const remaining = Math.ceil(10 - diffMinutes);
-        return res.status(429).json({ 
-          error: `광고 시청 쿨타임 중입니다. ${remaining}분 후에 다시 시도해주세요.`,
-          remainingMinutes: remaining
-        });
-      }
-    }
-
-    const newCredits = await userRepository.addCredit(userId, 1);
-    await userRepository.updateAdWatchTime(userId);
-    
-    return res.status(200).json({ success: true, credits: newCredits });
-  } catch (err) {
-    console.error(`[AD REWARD FATAL ERROR]`, err);
-    return res.status(500).json({ error: '보상 지급 실패' });
-  }
-});
+// [기존 보상형 광고 라우트 제거됨 - 배너 광고로 전환]
 
 // 일일 출석 보상 지급 (24시간 1회)
 router.post('/reward/attendance', authMiddleware, async (req, res) => {

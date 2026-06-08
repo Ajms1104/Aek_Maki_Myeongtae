@@ -5,18 +5,18 @@ import { INITIAL_TALISMAN_DATA, HIDDEN_TALISMAN_DATA, STORAGE_KEYS } from '../co
 import { storage } from '../utils/storage';
 import { 
   createConsultation, 
-  rewardAdCredit, 
   claimAttendanceReward,
   getCollection, 
   tokenStorage, 
   recordPayment 
 } from '../utils/api';
+import { getAmuletImage } from '../utils/amuletAssets';
 
 export interface TalismanContextType {
   talismanData: Talisman[];
   credits: number;
   hasHiddenPass: boolean;
-  lastAdWatchedAt: string | null; // 추가
+  lastAdWatchedAt: string | null;
   wish: string;
   loadingStep: number;
   justUnlockedHidden: boolean;
@@ -28,8 +28,7 @@ export interface TalismanContextType {
   setJustUnlockedHidden: (unlocked: boolean) => void;
   setCredits: (credits: number) => void;
   setHasHiddenPass: (has: boolean) => void;
-  handlePaymentComplete: (productType: 'credit' | 'hidden') => void;
-  handleAdReward: () => Promise<void>;
+  handlePaymentComplete: (productType: 'credit' | 'hidden') => Promise<void>;
   handleAttendanceReward: () => Promise<string | null>;
   unlockHiddenInState: () => void;
   resetWish: () => void;
@@ -63,7 +62,7 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [credits, setCredits] = useState<number>(() => 
     storage.get(STORAGE_KEYS.CREDITS, 0)
   );
-  const [lastAdWatchedAt, setLastAdWatchedAt] = useState<string | null>(null); // 추가
+  const [lastAdWatchedAt, setLastAdWatchedAt] = useState<string | null>(null);
   const [wish, setWish] = useState<string>('');
   const [loadingStep, setLoadingStep] = useState(0);
   const [justUnlockedHidden, setJustUnlockedHidden] = useState(false);
@@ -93,33 +92,49 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
         storage.set(STORAGE_KEYS.CREDITS, serverCredits);
       }
 
-      if (serverAdTime) setLastAdWatchedAt(serverAdTime); // 추가
+      if (serverAdTime) setLastAdWatchedAt(serverAdTime);
 
       if (items && Array.isArray(items)) {
-        const mappedItems = items.map((si: any) => ({
-          id: si.id,
-          name: si.name,
-          grade: si.grade as Grade,
-          img: si.imageUrl || '',
-          unlocked: !si.isLocked,
-          count: si.count || 0
-        }));
+        // 모든 로컬 부적 데이터 병합
+        const allLocalData = [...INITIAL_TALISMAN_DATA, ...HIDDEN_TALISMAN_DATA];
+
+        const mappedItems = items.map((si: any) => {
+          // 로컬 상수에서 메타데이터 매핑
+          const localMeta = allLocalData.find(l => l.id === si.id);
+          
+          return {
+            id: si.id,
+            name: si.name,
+            grade: si.grade as Grade,
+            img: getAmuletImage(si.imageUrl, 'ui'),
+            unlocked: !si.isLocked,
+            count: si.count || 0,
+            // 로컬에 정의된 고유 설명과 편지 데이터 병합 (가장 중요)
+            description: localMeta?.description,
+            letter: localMeta?.letter,
+            fontFamily: localMeta?.fontFamily
+          };
+        });
         setTalismanData(mappedItems);
       }
     } catch (err) {
       console.error('Failed to fetch collection:', err);
+      throw err;
     }
   }, []);
 
   useEffect(() => {
-    refreshCollection();
+    refreshCollection().catch(() => {
+      setTalismanData(INITIAL_TALISMAN_DATA.filter(t => t.grade !== 'hidden'));
+      setHasHiddenPass(false);
+    });
   }, [refreshCollection]);
 
   const submitWish = useCallback(async () => {
     if (!wish || wish.length < 5) return;
     setIsLoading(true);
     setError(null);
-    setConsultationResult(null); // 새로운 요청 전 이전 결과 초기화
+    setConsultationResult(null);
     
     try {
       const result = await createConsultation(wish);
@@ -163,18 +178,6 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   }, [refreshCollection]);
 
-  const handleAdReward = useCallback(async () => {
-    try {
-      const result = await rewardAdCredit();
-      if (result && typeof result.credits === 'number') {
-        setCredits(result.credits);
-        setLastAdWatchedAt(new Date().toISOString()); // 즉시 갱신
-      }
-    } catch (err) {
-      throw err;
-    }
-  }, []);
-
   const handleAttendanceReward = useCallback(async () => {
     try {
       const result = await claimAttendanceReward();
@@ -186,7 +189,7 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
     } catch (err) {
       return null;
     }
-  }, []);
+  }, [refreshCollection]);
 
   const unlockHiddenInState = useCallback(() => {
     setTalismanData((prev) => 
@@ -206,7 +209,7 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
       talismanData,
       credits,
       hasHiddenPass,
-      lastAdWatchedAt, // 추가
+      lastAdWatchedAt,
       wish,
       loadingStep,
       justUnlockedHidden,
@@ -219,7 +222,6 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
       setCredits,
       setHasHiddenPass,
       handlePaymentComplete,
-      handleAdReward,
       handleAttendanceReward,
       unlockHiddenInState,
       resetWish,

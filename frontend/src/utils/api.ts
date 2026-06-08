@@ -1,20 +1,21 @@
 // 현재 접속한 호스트를 기반으로 서버 주소 설정 (모바일 테스트 대응)
-const getBaseUrl = () => {
-  if (typeof window !== 'undefined') {
-    const host = window.location.hostname;
-    // 호스트가 localhost나 127.0.0.1이면 8080 포트 사용, 아니면 현재 호스트의 8080 포트 사용
-    return `http://${host}:8080`;
-  }
-  return 'http://localhost:8080';
-};
-
-const BASE_URL = getBaseUrl();
+export const BASE_URL = 'https://runniest-suppositionally-jesica.ngrok-free.dev';
 
 // 토큰 저장/조회
 export const tokenStorage = {
   get: () => localStorage.getItem('accessToken'),
   set: (token: string) => localStorage.setItem('accessToken', token),
   remove: () => localStorage.removeItem('accessToken'),
+};
+
+// 원격 로그 전송
+export const remoteLog = (message: string, level: 'info' | 'warn' | 'error' = 'info', data?: any) => {
+  console.log(`[Remote] ${message}`, data || '');
+  fetch(`${BASE_URL}/api/v1/debug/log`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ level, message, data }),
+  }).catch(() => {}); // 로그 전송 실패는 무시
 };
 
 // 공통 fetch
@@ -37,6 +38,11 @@ const request = async (url: string, options: RequestInit = {}) => {
     console.log(`[API Response] ${res.status} ${fullUrl}`);
 
     if (!res.ok) {
+      // 401(인증실패) 또는 404(유저없음) 시 세션 초기화
+      if (res.status === 401 || res.status === 404) {
+        console.warn(`[API] 세션 무효화 (${res.status}). 토큰을 삭제합니다.`);
+        tokenStorage.remove();
+      }
       const error = await res.json().catch(() => ({ error: '서버 오류' }));
       throw new Error(error.error || '서버 오류');
     }
@@ -78,9 +84,6 @@ export const recordPayment = (productType: 'credit' | 'hidden') =>
     method: 'POST', 
     body: JSON.stringify({ productType }) 
   });
-
-// 광고 보상 지급 요청
-export const rewardAdCredit = () => request('/api/v1/payments/reward/ad', { method: 'POST' });
 
 // 출석 보상 지급 요청
 export const claimAttendanceReward = () => request('/api/v1/payments/reward/attendance', { method: 'POST' });
