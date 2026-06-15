@@ -16,7 +16,15 @@ export interface NavigationContextType {
 export const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
 
 export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [step, setStep] = useState<Step>('main');
+  // URL 경로를 기반으로 초기 스텝 설정 (앱 내 기능 딥링크 지원)
+  const getInitialStep = (): Step => {
+    const path = window.location.pathname;
+    if (path === '/collection') return 'collection';
+    if (path === '/payment') return 'payment';
+    return 'main';
+  };
+
+  const [step, setStep] = useState<Step>(getInitialStep);
   const { setDialogConfig } = useUI();
 
   // --- 핵심 로직 (useEffect에서 참조하므로 위로 이동) ---
@@ -30,28 +38,31 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
 
   const navigateTo = useCallback((nextStep: Step) => {
     if (nextStep !== step) {
-      window.history.pushState({ step: nextStep }, '', '');
+      const path = nextStep === 'main' ? '/' : `/${nextStep}`;
+      window.history.pushState({ step: nextStep }, '', path);
       setStep(nextStep);
     }
   }, [step]);
 
   const replaceTo = useCallback((nextStep: Step) => {
     if (nextStep !== step) {
-      window.history.replaceState({ step: nextStep }, '', '');
+      const path = nextStep === 'main' ? '/' : `/${nextStep}`;
+      window.history.replaceState({ step: nextStep }, '', path);
       setStep(nextStep);
     }
   }, [step]);
 
   const resetToMain = useCallback(() => {
     setStep('main');
-    window.history.pushState({ step: 'main' }, '', '');
+    window.history.pushState({ step: 'main' }, '', '/');
   }, []);
 
   // --- Effect Hooks ---
 
   // 앱 진입 시 초기 히스토리 상태 설정
   useEffect(() => {
-    window.history.replaceState({ step: 'main' }, '', '');
+    const initialPath = step === 'main' ? '/' : `/${step}`;
+    window.history.replaceState({ step }, '', initialPath);
   }, []);
 
   // 브라우저/상단바 뒤로가기 감지 (브라우저 표준 popstate)
@@ -60,7 +71,11 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
       if (event.state && event.state.step) {
         setStep(event.state.step);
       } else {
-        setStep('main');
+        // 브라우저 기본 동작으로 돌아왔을 때 현재 경로 기준으로 복구
+        const path = window.location.pathname;
+        if (path === '/collection') setStep('collection');
+        else if (path === '/payment') setStep('payment');
+        else setStep('main');
       }
     };
     window.addEventListener('popstate', handlePopState);

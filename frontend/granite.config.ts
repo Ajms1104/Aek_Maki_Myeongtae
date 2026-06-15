@@ -5,7 +5,7 @@ export default defineConfig({
   brand: {
     displayName: '액막이AI', 
     primaryColor: '#3182F6', 
-    icon: './src/assets/액막이_아이콘.png',
+    icon: 'https://static.toss.im/appsintoss/16735/bca00758-7ffe-41cb-9210-0017b194f21e.png',
   },
   web: {
     host: 'localhost',
