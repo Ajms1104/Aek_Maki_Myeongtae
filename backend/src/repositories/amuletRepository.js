@@ -203,12 +203,12 @@ exports.findUserAmuletsByUserId = async (userId) => {
         a.name,
         a.grade,
         ua.count,
-        ua.created_at AS "createdAt",
+        ua.first_acquired_at AS "createdAt",
         ua.updated_at AS "updatedAt"
     FROM user_amulets ua
     JOIN amulets a ON ua.amulet_id = a.id
     WHERE ua.user_id = $1
-    ORDER BY ua.created_at DESC
+    ORDER BY ua.first_acquired_at DESC
   `;
   const result = await db.query(query, [userId]);
   return result.rows;

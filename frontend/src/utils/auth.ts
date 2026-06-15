@@ -1,26 +1,25 @@
 import { exchangeTossToken, remoteLog } from './api';
-import { getAnonymousKey } from '@apps-in-toss/web-framework';
+import { appLogin } from '@apps-in-toss/web-framework';
 
 /**
- * 토스 사용자 식별키를 발급받아 로그인을 시도합니다. (동의창 없음)
+ * 토스 사용자 식별키를 발급받아 로그인을 시도합니다. (동의창 포함)
  */
 export const loginWithToss = async (): Promise<any> => {
   try {
-    console.log('[Toss Login] 식별키 발급 시작...');
+    console.log('[Toss Login] 인가 코드 발급 시작...');
     
-    // 1. 토스 사용자 식별키 발급 (비게임 미니앱용)
-    const result = await getAnonymousKey();
+    // 1. 토스 인가 코드 발급 (동의창 포함)
+    const result = await appLogin();
     
     if (!result || typeof result === 'string') {
-      throw new Error(`식별키 발급 실패: ${result || 'unknown'}`);
+      throw new Error(`인가 코드 발급 실패: ${result || 'unknown'}`);
     }
 
-    const hash = result.hash;
-    remoteLog(`[Toss Login] 식별키 수신 성공`);
+    const { authorizationCode, referrer } = result;
+    remoteLog(`[Toss Login] 인가 코드 수신 성공`);
 
-    // 2. 백엔드로 식별키(hash) 전달하여 JWT 발급
-    // 기존 exchangeTossToken 함수를 재사용하되, 첫 번째 인자로 hash를 넘깁니다.
-    const loginResult = await exchangeTossToken(hash, 'DEFAULT');
+    // 2. 백엔드로 인가 코드(authorizationCode) 전달하여 JWT 발급
+    const loginResult = await exchangeTossToken(authorizationCode, referrer);
     remoteLog('[Toss Login] 서비스 로그인 성공');
 
     return loginResult;

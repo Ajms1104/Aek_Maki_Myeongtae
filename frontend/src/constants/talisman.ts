@@ -94,7 +94,7 @@ export const HIDDEN_TALISMAN_DATA: Talisman[] = [
     id: 86, unlocked: false, name: 'Moshu 명태', grade: 'hidden', count: 0,
     img: getAmuletImage('/uploads/hidden/hidden_amulet_02.png', 'ui'), 
     description: 'Moshu 명태는 따뜻하고 부드러운 기운으로 당신의 지친 마음을 포근하게 안아줍니다.',
-    letter: '안녕하세요 액막이 AI를 이용해주셔서 감사합니다\n해당 부적(그림)에 제가 좋아하는 것들과 명태, 돈과 네잎클로버를\n적절하게 배치해, 액막이+행운 기능을 극대화 해봤습니다\n항상 행복하시고 건강하시길 바라겠습니다\n다시 한 번 이용 및 구매해주셔서 감사합니다',
+    letter: '안녕하세요 액막이AI를 이용해주셔서 감사합니다\n해당 부적(그림)에 제가 좋아하는 것들과 명태, 돈과 네잎클로버를\n적절하게 배치해, 액막이+행운 기능을 극대화 해봤습니다\n항상 행복하시고 건강하시길 바라겠습니다\n다시 한 번 이용 및 구매해주셔서 감사합니다',
     fontFamily: '"Nanum Pen Script", cursive'
   },
   { 

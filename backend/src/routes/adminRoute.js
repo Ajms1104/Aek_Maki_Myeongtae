@@ -48,6 +48,7 @@ const upload = multer({ storage });
  *         description: 관리자 인증 실패
  */
 router.get('/probabilities', verifyAdmin, adminController.getProbabilities);
+router.get('/stats', verifyAdmin, adminController.getDashboardStats);
 
 /**
  * @swagger

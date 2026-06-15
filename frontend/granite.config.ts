@@ -3,9 +3,9 @@ import { defineConfig } from '@apps-in-toss/web-framework/config';
 export default defineConfig({
   appName: 'aekmagi-ai',
   brand: {
-    displayName: '액막이 AI', 
+    displayName: '액막이AI', 
     primaryColor: '#3182F6', 
-    icon: './src/assets/main_app_logo.png',
+    icon: './src/assets/액막이_아이콘.png',
   },
   web: {
     host: 'localhost',

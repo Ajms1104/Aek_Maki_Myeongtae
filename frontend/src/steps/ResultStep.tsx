@@ -55,11 +55,7 @@ const TypingCursor = styled.span<{ $visible: boolean }>`
 `;
 
 const AnimatedCardWrapper = styled(S.ResultCardWrapper)<{ $isFlying: boolean }>`
-  ${(props) =>
-    !props.$isFlying &&
-    css`
-      animation: ${floatingAnimation} 3s ease-in-out infinite;
-    `}
+  ${(props) => !props.$isFlying && css`animation: ${floatingAnimation} 3s ease-in-out infinite;`}
 `;
 
 const NewBadge = styled.div<{ $grade: string }>`
@@ -82,7 +78,6 @@ const NewBadge = styled.div<{ $grade: string }>`
   border: ${(props) => (props.$grade === 'common' ? '1px solid #e5e8eb' : 'none')};
   animation: ${floatingAnimation} 2s ease-in-out infinite;
   position: relative;
-
   &::after {
     content: '';
     position: absolute;
@@ -105,310 +100,278 @@ const ResultStep: React.FC = () => {
   const { consultationResult } = useTalisman();
   const [isFlying, setIsFlying] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-
   const bannerRef = useRef<HTMLDivElement>(null);
   const { isInitialized, attachBanner } = useTossBanner();
 
   useEffect(() => {
     if (!isInitialized || !bannerRef.current) return;
-
-    const attached = attachBanner('ait-ad-test-banner-id', bannerRef.current, {
+    const attached = attachBanner('ait.v2.live.71baf9f8b7fe466d', bannerRef.current, {
       theme: 'auto',
       tone: 'blackAndWhite',
       variant: 'expanded',
-      callbacks: {
-        onAdFailedToRender: (payload) => console.error('광고 렌더링 실패:', payload),
-      },
+      callbacks: { onAdFailedToRender: (payload) => console.error('광고 렌더링 실패:', payload) },
     });
-
-    return () => {
-      attached?.destroy();
-    };
+    return () => { attached?.destroy(); };
   }, [isInitialized, attachBanner]);
 
   const grade = (consultationResult?.amulet?.grade as Grade) || 'common';
   const isNew = consultationResult?.amulet?.isNew ?? false;
   const theme = GRADE_COLORS[grade] || GRADE_COLORS.common;
-
-  const displayImageUrl = getAmuletImage(consultationResult?.amulet?.imageUrl || '', 'ui');
   const highResImageUrl = getAmuletImage(consultationResult?.amulet?.imageUrl || '', 'high-res');
-
   const comment = consultationResult?.reply ?? '명태가 당신의 걱정을 모두 가져갔어요.';
-  const { displayedText } = useTypingEffect(comment, 60);
+  
+  // UI 출력용 문자열 처리 (키워드 부분 제거)
+  const displayComment = comment.replace(/\[키워드:\s*.+?\]/g, '').trim();
+  const { displayedText } = useTypingEffect(displayComment, 60);
 
-  const handleSaveCompositeImage = async () => {
-    if (isSaving) return;
-    setIsSaving(true);
-    remoteLog('[Canvas] 마스터피스 정통 부적 합성 시작');
-
+  const handleSaveCompositeImage = async (isDebug = false) => {
+    if (isSaving && !isDebug) return;
+    if (!isDebug) setIsSaving(true);
+    remoteLog('[Canvas] 정통 부적 합성 시작 (프리미엄 퀄리티)');
     try {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d', { willReadFrequently: true });
       if (!ctx) throw new Error('Canvas context 생성 실패');
-
-      canvas.width = 1000;
-      canvas.height = 1800;
-
+      
+      canvas.width = 1000; 
+      canvas.height = 1200;
+      
+      const targetGrade = isDebug ? 'legend' : grade;
       const inkRed = '#b91c1c'; 
       const goldBase = '#fcd34d'; 
-      const paperLight = '#fff9db';
-
-      // --- [1. 배경] ---
-      const grad = ctx.createRadialGradient(500, 700, 100, 500, 900, 1200);
-      grad.addColorStop(0, paperLight);
-      grad.addColorStop(0.6, goldBase);
-      grad.addColorStop(1, '#f97316'); 
-      ctx.fillStyle = grad;
+      
+      // 1. 등급별 배경 그라데이션 다변화
+      const grad = ctx.createRadialGradient(500, 500, 50, 500, 800, 1200);
+      if (targetGrade === 'legend') {
+        grad.addColorStop(0, '#fffbeb'); grad.addColorStop(0.5, '#fde68a'); grad.addColorStop(1, '#f59e0b');
+      } else if (targetGrade === 'rare') {
+        grad.addColorStop(0, '#f5f3ff'); grad.addColorStop(0.5, '#d8b4fe'); grad.addColorStop(1, '#9333ea');
+      } else {
+        grad.addColorStop(0, '#f8f9fa'); grad.addColorStop(0.5, '#e2e8f0'); grad.addColorStop(1, '#9ca3af');
+      }
+      ctx.fillStyle = grad; 
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // --- [2. 붓터치 함수] ---
-      const drawBrush = (x: number, y: number, size: number, alpha = 1) => {
-        ctx.save();
-        ctx.fillStyle = inkRed;
-        ctx.globalAlpha = (0.5 + Math.random() * 0.5) * alpha;
-        ctx.beginPath();
-        ctx.arc(x + (Math.random()-0.5)*size*0.2, y + (Math.random()-0.5)*size*0.2, size * (0.7 + Math.random()*0.4), 0, Math.PI*2);
-        ctx.fill();
-        ctx.restore();
-      };
-
-      const drawBrushLine = (x1: number, y1: number, x2: number, y2: number, size: number, alpha = 1) => {
-        const dist = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
-        const steps = dist / 1.5;
-        for (let i = 0; i <= steps; i++) {
-            const t = i / steps;
-            drawBrush(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t, size, alpha);
-        }
-      };
-
-      // --- [3. 상단: 정통 생쪽매듭 & 노리개 술] ---
-      const drawMasterKnot = (cx: number, cy: number) => {
-        ctx.save();
-        drawBrushLine(cx-25, cy-25, cx+25, cy+25, 8);
-        drawBrushLine(cx+25, cy-25, cx-25, cy+25, 8);
-        const drawPetal = (ang: number, dist: number, r: number) => {
-            const px = cx + Math.cos(ang) * dist;
-            const py = cy + Math.sin(ang) * dist;
-            for(let i=0; i<r*4; i++) {
-                const a = (Math.PI*2*i) / (r*4);
-                drawBrush(px + Math.cos(a)*r, py + Math.sin(a)*r, 6, 0.9);
-            }
-        };
-        drawPetal(0, 55, 30);
-        drawPetal(Math.PI/2, 55, 30);
-        drawPetal(Math.PI, 55, 30);
-        drawPetal(-Math.PI/2, 55, 30);
-
-        for(let i=0; i<18; i++) {
-            const offsetX = (i - 9) * 4;
-            const len = 220 + Math.random() * 60;
-            for(let t=0; t<=1; t+=0.02) {
-                const tx = cx + offsetX + Math.sin(t*5 + i)*5;
-                const ty = cy + 40 + t * len;
-                drawBrush(tx, ty, 3, 0.5 - t*0.3);
-            }
-        }
-        for(let side of [-1, 1]) {
-            for(let i=0; i<4; i++) {
-                const startX = cx + (side * 40);
-                const endX = cx + (side * 450);
-                const cpX = cx + (side * 200);
-                const cpY = cy - 120 + (i * 35);
-                for(let t=0; t<=1; t+=0.01) {
-                    const tx = (1-t)**2 * startX + 2*(1-t)*t * cpX + t**2 * endX;
-                    const ty = (1-t)**2 * cy + 2*(1-t)*t * cpY + t**2 * (cy + 180 + i*25);
-                    drawBrush(tx, ty, 4, 0.4);
-                }
-            }
-        }
-        ctx.restore();
-      };
-      drawMasterKnot(500, 160);
-
-      // --- [4. 하단: 정통 청해파(靑海波) 문양] ---
-      const drawChunghaepaMaster = () => {
-        const startY = 1600;
-        const r = 55;
-        const gapX = 85;
-        const gapY = 38;
-        for (let row = 0; row < 7; row++) {
-            const y = startY + row * gapY;
-            const offsetX = (row % 2) * (gapX / 2);
-            for (let x = -100; x <= 1100; x += gapX) {
-                const curX = x + offsetX;
-                ctx.save();
-                ctx.beginPath();
-                ctx.arc(curX, y, r, Math.PI, Math.PI * 2);
-                ctx.fillStyle = goldBase;
-                ctx.fill();
-                for(let subR = r; subR >= 15; subR -= 14) {
-                    const steps = subR * 1.5;
-                    for(let i=0; i<=steps; i++) {
-                        const angle = Math.PI + (Math.PI * i / steps);
-                        const px = curX + Math.cos(angle) * subR;
-                        const py = y + Math.sin(angle) * subR;
-                        drawBrush(px, py, 4, 0.8 - row*0.1);
-                    }
-                }
-                ctx.restore();
-            }
-        }
-      };
-      drawChunghaepaMaster();
-
-      // --- [5. 부적 이미지 합성] ---
-      const imgRes = await fetch(highResImageUrl, { headers: { 'ngrok-skip-browser-warning': '69420' } });
-      const imgBlob = await imgRes.blob();
-      const objectUrl = URL.createObjectURL(imgBlob);
-      const img = new Image();
-      img.src = objectUrl;
-      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
-
+      // 한지(종이) 노이즈 질감 추가
       ctx.save();
-      ctx.globalCompositeOperation = 'multiply';
-      ctx.globalAlpha = 0.9;
-      ctx.drawImage(img, 225, 260, 550, 550);
+      ctx.fillStyle = 'rgba(0,0,0,0.03)';
+      for (let i = 0; i < 4000; i++) {
+        ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, 2, 2);
+      }
       ctx.restore();
-      URL.revokeObjectURL(objectUrl);
 
-      // --- [6. 텍스트 필사] ---
-      const fontSize = 48;
-      ctx.font = `900 ${fontSize}px "Noto Serif KR", serif`;
-      ctx.textAlign = 'center';
-      ctx.fillStyle = inkRed;
+      // 은은한 사선 격자 무늬
+      ctx.save();
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.03)';
+      ctx.lineWidth = 2;
+      for (let i = -canvas.height; i < canvas.width; i += 40) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + canvas.height, canvas.height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(i + canvas.height, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+      }
+      ctx.restore();
 
-      const wrapText = (text: string, maxWidth: number) => {
-        const chars = text.split('');
-        const lines = [];
-        let currentLine = '';
-        for (let n = 0; n < chars.length; n++) {
-          let testLine = currentLine + chars[n];
-          if (ctx.measureText(testLine).width > maxWidth) {
-            lines.push(currentLine);
-            currentLine = chars[n];
-          } else {
-            currentLine = testLine;
+      // 중앙 원형 후광
+      ctx.save();
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.shadowColor = targetGrade === 'rare' ? 'rgba(147, 51, 234, 0.3)' : 'rgba(185, 28, 28, 0.2)';
+      ctx.shadowBlur = 50;
+      ctx.beginPath(); ctx.arc(500, 480, 250, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+
+      // 2. 외곽 테두리 및 귀퉁이 장식
+      ctx.strokeStyle = inkRed;
+      ctx.lineWidth = 12;
+      ctx.strokeRect(40, 40, 920, 1120); 
+      ctx.lineWidth = 3;
+      ctx.strokeRect(60, 60, 880, 1080); 
+      
+      // 전통 귀퉁이 장식 (Corner Ornaments)
+      const drawCorner = (x: number, y: number, rotation: number) => {
+        ctx.save();
+        ctx.translate(x, y); ctx.rotate(rotation);
+        ctx.beginPath(); ctx.moveTo(0, 40); ctx.lineTo(0, 0); ctx.lineTo(40, 0);
+        ctx.lineWidth = 8; ctx.strokeStyle = inkRed; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(15, 15); ctx.lineTo(35, 35);
+        ctx.lineWidth = 4; ctx.stroke();
+        ctx.restore();
+      };
+      drawCorner(60, 60, 0);
+      drawCorner(940, 60, Math.PI/2);
+      drawCorner(940, 1140, Math.PI);
+      drawCorner(60, 1140, -Math.PI/2);
+
+      // 3. 상단 밧줄 및 매듭
+      ctx.save();
+      ctx.strokeStyle = inkRed; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(500, 40); ctx.lineTo(500, 160); ctx.stroke();
+      ctx.strokeStyle = goldBase; ctx.lineWidth = 2; ctx.globalAlpha = 0.8;
+      for (let y = 40; y < 160; y += 12) {
+        ctx.beginPath(); ctx.moveTo(496, y); ctx.lineTo(504, y + 8); ctx.stroke();
+      }
+      
+      ctx.fillStyle = inkRed; ctx.globalAlpha = 1;
+      const kx = 500; const ky = 160;
+      ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.arc(kx, ky, 22, 0, Math.PI*2); ctx.fill(); 
+      ctx.beginPath(); ctx.ellipse(kx - 35, ky, 24, 12, 0, 0, Math.PI*2); ctx.fill(); 
+      ctx.beginPath(); ctx.ellipse(kx + 35, ky, 24, 12, 0, 0, Math.PI*2); ctx.fill(); 
+      ctx.beginPath(); ctx.ellipse(kx, ky - 35, 12, 24, 0, 0, Math.PI*2); ctx.fill(); 
+      ctx.fillStyle = goldBase;
+      ctx.beginPath(); ctx.arc(kx, ky, 6, 0, Math.PI*2); ctx.fill();
+      
+      ctx.strokeStyle = inkRed; ctx.lineWidth = 2;
+      for (let i = -15; i <= 15; i += 3) {
+        ctx.beginPath(); ctx.moveTo(kx + i*0.4, ky + 20); ctx.lineTo(kx + i, 220); ctx.stroke();
+      }
+      ctx.restore();
+
+      // 4. 하단 파도 문양
+      ctx.save();
+      ctx.strokeStyle = inkRed; ctx.fillStyle = 'rgba(185, 28, 28, 0.03)';
+      ctx.lineWidth = 3; ctx.globalAlpha = 0.7;
+      const waveW = 80;
+      for (let row = 0; row < 4; row++) {
+        const yBase = 1160 - (row * 40); 
+        const xOff = (row % 2) * waveW;
+        for (let x = -waveW; x <= canvas.width + waveW; x += waveW * 2) {
+          for (let r = waveW; r > 10; r -= 20) {
+            ctx.beginPath(); ctx.arc(x + xOff, yBase, r, Math.PI, 0); ctx.stroke();
+            if (r === waveW) ctx.fill(); 
           }
         }
-        lines.push(currentLine);
-        return lines;
-      };
+      }
+      ctx.restore();
 
-      const lines = wrapText(comment, 680);
-      const startY = 980; 
-      const lineHeight = fontSize + 35;
-
-      lines.forEach((line, i) => {
-        ctx.save();
-        ctx.shadowColor = 'rgba(185, 28, 28, 0.3)';
-        ctx.shadowBlur = 10;
-        ctx.fillText(line, 500, startY + i * lineHeight);
-        ctx.restore();
+      // 5. 이미지 로드 및 그리기
+      const imgUrl = isDebug ? getAmuletImage('/uploads/legend/legend_amulet_03.png', 'high-res') : highResImageUrl;
+      remoteLog(`[Canvas] 이미지 로드 시작: ${imgUrl}`);
+      const relativePath = imgUrl.replace(window.location.origin, '');
+      const img = new Image();
+      img.crossOrigin = 'anonymous'; 
+      img.src = relativePath;
+      
+      await new Promise((res, rej) => { 
+        img.onload = () => res(true);
+        img.onerror = () => rej(new Error('이미지 로드 실패')); 
       });
+      ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = 0.95;
+      ctx.drawImage(img, 250, 180, 500, 500); ctx.restore();
 
-      // --- [7. 낙관] ---
-      const stampX = 720;
-      const stampY = 1520;
-      const stampSize = 180;
+      // 6. 맞춤형 한글 요약 키워드 및 다변화된 서브 텍스트 로직
+      let customKeyword = '만사형통';
+      const targetComment = isDebug ? "취업 면접 때문에 너무 떨려요." : comment;
+      const keywordMatch = targetComment.match(/\[키워드:\s*(.+?)\]/);
+
+      if (keywordMatch && keywordMatch[1]) {
+        customKeyword = keywordMatch[1].substring(0, 4);
+      } else {
+        if (targetComment.includes('취업') || targetComment.includes('면접') || targetComment.includes('합격')) customKeyword = '취업성공';
+        else if (targetComment.includes('돈') || targetComment.includes('재물') || targetComment.includes('부자')) customKeyword = '재물가득';
+        else if (targetComment.includes('건강') || targetComment.includes('병') || targetComment.includes('아프')) customKeyword = '무병장수';
+        else if (targetComment.includes('연애') || targetComment.includes('사랑') || targetComment.includes('인연')) customKeyword = '천생연분';
+        else if (targetComment.includes('시험') || targetComment.includes('공부') || targetComment.includes('성적')) customKeyword = '시험합격';
+        else if (targetComment.includes('인간관계') || targetComment.includes('사람') || targetComment.includes('친구')) customKeyword = '인복가득';
+        else if (targetGrade === 'legend') customKeyword = '소원성취';
+        else if (targetGrade === 'rare') customKeyword = '행운가득';
+      }
+
+      // 키워드별 맞춤형 서브 텍스트 매핑
+      const subTextMap: Record<string, string> = {
+        '취업성공': '명태가 당신의 눈부신 새 출발을 응원합니다',
+        '재물가득': '마르지 않는 샘물처럼 풍요가 깃들 것입니다',
+        '무병장수': '아픈 곳 없이 평안하고 건강한 날들이 이어집니다',
+        '천생연분': '귀한 인연이 닿아 따뜻한 사랑을 이룰 것입니다',
+        '시험합격': '그동안의 땀방울이 값진 열매로 맺힐 것입니다',
+        '인복가득': '좋은 사람들이 당신의 곁을 든든히 지켜줍니다',
+        '만사형통': '세상의 모든 좋은 기운이 당신을 향해 흐릅니다',
+        '소원성취': '마음속 깊이 품은 간절한 소망이 이루어집니다',
+        '행운가득': '예상치 못한 기분 좋은 일들이 쏟아질 것입니다'
+      };
+      const subText = subTextMap[customKeyword] || '명태가 당신의 무거운 고민을 먹어치웠습니다';
+      
       ctx.save();
-      ctx.fillStyle = inkRed;
+      // 텍스트 그라데이션 적용 (고급스러움 극대화)
+      const textGrad = ctx.createLinearGradient(0, 720, 0, 820);
+      textGrad.addColorStop(0, '#7f1d1d'); // 다크 레드
+      textGrad.addColorStop(1, inkRed);
+      
+      ctx.font = '900 85px "Pretendard", "Noto Serif KR", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = textGrad;
+      ctx.shadowColor = 'rgba(255, 255, 255, 0.8)'; 
+      ctx.shadowBlur = 15; // 글자 주변을 환하게 밝힘
+      ctx.fillText(customKeyword, 500, 800);
+
+      // 서브 텍스트 (더 정갈하고 세련된 폰트 처리)
+      ctx.font = '600 30px "Pretendard", sans-serif';
+      ctx.fillStyle = '#333d4b';
+      ctx.shadowBlur = 0;
+      ctx.fillText(subText, 500, 880);
+      ctx.restore(); 
+
+      // 7. 하단 고퀄리티 직인
+      const stampX = 760; const stampY = 960; const stampSize = 120; 
+      ctx.save();
       ctx.globalAlpha = 0.95;
-      ctx.fillRect(stampX, stampY, stampSize, stampSize);
+      ctx.fillStyle = inkRed;
+      ctx.beginPath();
+      ctx.roundRect(stampX, stampY, stampSize, stampSize, 12);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 36px "Noto Serif KR", serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('액막', stampX + stampSize/2, stampY + 50);
+      ctx.fillText('명태', stampX + stampSize/2, stampY + 95);
+
       ctx.globalCompositeOperation = 'destination-out';
-      for(let i=0; i<40; i++) {
+      ctx.fillStyle = '#000000';
+      for(let i=0; i<60; i++) {
+        const x = stampX + (Math.random() > 0.5 ? Math.random()*12 : stampSize - Math.random()*12);
+        const y = stampY + Math.random()*stampSize;
+        ctx.beginPath(); ctx.arc(x, y, Math.random()*2.5 + 0.5, 0, Math.PI*2); ctx.fill();
+        const x2 = stampX + Math.random()*stampSize;
+        const y2 = stampY + (Math.random() > 0.5 ? Math.random()*12 : stampSize - Math.random()*12);
+        ctx.beginPath(); ctx.arc(x2, y2, Math.random()*2.5 + 0.5, 0, Math.PI*2); ctx.fill();
+      }
+      for(let i=0; i<120; i++) {
         ctx.beginPath();
-        ctx.arc(stampX + Math.random()*stampSize, stampY + (Math.random() < 0.5 ? 0 : stampSize), Math.random()*12, 0, Math.PI*2);
+        ctx.arc(stampX + Math.random()*stampSize, stampY + Math.random()*stampSize, Math.random()*1.2, 0, Math.PI*2);
         ctx.fill();
       }
       ctx.restore();
-      ctx.save();
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 44px serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('액막', stampX + stampSize/2, stampY + 75);
-      ctx.fillText('명태', stampX + stampSize/2, stampY + 135);
-      ctx.restore();
 
-      // --- [8. 저장] ---
       const base64Data = canvas.toDataURL('image/png').split(',')[1];
-      try {
-        await saveBase64Data({
-          data: base64Data,
-          fileName: `myeongtae_amulet_${Math.floor(Date.now()/1000)}.png`,
-          mimeType: 'image/png'
-        });
-        triggerToast('영험한 복 부적이 저장되었어요 🐟', 'success');
-      } catch (e: any) {
-        const link = document.createElement('a');
-        link.download = `talisman.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-        triggerToast('부적이 저장되었습니다', 'success');
+      if (isDebug) {
+        const win = window.open();
+        if (win) win.document.write(`<div style="background:#eee; display:flex; justify-content:center; padding:20px;"><img src="${canvas.toDataURL('image/png')}" style="max-height:90vh; border:1px solid #ccc; box-shadow:0 20px 50px rgba(0,0,0,0.1);" /></div>`);
+      } else {
+        try {
+          await saveBase64Data({ data: base64Data, fileName: `myeongtae_amulet_${Math.floor(Date.now()/1000)}.png`, mimeType: 'image/png' });
+          triggerToast('영험한 복 부적이 저장되었어요 🐟', 'success');
+        } catch (e: any) {
+          const link = document.createElement('a'); link.download = `talisman.png`; link.href = canvas.toDataURL('image/png'); link.click();
+          triggerToast('부적이 저장되었습니다', 'success');
+        }
       }
     } catch (err: any) {
-      console.error(err);
+      console.error(err); remoteLog(`[Canvas] 실패 원인: ${err.message}`, 'error');
       triggerToast('부적 생성에 실패했어요', 'error');
-    } finally {
-      setIsSaving(false);
-    }
+    } finally { setIsSaving(false); }
   };
 
   return (
-    <L.Content style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      height: '100%', 
-      background: `radial-gradient(circle at 50% 30%, ${theme.bg} 0%, #ffffff 70%)`,
-      padding: '0 20px', 
-      overflow: 'hidden', 
-      justifyContent: 'flex-start'
-    }}>
+    <L.Content style={{ display: 'flex', flexDirection: 'column', height: '100%', background: `radial-gradient(circle at 50% 30%, ${theme.bg} 0%, #ffffff 70%)`, padding: '0 20px', overflow: 'hidden', justifyContent: 'flex-start' }}>
       <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '65px', marginBottom: '20px' }}>
         <div style={{ width: '190px', position: 'relative' }}>
-          {isNew && (
-            <div style={{ position: 'absolute', top: '-45px', left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 100 }}>
-              <NewBadge $grade={grade}>
-                <IoSparkles size={14} />
-                {grade === 'legend' ? '전설 부적!' : grade === 'rare' ? '희귀 부적!' : '새로운 부적!'}
-              </NewBadge>
-            </div>
-          )}
-          <AnimatedCardWrapper $isFlying={isFlying}>
-            <S.ImageBox $bg="#ffffff" $glow={grade === 'legend'} style={{ padding: '16px', border: `2px solid ${theme.sub}`, boxShadow: `0 20px 40px ${theme.sub}40` }}>
-              <img src={displayImageUrl} alt="부적" style={{ width: '100%', height: 'auto', objectFit : 'contain' }} />
-            </S.ImageBox>
-          </AnimatedCardWrapper>
+          {isNew && <div style={{ position: 'absolute', top: '-45px', left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 100 }}><NewBadge $grade={grade}><IoSparkles size={14} />{grade === 'legend' ? '전설 부적!' : grade === 'rare' ? '희귀 부적!' : '새로운 부적!'}</NewBadge></div>}
+          <AnimatedCardWrapper $isFlying={isFlying}><S.ImageBox $bg="#ffffff" $glow={grade === 'legend'} style={{ padding: '16px', border: `2px solid ${theme.sub}`, boxShadow: `0 20px 40px ${theme.sub}40` }}><img src={getAmuletImage(consultationResult?.amulet?.imageUrl || '', 'ui')} alt="부적" style={{ width: '100%', height: 'auto', objectFit : 'contain' }} /></S.ImageBox></AnimatedCardWrapper>
         </div>
       </div>
-
-      <div style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', minHeight: 0, marginBottom: '16px' }}>
-        <ResultTextBox style={{ border: `1px solid ${theme.sub}80` }}>
-          <p style={{ color: '#191f28', textAlign: 'center', lineHeight: 1.6, fontSize: comment.length > 120 ? '13px' : '15px', fontWeight: 600, margin: 0, whiteSpace: 'pre-wrap' }}>
-            {displayedText}
-            <TypingCursor $visible={displayedText.length < comment.length} />
-          </p>
-        </ResultTextBox>
-      </div>
-
-      <div style={{ flexShrink: 0, width: '100%', paddingBottom: '20px' }}>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '16px' }}>
-            <C.MainButton onClick={handleSaveCompositeImage} disabled={isSaving} style={{ flex: 1, height: '54px' }}>
-              {isSaving ? '준비 중...' : '부적 소장 및 공유하기'}
-            </C.MainButton>
-            <button
-                onClick={() => { if (!isFlying) { setIsFlying(true); setTimeout(() => navigateTo('collection'), 700); } }}
-                style={{ width: '56px', height: '54px', borderRadius: '18px', border: '2px solid #3182f6', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-            >
-                <IoArchiveOutline size={24} color="#3182f6" />
-            </button>
-          </div>
-          <div 
-            ref={bannerRef} 
-            style={{ width: '100%', height: '96px', background: '#f9fafb', borderRadius: '16px', overflow: 'hidden' }} 
-          />
-      </div>
+      <div style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', minHeight: 0, marginBottom: '16px' }}><ResultTextBox style={{ border: `1px solid ${theme.sub}80` }}><p style={{ color: '#191f28', textAlign: 'center', lineHeight: 1.6, fontSize: displayComment.length > 120 ? '13px' : '15px', fontWeight: 600, margin: 0, whiteSpace: 'pre-wrap' }}>{displayedText}<TypingCursor $visible={displayedText.length < displayComment.length} /></p></ResultTextBox></div>
+      
+      <div style={{ flexShrink: 0, width: '100%', paddingBottom: '20px' }}><div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '16px' }}><C.MainButton onClick={() => handleSaveCompositeImage(false)} disabled={isSaving} style={{ flex: 1, height: '54px' }}>{isSaving ? '준비 중...' : '부적 소장 및 공유하기'}</C.MainButton><button onClick={() => { if (!isFlying) { setIsFlying(true); setTimeout(() => navigateTo('collection'), 700); } }} style={{ width: '56px', height: '54px', borderRadius: '18px', border: '2px solid #3182f6', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><IoArchiveOutline size={24} color="#3182f6" /></button></div><div ref={bannerRef} style={{ width: '100%', height: '96px', background: '#f9fafb', borderRadius: '16px', overflow: 'hidden' }} /></div>
     </L.Content>
   );
 };
-
 export default ResultStep;
