@@ -57,3 +57,14 @@ exports.downloadAmulet = async (req, res) => {
     return res.status(500).json({ error: '서버 내부 에러' });
   }
 };
+
+// 전체 통계 조회 (인증 불필요)
+exports.getPublicStats = async (req, res) => {
+  try {
+    const result = await amuletService.getTotalStats();
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error('getPublicStats 에러:', err);
+    return res.status(500).json({ error: '서버 내부 에러' });
+  }
+};

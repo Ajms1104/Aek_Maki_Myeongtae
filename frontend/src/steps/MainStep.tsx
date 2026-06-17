@@ -8,7 +8,6 @@ import {
   IoColorWandOutline,
   IoFingerPrintOutline,
   IoChatbubblesOutline,
-  IoHardwareChipOutline,
   IoStarOutline,
   IoShieldCheckmarkOutline,
   IoImageOutline,
@@ -24,25 +23,10 @@ import { tokenStorage, remoteLog } from '../utils/api';
 import { GRADE_COLORS } from '../constants/talisman';
 import { getAmuletImage } from '../utils/amuletAssets';
 
-const pulseGreen = keyframes`
-  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.4); }
-  70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(39, 174, 96, 0); }
-  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(39, 174, 96, 0); }
-`;
-
-const OnlineStatusDot = styled.div`
-  width: 6px; 
-  height: 6px; 
-  background: #27ae60; 
-  border-radius: 50%;
-  animation: ${pulseGreen} 2s infinite;
-`;
-
 const MainStep: React.FC = () => {
   const { navigateTo } = useNavigation();
   const { credits, handleAttendanceReward, refreshCollection } = useTalisman();
   const { openDialog, triggerToast } = useUI();
-  const [visitorCount, setVisitorCount] = useState(37421);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
@@ -243,13 +227,6 @@ const MainStep: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setVisitorCount(prev => prev + Math.floor(Math.random() * 2));
-    }, 4500);
-    return () => clearInterval(timer);
-  }, []);
-
   const attemptLogin = async () => {
     setIsLoggingIn(true);
     try {
@@ -312,7 +289,7 @@ const MainStep: React.FC = () => {
           position: 'relative',
           overflow: 'hidden',
           width: '100%',
-          aspectRatio: '2 / 1',
+          aspectRatio: '2.5 / 1', // 프레임 비율 조정
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
@@ -323,9 +300,9 @@ const MainStep: React.FC = () => {
             onClick={handleDebugReset}
             style={{ 
               position: 'absolute',
-              top: '50%',
+              top: '55%', // 중심축 조정
               left: '50%',
-              transform: 'translate(-50%, -50%)',
+              transform: 'translate(-50%, -50%) scale(1.15)', // 크기 살짝 키움
               width: '100%',
               height: '100%',
               objectFit: 'contain',
@@ -364,26 +341,6 @@ const MainStep: React.FC = () => {
             }}>
               <IoColorWandOutline size={14} color="#3182f6" />
               <span style={{ fontSize: '13px', fontWeight: 900, color: '#3182f6' }}>{credits}</span>
-            </div>
-          </div>
-
-          <div style={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
-            <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                background: 'rgba(255,255,255,0.9)',
-                width: 'fit-content',
-                margin: '0 auto',
-                padding: '4px 12px',
-                borderRadius: '100px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
-              }}>
-              <OnlineStatusDot />
-              <span style={{ color: '#4e5968', fontSize: '11px', fontWeight: 800 }}>
-                {visitorCount.toLocaleString()}명이 위로받는 중
-              </span>
             </div>
           </div>
         </div>

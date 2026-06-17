@@ -49,6 +49,7 @@ export const getCollection = () => request('/api/v1/amulets/collection');
 export const recordPayment = (productType: 'credit' | 'hidden') => request('/api/v1/payments/record', { method: 'POST', body: JSON.stringify({ productType }) });
 export const claimAttendanceReward = () => request('/api/v1/payments/reward/attendance', { method: 'POST' });
 export const getCatalog = () => request('/api/v1/amulets/catalog');
+export const getPublicStats = () => request('/api/v1/amulets/public-stats');
 export const getAdminUsers = (page = 1, search = '') => request(`/api/v1/admin/users?page=${page}&search=${search}`);
 export const getAdminUserDetail = (userId: string | number) => request(`/api/v1/admin/users/${userId}`);
 export const updateAdminUserUnlock = (userId: string | number, unlocked: boolean) => request(`/api/v1/admin/users/${userId}/unlock`, { method: 'PATCH', body: JSON.stringify({ unlocked }) });

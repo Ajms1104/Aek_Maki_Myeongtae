@@ -26,6 +26,18 @@ router.get('/catalog', amuletController.getCatalog);
 
 /**
  * @swagger
+ * /api/v1/amulets/public-stats:
+ *   get:
+ *     summary: 전체 통계 조회 (인증 불필요)
+ *     tags: [Amulet]
+ *     responses:
+ *       200:
+ *         description: 전체 유저 수, 부적 생성 수 등
+ */
+router.get('/public-stats', amuletController.getPublicStats);
+
+/**
+ * @swagger
  * /api/v1/amulets/me:
  *   get:
  *     summary: 내 보유 부적 조회

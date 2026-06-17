@@ -67,3 +67,8 @@ exports.downloadAmulet = async (userId, userAmuletId) => {
 
   return { imagePath, name: userAmulet.name };
 };
+
+// 전체 통계 조회
+exports.getTotalStats = async () => {
+  return await amuletRepository.getTotalStats();
+};

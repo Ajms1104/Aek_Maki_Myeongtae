@@ -302,3 +302,14 @@ exports.saveDownload = async (userId, amuletId) => {
     [userId, amuletId]
   );
 };
+
+// 전체 통계 조회 (인증 불필요)
+exports.getTotalStats = async () => {
+  const { rows } = await db.query(`
+    SELECT 
+      (SELECT COUNT(*) FROM users) as "totalUsers",
+      (SELECT COUNT(*) FROM user_amulets) as "totalAmulets",
+      (SELECT COUNT(*) FROM consultations) as "totalConsultations"
+  `);
+  return rows[0];
+};
