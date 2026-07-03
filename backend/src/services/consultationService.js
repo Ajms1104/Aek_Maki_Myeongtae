@@ -1,26 +1,27 @@
-'use strict';
+﻿'use strict';
 
 const consultationRepository = require('../repositories/consultationRepository');
 const amuletRepository = require('../repositories/amuletRepository');
 const userRepository = require('../repositories/userRepository');
 const llmService = require('./llmService');
+const challengeService = require('./challengeService');
 
-// 고민 등록 + 부적 발급
+// 怨좊? ?깅줉 + 遺??諛쒓툒
 exports.createConsultation = async ({ userId, content, category }) => {
   const remainingCredits = await userRepository.deductCredit(userId, 1);
   if (remainingCredits === null) {
-    const err = new Error('크레딧이 부족합니다.');
+    const err = new Error('?щ젅?㏃씠 遺議깊빀?덈떎.');
     err.status = 403;
     throw err;
   }
 
-   // const remainingCredits = 999; // AI 테스트시 사용할 것, 위의 코드는 주석처리하고
+   // const remainingCredits = 999; // AI ?뚯뒪?몄떆 ?ъ슜??寃? ?꾩쓽 肄붾뱶??二쇱꽍泥섎━?섍퀬
 
 
-  // 2. preview 생성
+  // 2. preview ?앹꽦
   const preview = content.slice(0, 50) + (content.length > 50 ? '...' : '');
 
-  // DB 저장
+  // DB ???
   const consultation = await consultationRepository.create({
     userId,
     category,
@@ -28,34 +29,39 @@ exports.createConsultation = async ({ userId, content, category }) => {
     preview,
   });
 
-  // GPT 답변 생성
+  // GPT ?듬? ?앹꽦
   const reply = await llmService.generateReply({ content, category });
 
-  // 4. 부적 뽑기 (중복 방지 로직 적용)
-  // 유저가 아직 얻지 못한 부적 목록을 조회합니다.
+  // 4. 遺??戮묎린 (以묐났 諛⑹? 濡쒖쭅 ?곸슜)
+  // ?좎?媛 ?꾩쭅 ?살? 紐삵븳 遺??紐⑸줉??議고쉶?⑸땲??
   const uncollected = await amuletRepository.findUncollectedByUser(userId);
   
   let selected;
   let isNew = true;
 
   if (uncollected && uncollected.length > 0) {
-    // 아직 못 얻은 게 있다면 그 중에서 랜덤 선택
+    // ?꾩쭅 紐??살? 寃??덈떎硫?洹?以묒뿉???쒕뜡 ?좏깮
     selected = uncollected[Math.floor(Math.random() * uncollected.length)];
   } else {
-    // 다 모았다면 전체 중에서 랜덤 선택 (중복 발생)
+    // ??紐⑥븯?ㅻ㈃ ?꾩껜 以묒뿉???쒕뜡 ?좏깮 (以묐났 諛쒖깮)
     const amulets = await amuletRepository.getAll();
-    if (!amulets || amulets.length === 0) throw new Error('등록된 부적이 없습니다.');
+    if (!amulets || amulets.length === 0) throw new Error('?깅줉??遺?곸씠 ?놁뒿?덈떎.');
     selected = amulets[Math.floor(Math.random() * amulets.length)];
     isNew = false;
   }
 
-  // 5. 지급
+  // 5. 吏湲?
   await amuletRepository.giveToUser(userId, selected.id);
 
-  // 6. 상담-부적 연결
+  const challengeResult = await challengeService.evaluateAmuletCreated(userId, selected);
+  const finalCredits = challengeResult.awards.length > 0
+    ? challengeResult.awards[challengeResult.awards.length - 1].credits
+    : remainingCredits;
+
+  // 6. ?곷떞-遺???곌껐
   await consultationRepository.linkAmulet(consultation.id, selected.id);
 
-  // 7. 상태 업데이트
+  // 7. ?곹깭 ?낅뜲?댄듃
   await consultationRepository.updateStatus(consultation.id, {
     status: 'DONE',
     reply,
@@ -66,38 +72,39 @@ exports.createConsultation = async ({ userId, content, category }) => {
     status: 'DONE',
     reply,
     amulet: { ...selected, isNew },
-    remainingCredits, // 복수형으로 통일
+    remainingCredits: finalCredits, // includes challenge rewards when granted
+    challengeAwards: challengeResult.awards,
     deleteAt: consultation.delete_at,
   };
 };
 
-// 단건 조회
+// ?④굔 議고쉶
 exports.getConsultation = async (userId, consultationId) => {
   const result = await consultationRepository.findOneByUser(userId, consultationId);
   if (!result) {
-    const err = new Error('존재하지 않거나 본인 글이 아닙니다.');
+    const err = new Error('議댁옱?섏? ?딄굅??蹂몄씤 湲???꾨떃?덈떎.');
     err.status = 404;
     throw err;
   }
   return result;
 };
 
-// 목록 조회
+// 紐⑸줉 議고쉶
 exports.getConsultations = async (userId, { cursor, limit }) => {
   return await consultationRepository.findByUser(userId, { cursor, limit });
 };
 
-// 삭제
+// ??젣
 exports.deleteConsultation = async (userId, consultationId) => {
   const deleted = await consultationRepository.deleteOne(userId, consultationId);
   if (!deleted) {
-    const err = new Error('존재하지 않거나 본인 글이 아닙니다.');
+    const err = new Error('議댁옱?섏? ?딄굅??蹂몄씤 湲???꾨떃?덈떎.');
     err.status = 404;
     throw err;
   }
 };
 
-// 반응 업데이트
+// 諛섏쓳 ?낅뜲?댄듃
 exports.updateReaction = async (userId, consultationId, reaction) => {
   const updated = await consultationRepository.updateReaction(
     userId,
@@ -105,8 +112,11 @@ exports.updateReaction = async (userId, consultationId, reaction) => {
     reaction
   );
   if (!updated) {
-    const err = new Error('존재하지 않거나 본인 글이 아닙니다.');
+    const err = new Error('議댁옱?섏? ?딄굅??蹂몄씤 湲???꾨떃?덈떎.');
     err.status = 404;
     throw err;
   }
 };
+
+
+

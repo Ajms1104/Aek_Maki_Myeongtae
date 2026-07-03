@@ -11,6 +11,7 @@ import {
   IoStarOutline,
   IoShieldCheckmarkOutline,
   IoImageOutline,
+  IoTrophyOutline,
 } from 'react-icons/io5';
 import * as L from '../styles/layoutStyles';
 import * as C from '../styles/commonStyles';
@@ -25,10 +26,22 @@ import { getAmuletImage } from '../utils/amuletAssets';
 
 const MainStep: React.FC = () => {
   const { navigateTo } = useNavigation();
-  const { credits, handleAttendanceReward, refreshCollection } = useTalisman();
+  const { credits, challenges, attendanceStreak, handleAttendanceReward, refreshCollection } = useTalisman();
   const { openDialog, triggerToast } = useUI();
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const challengeCopy: Record<string, { title: string; description: string }> = {
+    ATTENDANCE_3_DAYS: { title: '\u0033\uC77C \uC5F0\uC18D \uCD9C\uC11D', description: '+1 \uC774\uC6A9\uD1A0\uD070' },
+    ATTENDANCE_7_DAYS: { title: '\u0037\uC77C \uC5F0\uC18D \uCD9C\uC11D', description: '+2 \uC774\uC6A9\uD1A0\uD070' },
+    FIRST_AMULET: { title: '\uBD80\uC801 \uB9CC\uB4E4\uC5B4\uBCF4\uAE30', description: '+1 \uC774\uC6A9\uD1A0\uD070' },
+    FIRST_LEGEND: { title: '\uC804\uC124 \uB4F1\uAE09 \uBD80\uC801 \uC5BB\uAE30', description: '+3 \uC774\uC6A9\uD1A0\uD070' },
+  };
+  const visibleChallenges = challenges.length > 0 ? challenges : [
+    { key: 'ATTENDANCE_3_DAYS', title: '3-day streak', description: '', rewardCredits: 1, target: 3, progress: Math.min(attendanceStreak, 3), completed: false },
+    { key: 'ATTENDANCE_7_DAYS', title: '7-day streak', description: '', rewardCredits: 2, target: 7, progress: Math.min(attendanceStreak, 7), completed: false },
+    { key: 'FIRST_AMULET', title: 'Create first amulet', description: '', rewardCredits: 1, target: 1, progress: 0, completed: false },
+    { key: 'FIRST_LEGEND', title: 'Get legendary amulet', description: '', rewardCredits: 3, target: 1, progress: 0, completed: false },
+  ];
 
   // ✅ 다변화된 프리미엄 퀄리티 프리뷰 로직 (옵션별 생성)
   const handleDebugPreview = async (gradeType: string, keyword: string) => {
@@ -325,9 +338,7 @@ const MainStep: React.FC = () => {
             >
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <IoArchiveOutline size={16} color="#3182f6" />
-                <span style={{ marginLeft: '6px', fontWeight: 800, color: '#191f28', fontSize: '12px' }}>보관함</span>
-              </div>
-            </C.CollectionLink>
+                <span style={{ marginLeft: '6px', fontWeight: 800, color: '#191f28', fontSize: '12px' }}>{'\uBCF4\uAD00\uD568'}</span>`r`n              </div>`r`n            </C.CollectionLink>
 
             <div style={{
               display: 'flex',
@@ -347,9 +358,9 @@ const MainStep: React.FC = () => {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           {[
-            { id: 1, title: '토스로 로그인하기', sub: '안전하고 빠르게 서비스를 시작하세요.', icon: <IoFingerPrintOutline size={20} color="#3182f6" />, color: '#e8f3ff' },
-            { id: 2, title: '고민 털어놓기', sub: '누구에게도 말 못 한 고민을 적어보세요.', icon: <IoChatbubblesOutline size={20} color="#a25df5" />, color: '#f4edff' },
-            { id: 4, title: '행운의 부적 받기', sub: '당신만을 위한 특별한 부적을 드려요.', icon: <IoStarOutline size={20} color="#27ae60" />, color: '#e8f5e9' },
+            { id: 1, title: '\uD1A0\uC2A4\uB85C \uB85C\uADF8\uC778\uD558\uAE30', sub: '\uC548\uC804\uD558\uACE0 \uBE60\uB974\uAC8C \uC2DC\uC791\uD558\uC138\uC694.', icon: <IoFingerPrintOutline size={20} color="#3182f6" />, color: '#e8f3ff' },
+            { id: 2, title: '\uACE0\uBBFC \uD138\uC5B4\uB193\uAE30', sub: '\uBA85\uD0DC\uC5D0\uAC8C \uB9D0 \uBABB \uD55C \uACE0\uBBFC\uC744 \uC801\uC5B4\uBCF4\uC138\uC694.', icon: <IoChatbubblesOutline size={20} color="#a25df5" />, color: '#f4edff' },
+            { id: 4, title: '\uD589\uC6B4\uC758 \uBD80\uC801 \uBC1B\uAE30', sub: '\uB2F9\uC2E0\uB9CC\uC744 \uC704\uD55C \uD2B9\uBCC4\uD55C \uBD80\uC801\uC744 \uB4DC\uB824\uC694.', icon: <IoStarOutline size={20} color="#27ae60" />, color: '#e8f5e9' },
           ].map((item) => (
             <div key={item.id} style={{
                 background: '#ffffff',
@@ -371,8 +382,39 @@ const MainStep: React.FC = () => {
             </div>
           ))}
         </div>
-      </div>
 
+        <div style={{ marginTop: '14px', background: '#ffffff', borderRadius: '20px', padding: '16px', border: '1px solid #f2f4f6', boxShadow: '0 4px 12px rgba(0,0,0,0.01)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: 900, color: '#191f28' }}>
+              <IoTrophyOutline size={18} color="#3182f6" /> {'\uB3C4\uC804\uACFC\uC81C'}
+            </div>
+            <div style={{ fontSize: '12px', fontWeight: 800, color: '#8b95a1' }}>{attendanceStreak}{'\uC77C \uC5F0\uC18D'}</div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {visibleChallenges.map((challenge) => {
+              const copy = challengeCopy[challenge.key] || { title: challenge.title, description: `+${challenge.rewardCredits} tokens` };
+              const progress = Math.min(challenge.progress, challenge.target);
+              const percent = challenge.target > 0 ? Math.min(100, (progress / challenge.target) * 100) : 0;
+              return (
+                <div key={challenge.key} style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '10px', alignItems: 'center' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 800, color: challenge.completed ? '#3182f6' : '#333d4b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{copy.title}</span>
+                      <span style={{ fontSize: '12px', fontWeight: 800, color: '#8b95a1', flexShrink: 0 }}>{progress}/{challenge.target}</span>
+                    </div>
+                    <div style={{ height: '6px', background: '#f2f4f6', borderRadius: '999px', overflow: 'hidden' }}>
+                      <div style={{ width: `${percent}%`, height: '100%', borderRadius: '999px', background: challenge.completed ? '#3182f6' : '#b4d4ff', transition: 'width 0.2s ease' }} />
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '12px', fontWeight: 900, color: challenge.completed ? '#3182f6' : '#6b7684', background: challenge.completed ? '#e8f3ff' : '#f9fafb', borderRadius: '999px', padding: '6px 8px', whiteSpace: 'nowrap' }}>
+                    {challenge.completed ? '\uC644\uB8CC' : copy.description}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
       <div style={{ flex: 1 }} />
 
       <div style={{ width: '100%', paddingBottom: '16px' }}>

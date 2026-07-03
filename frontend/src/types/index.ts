@@ -1,4 +1,4 @@
-export type Step =
+﻿export type Step =
   | 'main'
   | 'input'
   | 'loading'
@@ -19,10 +19,10 @@ export interface Talisman {
   name: string;
   grade: Grade;
   count: number;
-  description?: string; // 액막이 설명 추가
-  extraImg?: string;   // 히든 전용 감사 카드 등 추가 이미지
-  letter?: string;     // 개발자 감사 편지 문구
-  fontFamily?: string; // 감사 편지용 고유 서체
+  description?: string; // ?〓쭑???ㅻ챸 異붽?
+  extraImg?: string;   // ?덈뱺 ?꾩슜 媛먯궗 移대뱶 ??異붽? ?대?吏
+  letter?: string;     // 媛쒕컻??媛먯궗 ?몄? 臾멸뎄
+  fontFamily?: string; // 媛먯궗 ?몄???怨좎쑀 ?쒖껜
 }
 
 export interface DialogConfig {
@@ -33,3 +33,14 @@ export interface DialogConfig {
   onConfirm: () => void;
   onClose?: () => void;
 }
+
+export interface Challenge {
+  key: string;
+  title: string;
+  description: string;
+  rewardCredits: number;
+  target: number;
+  progress: number;
+  completed: boolean;
+}
+
