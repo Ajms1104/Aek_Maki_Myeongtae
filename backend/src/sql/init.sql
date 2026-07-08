@@ -1,4 +1,4 @@
--- 유저 테이블
+﻿-- ?좎? ?뚯씠釉?
 CREATE TABLE IF NOT EXISTS users (
   id              SERIAL PRIMARY KEY,
   toss_user_key   TEXT UNIQUE NOT NULL,
@@ -6,13 +6,23 @@ CREATE TABLE IF NOT EXISTS users (
   has_hidden_pass BOOLEAN NOT NULL DEFAULT FALSE,
   last_attendance_at TIMESTAMPTZ,
   last_ad_watched_at TIMESTAMPTZ,
+  current_attendance_streak INTEGER NOT NULL DEFAULT 0,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   last_seen_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   deleted_at      TIMESTAMPTZ,
   is_deleted      BOOLEAN NOT NULL DEFAULT FALSE
 );
 
--- 부적 테이블
+CREATE TABLE IF NOT EXISTS user_challenges (
+  id             SERIAL PRIMARY KEY,
+  user_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  challenge_key  VARCHAR(50) NOT NULL,
+  reward_credits INTEGER NOT NULL,
+  rewarded_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, challenge_key)
+);
+
+-- 遺???뚯씠釉?
 CREATE TABLE IF NOT EXISTS amulets (
   id                   SERIAL PRIMARY KEY,
   name                 VARCHAR(100) NOT NULL,
@@ -26,11 +36,11 @@ CREATE TABLE IF NOT EXISTS amulets (
   created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 기존 제약 조건이 'hidden'을 포함하지 않을 경우를 대비해 업데이트
+-- 湲곗〈 ?쒖빟 議곌굔??'hidden'???ы븿?섏? ?딆쓣 寃쎌슦瑜??鍮꾪빐 ?낅뜲?댄듃
 ALTER TABLE amulets DROP CONSTRAINT IF EXISTS amulets_grade_check;
 ALTER TABLE amulets ADD CONSTRAINT amulets_grade_check CHECK (grade IN ('common', 'rare', 'legend', 'hidden'));
 
--- 유저 부적 인벤토리
+-- ?좎? 遺???몃깽?좊━
 CREATE TABLE IF NOT EXISTS user_amulets (
   id                SERIAL PRIMARY KEY,
   user_id           INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -41,7 +51,9 @@ CREATE TABLE IF NOT EXISTS user_amulets (
   UNIQUE (user_id, amulet_id)
 );
 
--- 부적 다운로드 이력
+
+
+-- 遺???ㅼ슫濡쒕뱶 ?대젰
 CREATE TABLE IF NOT EXISTS amulet_downloads (
   id            SERIAL PRIMARY KEY,
   user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -49,14 +61,14 @@ CREATE TABLE IF NOT EXISTS amulet_downloads (
   downloaded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 확률 버전 관리
+-- ?뺣쪧 踰꾩쟾 愿由?
 CREATE TABLE IF NOT EXISTS probability_configs (
   id         SERIAL PRIMARY KEY,
   version    INTEGER NOT NULL DEFAULT 1,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 확률 예약
+-- ?뺣쪧 ?덉빟
 CREATE TABLE IF NOT EXISTS amulet_probability_schedules (
   id           SERIAL PRIMARY KEY,
   version      INTEGER NOT NULL,
@@ -66,7 +78,7 @@ CREATE TABLE IF NOT EXISTS amulet_probability_schedules (
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 고민 테이블
+-- 怨좊? ?뚯씠釉?
 CREATE TABLE IF NOT EXISTS consultations (
   id         SERIAL PRIMARY KEY,
   user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -85,14 +97,14 @@ CREATE TABLE IF NOT EXISTS consultations (
 CREATE INDEX IF NOT EXISTS idx_consultations_user_id ON consultations(user_id);
 CREATE INDEX IF NOT EXISTS idx_consultations_delete_at ON consultations(delete_at);
 
--- 상담-부적 연결
+-- ?곷떞-遺???곌껐
 CREATE TABLE IF NOT EXISTS consultation_amulets (
   consultation_id INTEGER NOT NULL REFERENCES consultations(id) ON DELETE CASCADE,
   amulet_id       INTEGER NOT NULL REFERENCES amulets(id),
   PRIMARY KEY (consultation_id, amulet_id)
 );
 
--- 공지사항
+-- 怨듭??ы빆
 CREATE TABLE IF NOT EXISTS announcements (
   announcement_id SERIAL PRIMARY KEY,
   title           VARCHAR(255) NOT NULL,
@@ -103,7 +115,7 @@ CREATE TABLE IF NOT EXISTS announcements (
   created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 고객센터 문의
+-- 怨좉컼?쇳꽣 臾몄쓽
 CREATE TABLE IF NOT EXISTS support (
   id            SERIAL PRIMARY KEY,
   user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -111,119 +123,120 @@ CREATE TABLE IF NOT EXISTS support (
   content       TEXT NOT NULL,
   reply_email   VARCHAR(255),
   reply_content TEXT,
-  status        VARCHAR(50) DEFAULT '답변대기',
+  status        VARCHAR(50) DEFAULT '?듬??湲?,
   created       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 기존 데이터 삭제 후 id 1부터 다시 시작
+-- 湲곗〈 ?곗씠????젣 ??id 1遺???ㅼ떆 ?쒖옉
 DELETE FROM consultation_amulets;
 DELETE FROM user_amulets;
 DELETE FROM amulets;
 
--- 시퀀스 1부터 리셋
+-- ?쒗??1遺??由ъ뀑
 ALTER SEQUENCE amulets_id_seq RESTART WITH 1;
 
--- common 등급 (weight: 100)
+-- common ?깃툒 (weight: 100)
 INSERT INTO amulets (name, grade, image_url, weight, draft_weight) VALUES
-  ('윙크 명태',       'common', '/uploads/common/common_amulet_01.png', 100, 100),
-  ('깜짝 명태',       'common', '/uploads/common/common_amulet_02.png', 100, 100),
-  ('겁먹은 명태',     'common', '/uploads/common/common_amulet_03.png', 100, 100),
-  ('화난 명태',       'common', '/uploads/common/common_amulet_04.png', 100, 100),
-  ('반짝이는 명태',   'common', '/uploads/common/common_amulet_05.png', 100, 100),
-  ('슬픈 명태',       'common', '/uploads/common/common_amulet_06.png', 100, 100),
-  ('메롱 명태',       'common', '/uploads/common/common_amulet_07.png', 100, 100),
-  ('기본 명태',       'common', '/uploads/common/common_amulet_08.png', 100, 100),
-  ('잠자는 명태',     'common', '/uploads/common/common_amulet_09.png', 100, 100),
-  ('사악한 명태',     'common', '/uploads/common/common_amulet_10.png', 100, 100),
-  ('짝사랑 명태',     'common', '/uploads/common/common_amulet_11.png', 100, 100),
-  ('뽀뽀 명태',       'common', '/uploads/common/common_amulet_12.png', 100, 100),
-  ('승리자 명태',     'common', '/uploads/common/common_amulet_13.png', 100, 100),
-  ('초롱초롱 명태',   'common', '/uploads/common/common_amulet_14.png', 100, 100),
-  ('익살 명태',       'common', '/uploads/common/common_amulet_15.png', 100, 100),
-  ('노곤 명태',       'common', '/uploads/common/common_amulet_16.png', 100, 100),
-  ('배부른 명태',     'common', '/uploads/common/common_amulet_17.png', 100, 100),
-  ('감탄 명태',       'common', '/uploads/common/common_amulet_18.png', 100, 100),
-  ('반장대소 명태',   'common', '/uploads/common/common_amulet_19.png', 100, 100),
-  ('식은땀 명태',     'common', '/uploads/common/common_amulet_20.png', 100, 100),
-  ('명상 명태',       'common', '/uploads/common/common_amulet_21.png', 100, 100),
-  ('부끄 명태',       'common', '/uploads/common/common_amulet_22.png', 100, 100),
-  ('열정 명태',       'common', '/uploads/common/common_amulet_23.png', 100, 100),
-  ('비웃는 명태',     'common', '/uploads/common/common_amulet_24.png', 100, 100),
-  ('의욕제로 명태',   'common', '/uploads/common/common_amulet_25.png', 100, 100),
-  ('흥얼 명태',       'common', '/uploads/common/common_amulet_26.png', 100, 100),
-  ('도파민 명태',     'common', '/uploads/common/common_amulet_27.png', 100, 100),
-  ('의심 명태',       'common', '/uploads/common/common_amulet_28.png', 100, 100),
-  ('발랄 명태',       'common', '/uploads/common/common_amulet_29.png', 100, 100),
-  ('밤샌 명태',       'common', '/uploads/common/common_amulet_30.png', 100, 100),
-  ('피곤 명태',       'common', '/uploads/common/common_amulet_31.png', 100, 100);
+  ('?숉겕 紐낇깭',       'common', '/uploads/common/common_amulet_01.png', 100, 100),
+  ('源쒖쭩 紐낇깭',       'common', '/uploads/common/common_amulet_02.png', 100, 100),
+  ('寃곷㉨? 紐낇깭',     'common', '/uploads/common/common_amulet_03.png', 100, 100),
+  ('?붾궃 紐낇깭',       'common', '/uploads/common/common_amulet_04.png', 100, 100),
+  ('諛섏쭩?대뒗 紐낇깭',   'common', '/uploads/common/common_amulet_05.png', 100, 100),
+  ('?ы뵂 紐낇깭',       'common', '/uploads/common/common_amulet_06.png', 100, 100),
+  ('硫붾” 紐낇깭',       'common', '/uploads/common/common_amulet_07.png', 100, 100),
+  ('湲곕낯 紐낇깭',       'common', '/uploads/common/common_amulet_08.png', 100, 100),
+  ('?좎옄??紐낇깭',     'common', '/uploads/common/common_amulet_09.png', 100, 100),
+  ('?ъ븙??紐낇깭',     'common', '/uploads/common/common_amulet_10.png', 100, 100),
+  ('吏앹궗??紐낇깭',     'common', '/uploads/common/common_amulet_11.png', 100, 100),
+  ('戮戮 紐낇깭',       'common', '/uploads/common/common_amulet_12.png', 100, 100),
+  ('?밸━??紐낇깭',     'common', '/uploads/common/common_amulet_13.png', 100, 100),
+  ('珥덈”珥덈” 紐낇깭',   'common', '/uploads/common/common_amulet_14.png', 100, 100),
+  ('?듭궡 紐낇깭',       'common', '/uploads/common/common_amulet_15.png', 100, 100),
+  ('?멸낀 紐낇깭',       'common', '/uploads/common/common_amulet_16.png', 100, 100),
+  ('諛곕?瑜?紐낇깭',     'common', '/uploads/common/common_amulet_17.png', 100, 100),
+  ('媛먰깂 紐낇깭',       'common', '/uploads/common/common_amulet_18.png', 100, 100),
+  ('諛섏옣???紐낇깭',   'common', '/uploads/common/common_amulet_19.png', 100, 100),
+  ('?앹?? 紐낇깭',     'common', '/uploads/common/common_amulet_20.png', 100, 100),
+  ('紐낆긽 紐낇깭',       'common', '/uploads/common/common_amulet_21.png', 100, 100),
+  ('遺??紐낇깭',       'common', '/uploads/common/common_amulet_22.png', 100, 100),
+  ('?댁젙 紐낇깭',       'common', '/uploads/common/common_amulet_23.png', 100, 100),
+  ('鍮꾩썐??紐낇깭',     'common', '/uploads/common/common_amulet_24.png', 100, 100),
+  ('?섏슃?쒕줈 紐낇깭',   'common', '/uploads/common/common_amulet_25.png', 100, 100),
+  ('?μ뼹 紐낇깭',       'common', '/uploads/common/common_amulet_26.png', 100, 100),
+  ('?꾪뙆誘?紐낇깭',     'common', '/uploads/common/common_amulet_27.png', 100, 100),
+  ('?섏떖 紐낇깭',       'common', '/uploads/common/common_amulet_28.png', 100, 100),
+  ('諛쒕엫 紐낇깭',       'common', '/uploads/common/common_amulet_29.png', 100, 100),
+  ('諛ㅼ깒 紐낇깭',       'common', '/uploads/common/common_amulet_30.png', 100, 100),
+  ('?쇨낀 紐낇깭',       'common', '/uploads/common/common_amulet_31.png', 100, 100);
 
--- rare 등급 (weight: 40)
+-- rare ?깃툒 (weight: 40)
 INSERT INTO amulets (name, grade, image_url, weight, draft_weight) VALUES
-  ('천문학자 명태',       'rare', '/uploads/rare/rare_amulet_01.png', 40, 40),
-  ('패션디자이너 명태',   'rare', '/uploads/rare/rare_amulet_02.png', 40, 40),
-  ('건축가 명태',         'rare', '/uploads/rare/rare_amulet_03.png', 40, 40),
-  ('보석감정사 명태',     'rare', '/uploads/rare/rare_amulet_04.png', 40, 40),
-  ('엔지니어 명태',       'rare', '/uploads/rare/rare_amulet_05.png', 40, 40),
-  ('해양학자 명태',       'rare', '/uploads/rare/rare_amulet_06.png', 40, 40),
-  ('기상학자 명태',       'rare', '/uploads/rare/rare_amulet_07.png', 40, 40),
-  ('고고학자 명태',       'rare', '/uploads/rare/rare_amulet_08.png', 40, 40),
-  ('플로리스트 명태',     'rare', '/uploads/rare/rare_amulet_09.png', 40, 40),
-  ('스쿠버다이버 명태',   'rare', '/uploads/rare/rare_amulet_10.png', 40, 40),
-  ('연주가 명태',         'rare', '/uploads/rare/rare_amulet_11.png', 40, 40),
-  ('공원관리자 명태',     'rare', '/uploads/rare/rare_amulet_12.png', 40, 40),
-  ('정비사 명태',         'rare', '/uploads/rare/rare_amulet_13.png', 40, 40),
-  ('파티시에 명태',       'rare', '/uploads/rare/rare_amulet_14.png', 40, 40),
-  ('안전관리자 명태',     'rare', '/uploads/rare/rare_amulet_15.png', 40, 40),
-  ('우주비행사 명태',     'rare', '/uploads/rare/rare_amulet_16.png', 40, 40),
-  ('교사 명태',           'rare', '/uploads/rare/rare_amulet_17.png', 40, 40),
-  ('재즈음악가 명태',     'rare', '/uploads/rare/rare_amulet_18.png', 40, 40),
-  ('영화감독 명태',       'rare', '/uploads/rare/rare_amulet_19.png', 40, 40),
-  ('수의사 명태',         'rare', '/uploads/rare/rare_amulet_20.png', 40, 40),
-  ('승무원 명태',         'rare', '/uploads/rare/rare_amulet_21.png', 40, 40),
-  ('집배원 명태',         'rare', '/uploads/rare/rare_amulet_22.png', 40, 40),
-  ('정원사 명태',         'rare', '/uploads/rare/rare_amulet_23.png', 40, 40),
-  ('해커 명태',           'rare', '/uploads/rare/rare_amulet_24.png', 40, 40),
-  ('의사 명태',           'rare', '/uploads/rare/rare_amulet_25.png', 40, 40),
-  ('소방관 명태',         'rare', '/uploads/rare/rare_amulet_26.png', 40, 40),
-  ('경찰관 명태',         'rare', '/uploads/rare/rare_amulet_27.png', 40, 40),
-  ('판사 명태',           'rare', '/uploads/rare/rare_amulet_28.png', 40, 40),
-  ('설계사 명태',         'rare', '/uploads/rare/rare_amulet_29.png', 40, 40),
-  ('헤어디자이너 명태',   'rare', '/uploads/rare/rare_amulet_30.png', 40, 40),
-  ('메이크업아티스트 명태','rare', '/uploads/rare/rare_amulet_31.png', 40, 40),
-  ('네일아티스트 명태',   'rare', '/uploads/rare/rare_amulet_32.png', 40, 40),
-  ('회계사 명태',         'rare', '/uploads/rare/rare_amulet_33.png', 40, 40),
-  ('조향사 명태',         'rare', '/uploads/rare/rare_amulet_34.png', 40, 40),
-  ('재판사 명태',         'rare', '/uploads/rare/rare_amulet_35.png', 40, 40),
-  ('개발자 명태',         'rare', '/uploads/rare/rare_amulet_36.png', 40, 40),
-  ('사서 명태',           'rare', '/uploads/rare/rare_amulet_37.png', 40, 40);
+  ('泥쒕Ц?숈옄 紐낇깭',       'rare', '/uploads/rare/rare_amulet_01.png', 40, 40),
+  ('?⑥뀡?붿옄?대꼫 紐낇깭',   'rare', '/uploads/rare/rare_amulet_02.png', 40, 40),
+  ('嫄댁텞媛 紐낇깭',         'rare', '/uploads/rare/rare_amulet_03.png', 40, 40),
+  ('蹂댁꽍媛먯젙??紐낇깭',     'rare', '/uploads/rare/rare_amulet_04.png', 40, 40),
+  ('?붿??덉뼱 紐낇깭',       'rare', '/uploads/rare/rare_amulet_05.png', 40, 40),
+  ('?댁뼇?숈옄 紐낇깭',       'rare', '/uploads/rare/rare_amulet_06.png', 40, 40),
+  ('湲곗긽?숈옄 紐낇깭',       'rare', '/uploads/rare/rare_amulet_07.png', 40, 40),
+  ('怨좉퀬?숈옄 紐낇깭',       'rare', '/uploads/rare/rare_amulet_08.png', 40, 40),
+  ('?뚮줈由ъ뒪??紐낇깭',     'rare', '/uploads/rare/rare_amulet_09.png', 40, 40),
+  ('?ㅼ퓼踰꾨떎?대쾭 紐낇깭',   'rare', '/uploads/rare/rare_amulet_10.png', 40, 40),
+  ('?곗＜媛 紐낇깭',         'rare', '/uploads/rare/rare_amulet_11.png', 40, 40),
+  ('怨듭썝愿由ъ옄 紐낇깭',     'rare', '/uploads/rare/rare_amulet_12.png', 40, 40),
+  ('?뺣퉬??紐낇깭',         'rare', '/uploads/rare/rare_amulet_13.png', 40, 40),
+  ('?뚰떚?쒖뿉 紐낇깭',       'rare', '/uploads/rare/rare_amulet_14.png', 40, 40),
+  ('?덉쟾愿由ъ옄 紐낇깭',     'rare', '/uploads/rare/rare_amulet_15.png', 40, 40),
+  ('?곗＜鍮꾪뻾??紐낇깭',     'rare', '/uploads/rare/rare_amulet_16.png', 40, 40),
+  ('援먯궗 紐낇깭',           'rare', '/uploads/rare/rare_amulet_17.png', 40, 40),
+  ('?ъ쫰?뚯븙媛 紐낇깭',     'rare', '/uploads/rare/rare_amulet_18.png', 40, 40),
+  ('?곹솕媛먮룆 紐낇깭',       'rare', '/uploads/rare/rare_amulet_19.png', 40, 40),
+  ('?섏쓽??紐낇깭',         'rare', '/uploads/rare/rare_amulet_20.png', 40, 40),
+  ('?밸Т??紐낇깭',         'rare', '/uploads/rare/rare_amulet_21.png', 40, 40),
+  ('吏묐같??紐낇깭',         'rare', '/uploads/rare/rare_amulet_22.png', 40, 40),
+  ('?뺤썝??紐낇깭',         'rare', '/uploads/rare/rare_amulet_23.png', 40, 40),
+  ('?댁빱 紐낇깭',           'rare', '/uploads/rare/rare_amulet_24.png', 40, 40),
+  ('?섏궗 紐낇깭',           'rare', '/uploads/rare/rare_amulet_25.png', 40, 40),
+  ('?뚮갑愿 紐낇깭',         'rare', '/uploads/rare/rare_amulet_26.png', 40, 40),
+  ('寃쎌같愿 紐낇깭',         'rare', '/uploads/rare/rare_amulet_27.png', 40, 40),
+  ('?먯궗 紐낇깭',           'rare', '/uploads/rare/rare_amulet_28.png', 40, 40),
+  ('?ㅺ퀎??紐낇깭',         'rare', '/uploads/rare/rare_amulet_29.png', 40, 40),
+  ('?ㅼ뼱?붿옄?대꼫 紐낇깭',   'rare', '/uploads/rare/rare_amulet_30.png', 40, 40),
+  ('硫붿씠?ъ뾽?꾪떚?ㅽ듃 紐낇깭','rare', '/uploads/rare/rare_amulet_31.png', 40, 40),
+  ('?ㅼ씪?꾪떚?ㅽ듃 紐낇깭',   'rare', '/uploads/rare/rare_amulet_32.png', 40, 40),
+  ('?뚭퀎??紐낇깭',         'rare', '/uploads/rare/rare_amulet_33.png', 40, 40),
+  ('議고뼢??紐낇깭',         'rare', '/uploads/rare/rare_amulet_34.png', 40, 40),
+  ('?ы뙋??紐낇깭',         'rare', '/uploads/rare/rare_amulet_35.png', 40, 40),
+  ('媛쒕컻??紐낇깭',         'rare', '/uploads/rare/rare_amulet_36.png', 40, 40),
+  ('?ъ꽌 紐낇깭',           'rare', '/uploads/rare/rare_amulet_37.png', 40, 40);
 
--- legend 등급 (weight: 10)
+-- legend ?깃툒 (weight: 10)
 INSERT INTO amulets (name, grade, image_url, weight, draft_weight) VALUES
-  ('태양 명태',   'legend', '/uploads/legend/legend_amulet_01.png', 10, 10),
-  ('무지개 명태', 'legend', '/uploads/legend/legend_amulet_02.png', 10, 10),
-  ('황금 명태',   'legend', '/uploads/legend/legend_amulet_03.png', 10, 10),
-  ('구름 명태',   'legend', '/uploads/legend/legend_amulet_04.png', 10, 10),
-  ('번개 명태',   'legend', '/uploads/legend/legend_amulet_05.png', 10, 10),
-  ('수호신 명태', 'legend', '/uploads/legend/legend_amulet_06.png', 10, 10),
-  ('얼음 명태',   'legend', '/uploads/legend/legend_amulet_07.png', 10, 10),
-  ('불꽃 명태',   'legend', '/uploads/legend/legend_amulet_08.png', 10, 10),
-  ('밤 명태',     'legend', '/uploads/legend/legend_amulet_09.png', 10, 10),
-  ('보석 명태',   'legend', '/uploads/legend/legend_amulet_10.png', 10, 10),
-  ('사탕 명태',   'legend', '/uploads/legend/legend_amulet_11.png', 10, 10),
-  ('모래 명태',   'legend', '/uploads/legend/legend_amulet_12.png', 10, 10),
-  ('바람 명태',   'legend', '/uploads/legend/legend_amulet_13.png', 10, 10),
-  ('어둠 명태',   'legend', '/uploads/legend/legend_amulet_14.png', 10, 10),
-  ('화산 명태',   'legend', '/uploads/legend/legend_amulet_15.png', 10, 10),
-  ('숲 명태',     'legend', '/uploads/legend/legend_amulet_16.png', 10, 10);
+  ('?쒖뼇 紐낇깭',   'legend', '/uploads/legend/legend_amulet_01.png', 10, 10),
+  ('臾댁?媛?紐낇깭', 'legend', '/uploads/legend/legend_amulet_02.png', 10, 10),
+  ('?⑷툑 紐낇깭',   'legend', '/uploads/legend/legend_amulet_03.png', 10, 10),
+  ('援щ쫫 紐낇깭',   'legend', '/uploads/legend/legend_amulet_04.png', 10, 10),
+  ('踰덇컻 紐낇깭',   'legend', '/uploads/legend/legend_amulet_05.png', 10, 10),
+  ('?섑샇??紐낇깭', 'legend', '/uploads/legend/legend_amulet_06.png', 10, 10),
+  ('?쇱쓬 紐낇깭',   'legend', '/uploads/legend/legend_amulet_07.png', 10, 10),
+  ('遺덇퐙 紐낇깭',   'legend', '/uploads/legend/legend_amulet_08.png', 10, 10),
+  ('諛?紐낇깭',     'legend', '/uploads/legend/legend_amulet_09.png', 10, 10),
+  ('蹂댁꽍 紐낇깭',   'legend', '/uploads/legend/legend_amulet_10.png', 10, 10),
+  ('?ы깢 紐낇깭',   'legend', '/uploads/legend/legend_amulet_11.png', 10, 10),
+  ('紐⑤옒 紐낇깭',   'legend', '/uploads/legend/legend_amulet_12.png', 10, 10),
+  ('諛붾엺 紐낇깭',   'legend', '/uploads/legend/legend_amulet_13.png', 10, 10),
+  ('?대몺 紐낇깭',   'legend', '/uploads/legend/legend_amulet_14.png', 10, 10),
+  ('?붿궛 紐낇깭',   'legend', '/uploads/legend/legend_amulet_15.png', 10, 10),
+  ('??紐낇깭',     'legend', '/uploads/legend/legend_amulet_16.png', 10, 10);
 
--- hidden 등급 (weight: 0, 결제로만 획득)
+-- hidden ?깃툒 (weight: 0, 寃곗젣濡쒕쭔 ?띾뱷)
 INSERT INTO amulets (name, grade, image_url, weight, draft_weight) VALUES
-  ('Sourcandy 명태', 'hidden', '/uploads/hidden/hidden_amulet_01.png', 0, 0),
-  ('Moshu 명태',      'hidden', '/uploads/hidden/hidden_amulet_02.png', 0, 0),
-  ('LeeJin 명태',     'hidden', '/uploads/hidden/hidden_amulet_03.png', 0, 0),
-  ('Baldy 명태',      'hidden', '/uploads/hidden/hidden_amulet_04.png', 0, 0),
-  ('억만이 명태',     'hidden', '/uploads/hidden/hidden_amulet_05.png', 0, 0);
+  ('Sourcandy 紐낇깭', 'hidden', '/uploads/hidden/hidden_amulet_01.png', 0, 0),
+  ('Moshu 紐낇깭',      'hidden', '/uploads/hidden/hidden_amulet_02.png', 0, 0),
+  ('LeeJin 紐낇깭',     'hidden', '/uploads/hidden/hidden_amulet_03.png', 0, 0),
+  ('Baldy 紐낇깭',      'hidden', '/uploads/hidden/hidden_amulet_04.png', 0, 0),
+  ('?듬쭔??紐낇깭',     'hidden', '/uploads/hidden/hidden_amulet_05.png', 0, 0);
 
--- 시퀀스 재설정
+-- ?쒗???ъ꽕??
 SELECT setval('amulets_id_seq', (SELECT MAX(id) FROM amulets));
+

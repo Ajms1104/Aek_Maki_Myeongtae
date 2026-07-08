@@ -1,6 +1,6 @@
-import React, { createContext, useState, useCallback, useEffect } from 'react';
+﻿import React, { createContext, useState, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import type { Talisman, Grade } from '../types';
+import type { Talisman, Grade, Challenge } from '../types';
 import { INITIAL_TALISMAN_DATA, HIDDEN_TALISMAN_DATA, STORAGE_KEYS } from '../constants/talisman';
 import { storage } from '../utils/storage';
 import { 
@@ -17,6 +17,8 @@ export interface TalismanContextType {
   credits: number;
   hasHiddenPass: boolean;
   lastAdWatchedAt: string | null;
+  attendanceStreak: number;
+  challenges: Challenge[];
   wish: string;
   loadingStep: number;
   justUnlockedHidden: boolean;
@@ -49,6 +51,7 @@ interface ConsultationResult {
   };
   remainingCredits: number;
   deleteAt: string;
+  challengeAwards?: Array<{ challengeKey: string; rewardCredits: number; credits: number }>;
 }
 
 export const TalismanContext = createContext<TalismanContextType | undefined>(undefined);
@@ -63,6 +66,8 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
     storage.get(STORAGE_KEYS.CREDITS, 0)
   );
   const [lastAdWatchedAt, setLastAdWatchedAt] = useState<string | null>(null);
+  const [attendanceStreak, setAttendanceStreak] = useState<number>(0);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [wish, setWish] = useState<string>('');
   const [loadingStep, setLoadingStep] = useState(0);
   const [justUnlockedHidden, setJustUnlockedHidden] = useState(false);
@@ -80,7 +85,7 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
     
     try {
       const data = await getCollection();
-      const { items, hasHiddenPass: serverHasHiddenPass, lastAdWatchedAt: serverAdTime, credits: serverCredits } = data;
+      const { items, hasHiddenPass: serverHasHiddenPass, lastAdWatchedAt: serverAdTime, credits: serverCredits, attendanceStreak: serverAttendanceStreak, challenges: serverChallenges } = data;
       
       if (typeof serverHasHiddenPass === 'boolean') {
         setHasHiddenPass(serverHasHiddenPass);
@@ -93,13 +98,15 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
       }
 
       if (serverAdTime) setLastAdWatchedAt(serverAdTime);
+      if (typeof serverAttendanceStreak === 'number') setAttendanceStreak(serverAttendanceStreak);
+      if (Array.isArray(serverChallenges)) setChallenges(serverChallenges);
 
       if (items && Array.isArray(items)) {
-        // 모든 로컬 부적 데이터 병합
+        // 紐⑤뱺 濡쒖뺄 遺???곗씠??蹂묓빀
         const allLocalData = [...INITIAL_TALISMAN_DATA, ...HIDDEN_TALISMAN_DATA];
 
         const mappedItems = items.map((si: any) => {
-          // 로컬 상수에서 메타데이터 매핑
+          // 濡쒖뺄 ?곸닔?먯꽌 硫뷀??곗씠??留ㅽ븨
           const localMeta = allLocalData.find(l => l.id === si.id);
           
           return {
@@ -109,7 +116,7 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
             img: getAmuletImage(si.imageUrl, 'ui'),
             unlocked: !si.isLocked,
             count: si.count || 0,
-            // 로컬에 정의된 고유 설명과 편지 데이터 병합 (가장 중요)
+            // 濡쒖뺄???뺤쓽??怨좎쑀 ?ㅻ챸怨??몄? ?곗씠??蹂묓빀 (媛??以묒슂)
             description: localMeta?.description,
             letter: localMeta?.letter,
             fontFamily: localMeta?.fontFamily
@@ -144,7 +151,7 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
         setCredits(result.remainingCredits);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '오류가 발생했어요.');
+      setError(err instanceof Error ? err.message : '?ㅻ쪟媛 諛쒖깮?덉뼱??');
       throw err;
     } finally {
       setIsLoading(false);
@@ -183,6 +190,8 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
       const result = await claimAttendanceReward();
       if (result && result.success) {
         setCredits(result.credits);
+        if (typeof result.attendanceStreak === 'number') setAttendanceStreak(result.attendanceStreak);
+        if (Array.isArray(result.awards) && result.awards.length > 0) await refreshCollection();
         return result.message; 
       }
       return null;
@@ -207,6 +216,8 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
   return (
     <TalismanContext.Provider value={{
       talismanData,
+      challenges,
+      attendanceStreak,
       credits,
       hasHiddenPass,
       lastAdWatchedAt,
@@ -232,3 +243,6 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
     </TalismanContext.Provider>
   );
 };
+
+
+
