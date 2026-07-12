@@ -91,7 +91,7 @@ export const TalismanDetailModal: React.FC<{
 
   // --- [기본 부적 상세 뷰] ---
   return (
-    <O.ModalOverlay onClick={onClose}>
+    <O.ModalOverlay onClick={onClose} style={{ flexDirection: 'column', gap: '12px' }}>
       <O.ModalContent 
         onClick={(e) => e.stopPropagation()}
         style={{
