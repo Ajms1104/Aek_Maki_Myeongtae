@@ -246,109 +246,49 @@ export default function AdminStep() {
                     </div>
                   ))
                 ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', width: '100%' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ padding: '24px', backgroundColor: '#fff', borderRadius: '16px', border: '2px solid #e8f3ff', boxShadow: '0 4px 12px rgba(49, 130, 246, 0.05)' }}>
-                <div style={{ fontSize: '16px', fontWeight: 800, color: '#191f28', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <IoCheckmarkCircleOutline color="#3182f6" size={24} />
-                  히든 부적 패키지 구매 상태: <span style={{ color: selectedUser.hasHiddenPass ? '#27ae60' : '#f04452' }}>{selectedUser.hasHiddenPass ? '해금 완료' : '미구매 (잠금)'}</span>
-                </div>
-                {!selectedUser.hasHiddenPass && (
-                  <C.Button onClick={handleManualUnlock} $variant="primary" style={{ backgroundColor: '#3182f6', height: '48px', width: '100%', borderRadius: '12px', fontSize: '15px', fontWeight: 800 }}>
-                    히든 부적 즉시 강제 해금하기
-                  </C.Button>
+                  <p style={{ textAlign: 'center', color: '#8b95a1', fontSize: '12px', padding: '20px 0' }}>수집된 접속 로그가 없습니다.</p>
                 )}
               </div>
-              
-              <Section title="보유 크레딧 조작 및 관리">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '8px 0' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '12px', color: '#8b95a1', marginBottom: '4px', fontWeight: 600 }}>현재 크레딧</div>
-                    <div style={{ fontSize: '26px', fontWeight: 900, color: '#191f28' }}>{selectedUser.credit}개</div>
-                  </div>
-                  <div style={{ flex: 1.5, display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <input 
-                      type="number" 
-                      style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e5e8eb', fontSize: '16px', fontWeight: 700, outline: 'none', textAlign: 'center' }} 
-                      value={editCredit} 
-                      onChange={(e) => setEditCredit(e.target.value)} 
-                    />
-                    <button 
-                      onClick={handleUpdateCredit} 
-                      style={{ padding: '0 20px', height: '44px', backgroundColor: '#333', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}
-                    >
-                      수정 적용
-                    </button>
-                  </div>
-                </div>
-              </Section>
-              
-              <Section title="유저 기본 마스터 정보">
-                <DataRow label="회원 번호 (ID)" value={selectedUser.id} />
-                <DataRow label="Toss User 식별 Key" value={selectedUser.tossUserKey} />
-                <DataRow label="누적 부적 제작 횟수" value={`${selectedUser.consultationCount}회`} />
-                <DataRow label="최초 가입일" value={new Date(selectedUser.createdAt).toLocaleString()} />
-              </Section>
-            </div>
+            </Section>
 
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <Section title={`유저 획득 부적 도감 (${selectedUser.amuletCount}개)`}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '10px', maxHeight: '550px', overflowY: 'auto', paddingRight: '4px' }}>
-                  {selectedUser.amulets?.length > 0 ? (
-                    selectedUser.amulets.map((a: any) => (
-                      <div key={a.userAmuletId} style={{ padding: '12px', backgroundColor: '#f9fafb', borderRadius: '12px', border: '1px solid #f2f4f6', textAlign: 'center' }}>
-                        <div style={{ fontSize: '14px', fontWeight: 900, color: '#333d4b', marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name}</div>
-                        <div style={{ fontSize: '11px', color: '#8b95a1', fontWeight: 700 }}>
-                          <span style={{ 
-                            color: a.grade === 'legend' ? '#ff922b' : a.grade === 'rare' ? '#3182f6' : a.grade === 'hidden' ? '#a25df5' : '#8b95a1',
-                            fontWeight: 800
-                          }}>
-                            {a.grade.toUpperCase()}
-                          </span>
-                          {` • ${a.count}개`}
-                        </div>
+            {/* 부적 분포 + 시스템 에러 로그 (2열 배치) */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <Section title="📊 부적 등급 분포">
+                {stats && Object.entries(stats.gradeDistribution || {}).map(([grade, count]: any) => (
+                  <div key={grade} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f9fafb', fontSize: '12px' }}>
+                    <span style={{ fontWeight: 700, color: '#4e5968', textTransform: 'capitalize' }}>
+                      {grade === 'legend' ? '👑 전설' : grade === 'rare' ? '✨ 희귀' : grade === 'hidden' ? '🔒 히든' : '🐟 일반'}
+                    </span>
+                    <span style={{ color: '#3182f6', fontWeight: 800 }}>{count}개</span>
+                  </div>
+                ))}
+              </Section>
+
+              <Section title="🚨 최근 서버 에러 로그">
+                <div style={{ maxHeight: '120px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {stats && stats.recentSystemLogs && stats.recentSystemLogs.length > 0 ? (
+                    stats.recentSystemLogs.map((log: any) => (
+                      <div 
+                        key={log.id} 
+                        style={{ 
+                          padding: '6px 8px', 
+                          backgroundColor: '#fff0f0', 
+                          borderLeft: '3px solid #f04452', 
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          textAlign: 'left'
+                        }}
+                      >
+                        <div style={{ color: '#f04452', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{log.message}</div>
                       </div>
                     ))
                   ) : (
-                    <p style={{ gridColumn: 'span 2', textAlign: 'center', color: '#8b95a1', fontSize: '13px', padding: '40px 0' }}>획득한 부적이 아직 없습니다.</p>
+                    <p style={{ textAlign: 'center', color: '#8b95a1', fontSize: '11px', padding: '10px 0' }}>에러 없음</p>
                   )}
                 </div>
               </Section>
             </div>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ position: 'relative', width: '100%', maxWidth: '500px', margin: '0 auto 12px' }}>
-              <IoSearch style={{ position: 'absolute', left: '16px', top: '16px', color: '#adb5bd' }} size={20} />
-              <input 
-                style={{ width: '100%', boxSizing: 'border-box', padding: '16px 16px 16px 48px', borderRadius: '14px', border: '1px solid #e5e8eb', fontSize: '16px', fontWeight: 600, outline: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }} 
-                placeholder="유저 검색 (회원 ID 또는 Toss 식별 Key)" 
-                value={search} 
-                onChange={(e) => setSearch(e.target.value)} 
-                onKeyDown={(e) => e.key === 'Enter' && fetchUsers()} 
-              />
-            </div>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
-              {loading ? (
-                <p style={{ gridColumn: 'span 2', textAlign: 'center', padding: '60px', color: '#8b95a1', fontWeight: 600 }}>데이터 로드 중...</p>
-              ) : users.map((u: any) => (
-                <div key={u.id} style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.01)', border: '1px solid #e5e8eb' }}>
-                  <div>
-                    <div style={{ fontSize: '16px', fontWeight: 800, color: '#191f28' }}>
-                      ID: #{u.id} {u.isDeleted && <span style={{ color: '#f04452', fontSize: '11px', fontWeight: 700 }}>(탈퇴 회원)</span>}
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#8b95a1', marginTop: '4px', fontFamily: 'monospace' }}>Key: {u.tossUserKey.substring(0, 16)}...</div>
-                  </div>
-                  <button 
-                    onClick={() => handleSelectUser(u.id)} 
-                    style={{ backgroundColor: '#3182f6', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: 800, cursor: 'pointer', boxShadow: '0 4px 10px rgba(49, 130, 246, 0.1)' }}
-                  >
-                    상세 정보
-                  </button>
-                </div>
-              ))}
-            </div>
+
           </div>
         </div>
 
