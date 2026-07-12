@@ -129,7 +129,6 @@ export default function AdminStep() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <Section title="👥 실시간 유저 조회 및 마스터 제어">
               {selectedUser ? (
-                // 유저가 선택된 경우 상세 카드 노출
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                     <button 
@@ -194,7 +193,6 @@ export default function AdminStep() {
                   </div>
                 </div>
               ) : (
-                // 유저 검색창 및 검색 목록 노출
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   <div style={{ position: 'relative' }}>
                     <IoSearch style={{ position: 'absolute', left: '12px', top: '12px', color: '#adb5bd' }} size={16} />
@@ -227,21 +225,13 @@ export default function AdminStep() {
           {/* [B-2] 우측 열: 실시간 모니터링 로그 대시보드 */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             
-            {/* 실시간 유저 활동 및 체류 로그 */}
             <Section title="⚡ 실시간 접속 및 이용 현황 (유저 여정 로그)">
               <div style={{ maxHeight: '280px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {stats && stats.recentAccessLogs && stats.recentAccessLogs.length > 0 ? (
                   stats.recentAccessLogs.map((log: any) => (
                     <div 
                       key={log.id} 
-                      style={{ 
-                        padding: '10px', 
-                        backgroundColor: '#f9fafb', 
-                        borderRadius: '8px',
-                        fontSize: '12px',
-                        border: '1px solid #f2f4f6',
-                        textAlign: 'left'
-                      }}
+                      style={{ padding: '10px', backgroundColor: '#f9fafb', borderRadius: '8px', fontSize: '12px', border: '1px solid #f2f4f6', textAlign: 'left' }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px', fontWeight: 700, color: '#4c566a' }}>
                         <span>User: #{log.userId} ({log.tossUserKey ? log.tossUserKey.substring(0, 16) + '...' : 'Guest'})</span>
@@ -256,12 +246,6 @@ export default function AdminStep() {
                     </div>
                   ))
                 ) : (
-                  <p style={{ textAlign: 'center', color: '#8b95a1', fontSize: '13px', padding: '20px 0' }}>활동 로그가 없습니다.</p>
-                )}
-              </div>
-            </Section>
-          </div>
-        ) : selectedUser ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', width: '100%' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ padding: '24px', backgroundColor: '#fff', borderRadius: '16px', border: '2px solid #e8f3ff', boxShadow: '0 4px 12px rgba(49, 130, 246, 0.05)' }}>
