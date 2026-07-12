@@ -1,50 +1,36 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { IoCheckmarkCircle, IoSparklesOutline } from 'react-icons/io5';
 import styled, { keyframes } from 'styled-components';
 import * as L from '../styles/layoutStyles';
-import * as S from '../styles/stepStyles';
-import { useTalisman } from '../hooks/useTalisman';
 import loading_fish from '../assets/loading_image.png';
 
-const rotate = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-`;
-
-const pulse = keyframes`
-  0%, 100% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.05); opacity: 1; }
-`;
-
-const LoadingStatus = styled.div`
-  margin-top: 32px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-`;
-
-const ProgressBar = styled.div`
-  width: 200px;
-  height: 6px;
-  background: #f2f4f6;
-  border-radius: 100px;
-  overflow: hidden;
-  margin-bottom: 20px;
-`;
-
-const ProgressFill = styled.div<{ $step: number }>`
-  height: 100%;
-  background: #3182f6;
-  width: ${props => (props.$step / 3) * 100}%;
-  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-`;
-
 const LoadingStep: React.FC = () => {
-  const { loadingStep } = useTalisman();
+  const [progress, setProgress] = useState(0);
 
-  console.log('[LoadingStep] Rendering, step:', loadingStep);
+  // 로컬 타이머로 부드러운 가속 시뮬레이션 (85%까지 2.5초에 도달, 그 후 극소 가속)
+  useEffect(() => {
+    const start = Date.now();
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - start;
+      
+      setProgress((prev) => {
+        if (prev >= 95) {
+          // 95% 이상은 극도로 미세하게 증가시키며 대기 (최대 99%)
+          return Math.min(99, prev + 0.1);
+        }
+        
+        // 2.5초 동안 부드럽게 85%까지 로딩바를 채움
+        const ratio = Math.min(1, elapsed / 2500);
+        const nextProgress = Math.round(ratio * 85);
+        return Math.max(prev, nextProgress);
+      });
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // 진행도에 따라 로컬 진행 텍스트 단계 연동
+  const currentStep = progress < 33 ? 1 : progress < 66 ? 2 : 3;
 
   const statusItems = [
     { id: 1, label: '액운을 분류하는 중' },
@@ -67,7 +53,7 @@ const LoadingStep: React.FC = () => {
           방법을 고민하고 있어요
         </h2>
         <p style={{ color: '#3182f6', fontSize: '14px', marginTop: '10px', fontWeight: 700 }}>
-          [진행 단계: {loadingStep}/3]
+          [진행 단계: {currentStep}/3]
         </p>
       </div>
 
@@ -88,8 +74,8 @@ const LoadingStep: React.FC = () => {
           <div style={{ 
             height: '100%', 
             background: '#3182f6', 
-            width: `${(loadingStep / 3) * 100}%`,
-            transition: 'width 0.5s ease' 
+            width: `${progress}%`,
+            transition: 'width 0.2s ease' 
           }} />
         </div>
         
@@ -101,19 +87,19 @@ const LoadingStep: React.FC = () => {
                 width: '260px', 
                 padding: '16px 20px',
                 borderRadius: '20px',
-                backgroundColor: loadingStep >= item.id ? '#e8f3ff' : '#f9fafb',
-                color: loadingStep >= item.id ? '#3182f6' : '#8b95a1',
+                backgroundColor: currentStep >= item.id ? '#e8f3ff' : '#f9fafb',
+                color: currentStep >= item.id ? '#3182f6' : '#8b95a1',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
                 border: '1px solid',
-                borderColor: loadingStep >= item.id ? '#3182f6' : '#f2f4f6',
-                boxShadow: loadingStep === item.id ? '0 4px 12px rgba(49, 130, 246, 0.1)' : 'none',
+                borderColor: currentStep >= item.id ? '#3182f6' : '#f2f4f6',
+                boxShadow: currentStep === item.id ? '0 4px 12px rgba(49, 130, 246, 0.1)' : 'none',
                 transition: 'all 0.3s'
               }}
             >
-              <IoCheckmarkCircle size={22} style={{ opacity: loadingStep >= item.id ? 1 : 0.2 }} />
-              <span style={{ fontSize: '15px', fontWeight: loadingStep === item.id ? 800 : 500 }}>
+              <IoCheckmarkCircle size={22} style={{ opacity: currentStep >= item.id ? 1 : 0.2 }} />
+              <span style={{ fontSize: '15px', fontWeight: currentStep === item.id ? 800 : 500 }}>
                 {item.label}
               </span>
             </div>

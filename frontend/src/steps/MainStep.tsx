@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
 import main_fish from '../assets/가로형.png';
 import {
@@ -23,6 +23,7 @@ import { loginWithToss } from '../utils/auth';
 import { tokenStorage, remoteLog } from '../utils/api';  
 import { GRADE_COLORS } from '../constants/talisman';
 import { getAmuletImage } from '../utils/amuletAssets';
+import { useTossBanner } from '../hooks/useTossBanner';
 
 const MainStep: React.FC = () => {
   const { navigateTo } = useNavigation();
@@ -30,6 +31,21 @@ const MainStep: React.FC = () => {
   const { openDialog, triggerToast } = useUI();
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // ✅ 토스 광고 배너 연동
+  const bannerRef = useRef<HTMLDivElement>(null);
+  const { isInitialized, attachBanner } = useTossBanner();
+
+  useEffect(() => {
+    if (!isInitialized || !bannerRef.current) return;
+    const attached = attachBanner('ait.v2.live.71baf9f8b7fe466d', bannerRef.current, {
+      theme: 'auto',
+      tone: 'blackAndWhite',
+      variant: 'expanded',
+      callbacks: { onAdFailedToRender: (payload) => console.error('메인 광고 렌더링 실패:', payload) },
+    });
+    return () => { attached?.destroy(); };
+  }, [isInitialized, attachBanner]);
   const challengeCopy: Record<string, { title: string; description: string }> = {
     ATTENDANCE_3_DAYS: { title: '\u0033\uC77C \uC5F0\uC18D \uCD9C\uC11D', description: '+1 \uC774\uC6A9\uD1A0\uD070' },
     ATTENDANCE_7_DAYS: { title: '\u0037\uC77C \uC5F0\uC18D \uCD9C\uC11D', description: '+2 \uC774\uC6A9\uD1A0\uD070' },
@@ -432,6 +448,21 @@ const MainStep: React.FC = () => {
             })}
           </div>
         </div>
+
+        {/* 토스 배너 광고 지면 */}
+        <div 
+          ref={bannerRef} 
+          style={{ 
+            width: '100%', 
+            minHeight: '60px', 
+            borderRadius: '16px', 
+            overflow: 'hidden',
+            border: '1px solid #f2f4f6',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.01)',
+            backgroundColor: '#ffffff',
+            marginTop: '4px'
+          }} 
+        />
       </div>
 
       <div style={{ width: '100%', paddingBottom: '8px', flexShrink: 0, marginTop: 'auto' }}>

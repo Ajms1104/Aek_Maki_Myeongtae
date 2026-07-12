@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   IoDiamondOutline,
   IoGiftOutline,
@@ -14,6 +14,7 @@ import { useTalisman } from '../hooks/useTalisman';
 import { useUI } from '../hooks/useUI';
 import { loginWithToss } from '../utils/auth';
 import { tokenStorage } from '../utils/api';
+import { useTossBanner } from '../hooks/useTossBanner';
 
 const SKU_HIDDEN = 'ait.0000019636.8223c8cb.17d7c52664.7277637768';
 const SKU_CREDIT = 'ait.0000019636.26612546.7356f68591.7277541916';
@@ -68,6 +69,21 @@ const PaymentStep: React.FC = () => {
     hasHiddenPass ? 'credit' : 'hidden'
   );
   const [purchasedProduct, setPurchasedProduct] = useState<'credit' | 'hidden' | null>(null);
+
+  // ✅ 토스 광고 배너 연동
+  const bannerRef = useRef<HTMLDivElement>(null);
+  const { isInitialized, attachBanner } = useTossBanner();
+
+  useEffect(() => {
+    if (!isInitialized || !bannerRef.current) return;
+    const attached = attachBanner('ait.v2.live.71baf9f8b7fe466d', bannerRef.current, {
+      theme: 'auto',
+      tone: 'blackAndWhite',
+      variant: 'expanded',
+      callbacks: { onAdFailedToRender: (payload) => console.error('충전소 광고 렌더링 실패:', payload) },
+    });
+    return () => { attached?.destroy(); };
+  }, [isInitialized, attachBanner]);
 
   useEffect(() => {
     refreshCollection().catch(console.error);
@@ -184,6 +200,21 @@ const PaymentStep: React.FC = () => {
                 명태가 <span style={{ color: '#3182f6', fontWeight: 800 }}>1 크레딧</span>을 선물로 드려요! 🐟
               </p>
             </div>
+
+            {/* 토스 배너 광고 지면 */}
+            <div 
+              ref={bannerRef} 
+              style={{ 
+                width: '100%', 
+                minHeight: '60px', 
+                borderRadius: '16px', 
+                overflow: 'hidden',
+                border: '1px solid #f2f4f6',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.01)',
+                backgroundColor: '#ffffff',
+                marginTop: '12px'
+              }} 
+            />
         </div>
       </S.ScrollArea>
 

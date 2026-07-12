@@ -161,10 +161,7 @@ const InputStep: React.FC = () => {
     navigateTo('loading');
 
     try {
-      await Promise.all([
-        submitWish(),
-        new Promise(resolve => setTimeout(resolve, 3800))
-      ]);
+      await submitWish();
       setWish('');
       replaceTo('result');
     } catch (err: any) {
