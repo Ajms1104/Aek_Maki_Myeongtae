@@ -162,23 +162,7 @@ export const TalismanDetailModal: React.FC<{
             </O.DescriptionBox>
         </div>
 
-        {/* 토스 배너 광고 지면 (확인 버튼 바로 위에 밀착 배치) */}
-        <div 
-          ref={bannerRef} 
-          style={{ 
-            width: '100%', 
-            minHeight: '64px', 
-            borderRadius: '16px', 
-            overflow: 'hidden',
-            border: '1px solid #f2f4f6',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.01)',
-            backgroundColor: '#ffffff',
-            marginTop: '16px',
-            flexShrink: 0
-          }} 
-        />
-
-        <div style={{ display: 'flex', gap: '10px', width: '100%', marginTop: '12px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', gap: '10px', width: '100%', marginTop: '20px', flexShrink: 0 }}>
           {isHiddenGrade && talisman.unlocked && talisman.letter && (
             <C.MainButton
               onClick={() => setShowLetter(true)}
@@ -208,6 +192,24 @@ export const TalismanDetailModal: React.FC<{
           </C.MainButton>
         </div>
       </O.ModalContent>
+
+      {/* 토스 배너 광고 지면 (모달 카드 바깥 하단에 고정 배치) */}
+      <div 
+        onClick={(e) => e.stopPropagation()} // 광고 클릭 시 모달이 닫히지 않도록 차단
+        ref={bannerRef} 
+        style={{ 
+          width: 'calc(100% - 48px)', 
+          maxWidth: '320px',
+          minHeight: '64px', 
+          borderRadius: '20px', 
+          overflow: 'hidden',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+          backgroundColor: '#ffffff',
+          marginTop: '16px',
+          flexShrink: 0
+        }} 
+      />
     </O.ModalOverlay>
   );
 };
