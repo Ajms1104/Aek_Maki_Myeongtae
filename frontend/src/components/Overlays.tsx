@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { IoCloseCircle } from 'react-icons/io5';
 import * as O from '../styles/overlayStyles';
 import * as C from '../styles/commonStyles';
 import { type Talisman } from '../types/index';
 import { GRADE_COLORS } from '../constants/talisman';
+import { useTossBanner } from '../hooks/useTossBanner';
 
 export const TalismanDetailModal: React.FC<{
   talisman: Talisman;
@@ -12,6 +13,21 @@ export const TalismanDetailModal: React.FC<{
   const [showLetter, setShowLetter] = React.useState(false);
   const theme = GRADE_COLORS[talisman.grade];
   const isHiddenGrade = talisman.grade === 'hidden';
+
+  // ✅ 토스 광고 배너 연동
+  const bannerRef = useRef<HTMLDivElement>(null);
+  const { isInitialized, attachBanner } = useTossBanner();
+
+  useEffect(() => {
+    if (!isInitialized || !bannerRef.current) return;
+    const attached = attachBanner('ait.v2.live.71baf9f8b7fe466d', bannerRef.current, {
+      theme: 'auto',
+      tone: 'blackAndWhite',
+      variant: 'expanded',
+      callbacks: { onAdFailedToRender: (payload) => console.error('모달 광고 렌더링 실패:', payload) },
+    });
+    return () => { attached?.destroy(); };
+  }, [isInitialized, attachBanner]);
   
   // 개별 설명(description)이 있으면 그것을 먼저 보여주고, 없으면 기본 문구 출력
   const displayDescription = (talisman.unlocked && talisman.description)
@@ -146,7 +162,23 @@ export const TalismanDetailModal: React.FC<{
             </O.DescriptionBox>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px', width: '100%', marginTop: '20px', flexShrink: 0 }}>
+        {/* 토스 배너 광고 지면 (확인 버튼 바로 위에 밀착 배치) */}
+        <div 
+          ref={bannerRef} 
+          style={{ 
+            width: '100%', 
+            minHeight: '64px', 
+            borderRadius: '16px', 
+            overflow: 'hidden',
+            border: '1px solid #f2f4f6',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.01)',
+            backgroundColor: '#ffffff',
+            marginTop: '16px',
+            flexShrink: 0
+          }} 
+        />
+
+        <div style={{ display: 'flex', gap: '10px', width: '100%', marginTop: '12px', flexShrink: 0 }}>
           {isHiddenGrade && talisman.unlocked && talisman.letter && (
             <C.MainButton
               onClick={() => setShowLetter(true)}
