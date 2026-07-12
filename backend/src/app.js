@@ -31,9 +31,25 @@ const PORT = process.env.PORT || 3000;
 
 const IS_PROD = process.env.NODE_ENV === 'production';
 const corsOptions = {
-  origin: IS_PROD 
-    ? ['https://aekmaki.site'] 
-    : true, // 개발 모드에서는 모든 origin 허용
+  origin: (origin, callback) => {
+    // 브라우저가 아닌 환경(네이티브 앱 등)에서 origin이 비어오는 경우 허용
+    if (!origin) return callback(null, true);
+    
+    // 토스 인앱 및 실서버 허용 오리진 검사
+    const isAllowed = 
+      origin === 'https://aekmaki.site' ||
+      origin === 'https://localhost' ||
+      origin.startsWith('toss-mini-app://') ||
+      /\.toss\.im$/.test(origin) ||
+      /\.ait$/.test(origin); // 토스 인앱(AIT) 번들 호스팅 도메인 대응
+
+    if (isAllowed || !IS_PROD) {
+      callback(null, true);
+    } else {
+      console.warn(`[CORS Blocked] Origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 };
 

@@ -290,19 +290,18 @@ const MainStep: React.FC = () => {
   };
 
   return (
-    <L.Content style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '0 20px 24px', justifyContent: 'flex-start' }}> 
-      <div style={{ flex: '0 0 auto', paddingTop: '24px' }}>
+    <L.Content style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '0 16px 16px', justifyContent: 'space-between', overflow: 'hidden' }}> 
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingTop: '16px' }}>
         <div style={{
           background: 'linear-gradient(135deg, #f9fafb 0%, #f2f4f6 100%)',
           borderRadius: '24px',
-          padding: '12px 16px',
-          marginBottom: '24px',
+          padding: '10px 16px',
           border: '1px solid #f2f4f6',
           boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
           position: 'relative',
           overflow: 'hidden',
           width: '100%',
-          aspectRatio: '2.5 / 1', // 프레임 비율 조정
+          aspectRatio: '2.8 / 1',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
@@ -313,9 +312,9 @@ const MainStep: React.FC = () => {
             onClick={handleDebugReset}
             style={{ 
               position: 'absolute',
-              top: '55%', // 중심축 조정
+              top: '55%', 
               left: '50%',
-              transform: 'translate(-50%, -50%) scale(1.15)', // 크기 살짝 키움
+              transform: 'translate(-50%, -50%) scale(1.15)',
               width: '100%',
               height: '100%',
               objectFit: 'contain',
@@ -338,7 +337,9 @@ const MainStep: React.FC = () => {
             >
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <IoArchiveOutline size={16} color="#3182f6" />
-                <span style={{ marginLeft: '6px', fontWeight: 800, color: '#191f28', fontSize: '12px' }}>{'\uBCF4\uAD00\uD568'}</span>`r`n              </div>`r`n            </C.CollectionLink>
+                <span style={{ marginLeft: '6px', fontWeight: 800, color: '#191f28', fontSize: '12px' }}>보관함</span>
+              </div>
+            </C.CollectionLink>
 
             <div style={{
               display: 'flex',
@@ -356,58 +357,53 @@ const MainStep: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {[
-            { id: 1, title: '\uD1A0\uC2A4\uB85C \uB85C\uADF8\uC778\uD558\uAE30', sub: '\uC548\uC804\uD558\uACE0 \uBE60\uB974\uAC8C \uC2DC\uC791\uD558\uC138\uC694.', icon: <IoFingerPrintOutline size={20} color="#3182f6" />, color: '#e8f3ff' },
-            { id: 2, title: '\uACE0\uBBFC \uD138\uC5B4\uB193\uAE30', sub: '\uBA85\uD0DC\uC5D0\uAC8C \uB9D0 \uBABB \uD55C \uACE0\uBBFC\uC744 \uC801\uC5B4\uBCF4\uC138\uC694.', icon: <IoChatbubblesOutline size={20} color="#a25df5" />, color: '#f4edff' },
-            { id: 4, title: '\uD589\uC6B4\uC758 \uBD80\uC801 \uBC1B\uAE30', sub: '\uB2F9\uC2E0\uB9CC\uC744 \uC704\uD55C \uD2B9\uBCC4\uD55C \uBD80\uC801\uC744 \uB4DC\uB824\uC694.', icon: <IoStarOutline size={20} color="#27ae60" />, color: '#e8f5e9' },
+            { id: 1, title: '토스로 로그인하기', sub: '안전하고 빠르게 시작하세요.', icon: <IoFingerPrintOutline size={18} color="#3182f6" />, color: '#e8f3ff' },
+            { id: 2, title: '고민 털어놓기', sub: '명태에게 말 못한 고민을 적어보세요.', icon: <IoChatbubblesOutline size={18} color="#a25df5" />, color: '#f4edff' },
+            { id: 4, title: '행운의 부적 받기', sub: '당신만을 위한 특별한 부적을 드려요.', icon: <IoStarOutline size={18} color="#27ae60" />, color: '#e8f5e9' },
           ].map((item) => (
             <div key={item.id} style={{
                 background: '#ffffff',
-                borderRadius: '24px',
-                padding: '16px 20px',
+                borderRadius: '20px',
+                padding: '10px 16px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '16px',
+                gap: '12px',
                 border: '1px solid #f2f4f6',
                 boxShadow: '0 4px 12px rgba(0,0,0,0.01)',
               }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: item.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: item.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 {item.icon}
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '16px', fontWeight: 800, color: '#191f28', marginBottom: '2px' }}>{item.title}</div>
-                <div style={{ fontSize: '12px', color: '#6b7684', fontWeight: 600 }}>{item.sub}</div>
+                <div style={{ fontSize: '14px', fontWeight: 800, color: '#191f28', marginBottom: '1px' }}>{item.title}</div>
+                <div style={{ fontSize: '11px', color: '#6b7684', fontWeight: 600 }}>{item.sub}</div>
               </div>
             </div>
           ))}
         </div>
 
-        <div style={{ marginTop: '14px', background: '#ffffff', borderRadius: '20px', padding: '16px', border: '1px solid #f2f4f6', boxShadow: '0 4px 12px rgba(0,0,0,0.01)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: 900, color: '#191f28' }}>
-              <IoTrophyOutline size={18} color="#3182f6" /> {'\uB3C4\uC804\uACFC\uC81C'}
+        <div style={{ marginTop: '4px', background: '#ffffff', borderRadius: '20px', padding: '12px 16px', border: '1px solid #f2f4f6', boxShadow: '0 4px 12px rgba(0,0,0,0.01)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', fontWeight: 900, color: '#191f28' }}>
+              <IoTrophyOutline size={16} color="#3182f6" /> 도전과제
             </div>
-            <div style={{ fontSize: '12px', fontWeight: 800, color: '#8b95a1' }}>{attendanceStreak}{'\uC77C \uC5F0\uC18D'}</div>
+            <div style={{ fontSize: '11px', fontWeight: 800, color: '#8b95a1' }}>{attendanceStreak}일 연속</div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px' }}>
             {visibleChallenges.map((challenge) => {
               const copy = challengeCopy[challenge.key] || { title: challenge.title, description: `+${challenge.rewardCredits} tokens` };
               const progress = Math.min(challenge.progress, challenge.target);
               const percent = challenge.target > 0 ? Math.min(100, (progress / challenge.target) * 100) : 0;
               return (
-                <div key={challenge.key} style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '10px', alignItems: 'center' }}>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '13px', fontWeight: 800, color: challenge.completed ? '#3182f6' : '#333d4b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{copy.title}</span>
-                      <span style={{ fontSize: '12px', fontWeight: 800, color: '#8b95a1', flexShrink: 0 }}>{progress}/{challenge.target}</span>
-                    </div>
-                    <div style={{ height: '6px', background: '#f2f4f6', borderRadius: '999px', overflow: 'hidden' }}>
-                      <div style={{ width: `${percent}%`, height: '100%', borderRadius: '999px', background: challenge.completed ? '#3182f6' : '#b4d4ff', transition: 'width 0.2s ease' }} />
-                    </div>
+                <div key={challenge.key} style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '4px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 800, color: challenge.completed ? '#3182f6' : '#333d4b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{copy.title}</span>
+                    <span style={{ fontSize: '9px', fontWeight: 800, color: '#8b95a1', flexShrink: 0 }}>{progress}/{challenge.target}</span>
                   </div>
-                  <div style={{ fontSize: '12px', fontWeight: 900, color: challenge.completed ? '#3182f6' : '#6b7684', background: challenge.completed ? '#e8f3ff' : '#f9fafb', borderRadius: '999px', padding: '6px 8px', whiteSpace: 'nowrap' }}>
-                    {challenge.completed ? '\uC644\uB8CC' : copy.description}
+                  <div style={{ height: '5px', background: '#f2f4f6', borderRadius: '999px', overflow: 'hidden' }}>
+                    <div style={{ width: `${percent}%`, height: '100%', borderRadius: '999px', background: challenge.completed ? '#3182f6' : '#b4d4ff', transition: 'width 0.2s ease' }} />
                   </div>
                 </div>
               );
@@ -415,29 +411,28 @@ const MainStep: React.FC = () => {
           </div>
         </div>
       </div>
-      <div style={{ flex: 1 }} />
 
-      <div style={{ width: '100%', paddingBottom: '16px' }}>
+      <div style={{ width: '100%', paddingBottom: '8px', flexShrink: 0 }}>
         <C.MainButton 
           onClick={handleStart}
           disabled={isLoggingIn}
           style={{ 
-            height: '60px', 
-            fontSize: '18px', 
+            height: '56px', 
+            fontSize: '17px', 
             fontWeight: 800,
-            borderRadius: '18px',
-            boxShadow: '0 8px 20px rgba(49, 130, 246, 0.2)' 
+            borderRadius: '16px',
+            boxShadow: '0 6px 16px rgba(49, 130, 246, 0.15)' 
           }}
         >
           {isLoggingIn ? '로그인 중...' : '시작하기'}
         </C.MainButton>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginTop: '16px' }}>
-          <button onClick={() => navigateTo('payment')} style={{ background: 'none', color: '#8b95a1', fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <IoWalletOutline size={18} /> 충전소
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '12px' }}>
+          <button onClick={() => navigateTo('payment')} style={{ background: 'none', color: '#8b95a1', fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <IoWalletOutline size={16} /> 충전소
           </button>
-          <div style={{ width: '1px', height: '12px', background: '#e5e8eb', alignSelf: 'center' }} />
-          <button onClick={() => setIsHelpOpen(true)} style={{ background: 'none', color: '#3182f6', fontSize: '14px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <IoHelpCircleOutline size={18} /> 상세 가이드
+          <div style={{ width: '1px', height: '10px', background: '#e5e8eb', alignSelf: 'center' }} />
+          <button onClick={() => setIsHelpOpen(true)} style={{ background: 'none', color: '#3182f6', fontSize: '13px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <IoHelpCircleOutline size={16} /> 상세 가이드
           </button>
         </div>
       </div>
