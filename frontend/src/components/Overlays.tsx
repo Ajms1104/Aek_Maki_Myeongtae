@@ -68,7 +68,7 @@ export const TalismanDetailModal: React.FC<{
             margin: 0,
             whiteSpace: 'pre-wrap'
           }}>
-            "{talisman.letter}"
+            {talisman.letter}
           </p>
 
           <div style={{ width: '100%', height: '1px', background: '#fab005', opacity: 0.3, margin: '30px 0 20px' }} />
@@ -95,41 +95,41 @@ export const TalismanDetailModal: React.FC<{
       <O.ModalContent 
         onClick={(e) => e.stopPropagation()}
         style={{
-          maxHeight: '85vh', // 스크롤 방지를 위해 높이 제한
+          maxHeight: '52vh', // 높이 제한을 타이트하게 52vh로 줄여 확인 버튼 짤림 완전 방지
           display: 'flex',
           flexDirection: 'column',
-          padding: '24px 20px',
-          background: '#fdfcf9', // 정갈한 한지 크림색 배경
+          padding: '16px 20px 20px', 
+          background: '#fdfcf9', 
           border: `2px solid ${talisman.unlocked ? theme.sub : '#e5e8eb'}`,
           borderRadius: '32px',
           boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
-          overflow: 'hidden' // 스크롤 절대 금지
+          overflow: 'hidden' 
         }}
       >
         <div
           style={{
             alignSelf: 'flex-end',
             cursor: 'pointer',
-            marginTop: '-6px',
-            marginRight: '-6px',
+            marginTop: '-2px',
+            marginRight: '-2px',
             flexShrink: 0
           }}
           onClick={onClose}
         >
-          <IoCloseCircle size={32} color="#8b95a1" />
+          <IoCloseCircle size={30} color="#8b95a1" />
         </div>
 
         <div style={{ flex: 1, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
             {/* 등급별 전통 미니 배지 */}
             <div style={{ 
-              fontSize: '11px', 
+              fontSize: '10px', 
               fontWeight: 900, 
               color: talisman.unlocked ? theme.text : '#8b95a1', 
               background: talisman.unlocked ? theme.bg : '#f2f4f6', 
-              padding: '4px 10px', 
+              padding: '3px 8px', 
               borderRadius: '8px', 
               border: `1.5px solid ${talisman.unlocked ? theme.sub : '#e5e8eb'}`,
-              marginBottom: '14px',
+              marginBottom: '10px',
               letterSpacing: '0.5px',
               flexShrink: 0
             }}>
@@ -142,10 +142,11 @@ export const TalismanDetailModal: React.FC<{
               $bg={talisman.unlocked ? theme.bg : '#f2f4f6'}
               style={{ 
                 flexShrink: 0, 
-                width: '160px', 
-                height: '160px',
-                borderRadius: '24px',
-                boxShadow: talisman.unlocked ? `0 12px 36px ${theme.sub}40` : 'none'
+                width: '120px', 
+                height: '120px',
+                borderRadius: '20px',
+                boxShadow: talisman.unlocked ? `0 12px 36px ${theme.sub}40` : 'none',
+                marginBottom: '12px'
               }}
             >
               <img
@@ -160,10 +161,10 @@ export const TalismanDetailModal: React.FC<{
 
             <h2
               style={{
-                fontSize: '22px',
+                fontSize: '20px', 
                 fontWeight: 900,
-                marginBottom: '4px',
-                marginTop: '16px',
+                marginBottom: '3px',
+                marginTop: '8px',
                 color: '#191f28',
                 textAlign: 'center',
                 fontFamily: '"Pretendard", "Noto Serif KR", sans-serif'
@@ -173,20 +174,22 @@ export const TalismanDetailModal: React.FC<{
             </h2>
 
             {/* 등급 색상 미니 데코 바 */}
-            <div style={{ width: '28px', height: '2.5px', background: talisman.unlocked ? theme.sub : '#e5e8eb', borderRadius: '999px', marginBottom: '14px', flexShrink: 0 }} />
+            <div style={{ width: '24px', height: '2px', background: talisman.unlocked ? theme.sub : '#e5e8eb', borderRadius: '999px', marginBottom: '10px', flexShrink: 0 }} />
 
             <O.DescriptionBox style={{ 
               width: '100%', 
-              padding: '14px 16px',
-              background: '#f5f2eb', // 옅은 고서적 한지 질감 박스
+              padding: '10px 14px', 
+              background: '#f5f2eb', 
               borderRadius: '16px',
-              border: '1px solid #eae5db'
+              border: '1px solid #eae5db',
+              maxHeight: '85px', // 85px로 설명글 상자 크기 제한하여 가두기
+              overflowY: 'auto' // 초과 시 한지 박스 내부에서 정갈하게 스크롤 처리
             }}>
               <p
                 style={{
-                  fontSize: '14px',
+                  fontSize: '13px', // 가독성 유지하며 폰트 축소 (14px -> 13px)
                   color: '#4e5968',
-                  lineHeight: '1.6',
+                  lineHeight: '1.5',
                   margin: 0,
                   whiteSpace: 'pre-wrap',
                   textAlign: 'center',

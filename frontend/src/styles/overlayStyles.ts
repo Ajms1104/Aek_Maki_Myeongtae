@@ -118,24 +118,6 @@ export const DescriptionBox = styled.div`
   border-radius: 20px;
   position: relative;
   margin-top: 8px;
-  &::before {
-    content: '"';
-    position: absolute;
-    top: 10px;
-    left: 15px;
-    color: #e5e8eb;
-    font-size: 40px;
-    font-family: serif;
-  }
-  &::after {
-    content: '"';
-    position: absolute;
-    bottom: -10px;
-    right: 15px;
-    color: #e5e8eb;
-    font-size: 40px;
-    font-family: serif;
-  }
 `;
 
 export const BottomSheetContainer = styled.div<{ $show: boolean }>`

@@ -21,6 +21,8 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
     const path = window.location.pathname;
     if (path === '/collection') return 'collection';
     if (path === '/payment') return 'payment';
+    if (path === '/admin_login') return 'admin_login';
+    if (path === '/admin') return 'admin';
     return 'main';
   };
 
@@ -75,6 +77,8 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
         const path = window.location.pathname;
         if (path === '/collection') setStep('collection');
         else if (path === '/payment') setStep('payment');
+        else if (path === '/admin_login') setStep('admin_login');
+        else if (path === '/admin') setStep('admin');
         else setStep('main');
       }
     };
