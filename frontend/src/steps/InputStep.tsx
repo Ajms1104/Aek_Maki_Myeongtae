@@ -161,7 +161,11 @@ const InputStep: React.FC = () => {
     navigateTo('loading');
 
     try {
-      await submitWish();
+      // 5.5초(5500ms) 최소 로딩 시간을 강제하여 광고 1회 유효 노출을 보장함
+      await Promise.all([
+        submitWish(),
+        new Promise(resolve => setTimeout(resolve, 5500))
+      ]);
       setWish('');
       replaceTo('result');
     } catch (err: any) {
