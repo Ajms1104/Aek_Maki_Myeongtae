@@ -41,6 +41,8 @@ const corsOptions = {
       origin === 'https://localhost' ||
       origin.startsWith('toss-mini-app://') ||
       /\.toss\.im$/.test(origin) ||
+      /\.tossmini\.com$/.test(origin) || // 토스 폰 웹뷰 도메인 대응 (*.tossmini.com)
+      /\.tossmini\.app$/.test(origin) || 
       /\.ait$/.test(origin); // 토스 인앱(AIT) 번들 호스팅 도메인 대응
 
     if (isAllowed || !IS_PROD) {
