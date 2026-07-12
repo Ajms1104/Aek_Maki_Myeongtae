@@ -201,24 +201,23 @@ const PaymentStep: React.FC = () => {
               </p>
             </div>
 
-            {/* 토스 배너 광고 지면 */}
-            <div 
-              ref={bannerRef} 
-              style={{ 
-                width: '100%', 
-                minHeight: '60px', 
-                borderRadius: '16px', 
-                overflow: 'hidden',
-                border: '1px solid #f2f4f6',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.01)',
-                backgroundColor: '#ffffff',
-                marginTop: '12px'
-              }} 
-            />
         </div>
       </S.ScrollArea>
 
-      <C.FixedButtonGroup style={{ backgroundColor: '#ffffff', borderTop: '1px solid #f2f4f6', padding: '16px 24px 34px', flexShrink: 0 }}>
+      <C.FixedButtonGroup style={{ backgroundColor: '#ffffff', borderTop: '1px solid #f2f4f6', padding: '16px 24px 32px', flexShrink: 0, flexDirection: 'column', gap: '10px' }}>
+        {/* 토스 배너 광고 지면 (결제 버튼 클릭 실수 유도용 배치) */}
+        <div 
+          ref={bannerRef} 
+          style={{ 
+            width: '100%', 
+            minHeight: '64px', 
+            borderRadius: '16px', 
+            overflow: 'hidden',
+            border: '1px solid #f2f4f6',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.01)',
+            backgroundColor: '#ffffff'
+          }} 
+        />
         <C.MainButton onClick={handlePayment} disabled={isProcessing || (selectedProduct === 'hidden' && hasHiddenPass)} style={{ height: '62px', borderRadius: '18px', fontSize: '18px' }}>
           {isProcessing ? '확인 중...' : `결제 및 충전하기`}
         </C.MainButton>

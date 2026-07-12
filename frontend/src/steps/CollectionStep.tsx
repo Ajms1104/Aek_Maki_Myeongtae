@@ -111,23 +111,7 @@ const CollectionStep: React.FC = () => {
         </button>
       </div>
 
-      {/* 고정 배너 광고 지면 (스크롤 영역 밖 최상단 고정) */}
-      <div style={{ padding: '0 24px 10px', flexShrink: 0 }}>
-        <div 
-          ref={bannerRef} 
-          style={{ 
-            width: '100%', 
-            minHeight: '64px', 
-            borderRadius: '20px', 
-            overflow: 'hidden',
-            border: '1px solid #f2f4f6',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.01)',
-            backgroundColor: '#ffffff'
-          }} 
-        />
-      </div>
-
-      <S.ScrollArea style={{ padding: '10px 24px 140px', flex: 1 }}>
+      <S.ScrollArea style={{ padding: '10px 24px 140px' }}>
         {/* 획득 현황 프리미엄 대시보드 카드화 */}
         <div style={{ 
           padding: '20px 24px', 
@@ -209,7 +193,20 @@ const CollectionStep: React.FC = () => {
         </S.TalismanGrid>
       </S.ScrollArea>
 
-      <C.FixedButtonGroup style={{ paddingBottom: '32px', backgroundColor: '#ffffff', borderTop: '1px solid #f2f4f6' }}>
+      <C.FixedButtonGroup style={{ padding: '16px 24px 32px', backgroundColor: '#ffffff', borderTop: '1px solid #f2f4f6', flexDirection: 'column', gap: '10px' }}>
+        {/* 토스 배너 광고 지면 (버튼 클릭 실수 유도용 배치) */}
+        <div 
+          ref={bannerRef} 
+          style={{ 
+            width: '100%', 
+            minHeight: '64px', 
+            borderRadius: '16px', 
+            overflow: 'hidden',
+            border: '1px solid #f2f4f6',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.01)',
+            backgroundColor: '#ffffff'
+          }} 
+        />
         <C.MainButton onClick={resetToMain} style={{ background: '#3182f6', color: '#ffffff', height: '56px', borderRadius: '16px' }}>메인으로 돌아가기</C.MainButton>
       </C.FixedButtonGroup>
 
