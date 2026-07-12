@@ -18,11 +18,21 @@ export const NavigationContext = createContext<NavigationContextType | undefined
 export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // URL 경로를 기반으로 초기 스텝 설정 (앱 내 기능 딥링크 지원)
   const getInitialStep = (): Step => {
+    // 1. 일반 경로 파싱
     const path = window.location.pathname;
     if (path === '/collection') return 'collection';
     if (path === '/payment') return 'payment';
     if (path === '/admin_login') return 'admin_login';
     if (path === '/admin') return 'admin';
+
+    // 2. Nginx 정적 호스팅 우회용 쿼리 스트링 (?step=admin_login) 파싱
+    const params = new URLSearchParams(window.location.search);
+    const queryStep = params.get('step') as Step;
+    const validSteps: Step[] = ['collection', 'payment', 'admin_login', 'admin'];
+    if (queryStep && validSteps.includes(queryStep)) {
+      return queryStep;
+    }
+
     return 'main';
   };
 
