@@ -98,7 +98,11 @@ export const TalismanDetailModal: React.FC<{
           maxHeight: '85vh', // 스크롤 방지를 위해 높이 제한
           display: 'flex',
           flexDirection: 'column',
-          padding: '24px',
+          padding: '24px 20px',
+          background: '#fdfcf9', // 정갈한 한지 크림색 배경
+          border: `2px solid ${talisman.unlocked ? theme.sub : '#e5e8eb'}`,
+          borderRadius: '32px',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
           overflow: 'hidden' // 스크롤 절대 금지
         }}
       >
@@ -106,21 +110,43 @@ export const TalismanDetailModal: React.FC<{
           style={{
             alignSelf: 'flex-end',
             cursor: 'pointer',
-            marginTop: '-10px',
-            marginRight: '-10px',
+            marginTop: '-6px',
+            marginRight: '-6px',
             flexShrink: 0
           }}
           onClick={onClose}
         >
-          <IoCloseCircle size={32} color="#000000" />
+          <IoCloseCircle size={32} color="#8b95a1" />
         </div>
 
         <div style={{ flex: 1, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            {/* 등급별 전통 미니 배지 */}
+            <div style={{ 
+              fontSize: '11px', 
+              fontWeight: 900, 
+              color: talisman.unlocked ? theme.text : '#8b95a1', 
+              background: talisman.unlocked ? theme.bg : '#f2f4f6', 
+              padding: '4px 10px', 
+              borderRadius: '8px', 
+              border: `1.5px solid ${talisman.unlocked ? theme.sub : '#e5e8eb'}`,
+              marginBottom: '14px',
+              letterSpacing: '0.5px',
+              flexShrink: 0
+            }}>
+              {talisman.grade === 'legend' ? '👑 전설 부적' : talisman.grade === 'rare' ? '✨ 희귀 부적' : talisman.grade === 'hidden' ? '🔒 히든 부적' : '🐟 일반 부적'}
+            </div>
+
             <O.ModalImageContainer
               $isHidden={isHiddenGrade}
               $unlocked={talisman.unlocked}
               $bg={talisman.unlocked ? theme.bg : '#f2f4f6'}
-              style={{ flexShrink: 0, width: '180px', height: '180px' }} // 이미지 크기 고정으로 스크롤 방지
+              style={{ 
+                flexShrink: 0, 
+                width: '160px', 
+                height: '160px',
+                borderRadius: '24px',
+                boxShadow: talisman.unlocked ? `0 12px 36px ${theme.sub}40` : 'none'
+              }}
             >
               <img
                 src={talisman.img}
@@ -135,26 +161,37 @@ export const TalismanDetailModal: React.FC<{
             <h2
               style={{
                 fontSize: '22px',
-                fontWeight: 800,
-                marginBottom: '12px',
+                fontWeight: 900,
+                marginBottom: '4px',
                 marginTop: '16px',
                 color: '#191f28',
-                textAlign: 'center'
+                textAlign: 'center',
+                fontFamily: '"Pretendard", "Noto Serif KR", sans-serif'
               }}
             >
               {talisman.unlocked ? talisman.name : '숨겨져 있는 부적'}
             </h2>
 
-            <O.DescriptionBox style={{ width: '100%', padding: '0 10px' }}>
+            {/* 등급 색상 미니 데코 바 */}
+            <div style={{ width: '28px', height: '2.5px', background: talisman.unlocked ? theme.sub : '#e5e8eb', borderRadius: '999px', marginBottom: '14px', flexShrink: 0 }} />
+
+            <O.DescriptionBox style={{ 
+              width: '100%', 
+              padding: '14px 16px',
+              background: '#f5f2eb', // 옅은 고서적 한지 질감 박스
+              borderRadius: '16px',
+              border: '1px solid #eae5db'
+            }}>
               <p
                 style={{
-                  fontSize: '15px',
+                  fontSize: '14px',
                   color: '#4e5968',
-                  lineHeight: '1.5',
+                  lineHeight: '1.6',
                   margin: 0,
                   whiteSpace: 'pre-wrap',
                   textAlign: 'center',
-                  wordBreak: 'keep-all'
+                  wordBreak: 'keep-all',
+                  fontWeight: 600
                 }}
               >
                 {displayDescription}
@@ -171,7 +208,9 @@ export const TalismanDetailModal: React.FC<{
                 background: '#fff9db',
                 color: '#e67e22',
                 border: '1px solid #fab005',
-                fontSize: '15px'
+                fontSize: '15px',
+                fontWeight: 800,
+                borderRadius: '14px'
               }}
             >
               ✨ 편지 보기
@@ -185,7 +224,10 @@ export const TalismanDetailModal: React.FC<{
                 ? 'linear-gradient(90deg, #ffb3ba 0%, #bae1ff 100%)'
                 : (talisman.grade === 'common' ? '#3182f6' : theme.text),
               color: '#ffffff',
-              fontSize: '15px'
+              fontSize: '15px',
+              fontWeight: 800,
+              borderRadius: '14px',
+              boxShadow: talisman.unlocked ? `0 4px 12px ${theme.sub}20` : 'none'
             }}
           >
             확인
