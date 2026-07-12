@@ -137,31 +137,45 @@ export default function App() {
     }
   }, [step]);
 
+  const isAdminStep = step === 'admin' || step === 'admin_login';
+
   return (
     <>
       <GlobalStyle />
-      <L.Container>
-        {/* 토스 스타일 통합 토스트 알림 */}
-        <C.ToastContainer $show={toastConfig.show} $type={toastConfig.type}>
-          {toastConfig.type === 'success' && <IoCheckmarkCircle size={18} color="#2ecc71" />}
-          {toastConfig.type === 'error' && <IoAlertCircle size={18} color="#ffffff" />}
-          {toastConfig.type === 'info' && <IoInformationCircle size={18} color="#3182f6" />}
-          <span style={{ marginLeft: '2px' }}>{toastConfig.message}</span>
-        </C.ToastContainer>
+      {isAdminStep ? (
+        <>
+          <C.ToastContainer $show={toastConfig.show} $type={toastConfig.type}>
+            {toastConfig.type === 'success' && <IoCheckmarkCircle size={18} color="#2ecc71" />}
+            {toastConfig.type === 'error' && <IoAlertCircle size={18} color="#ffffff" />}
+            {toastConfig.type === 'info' && <IoInformationCircle size={18} color="#3182f6" />}
+            <span style={{ marginLeft: '2px' }}>{toastConfig.message}</span>
+          </C.ToastContainer>
+          {CurrentStep}
+        </>
+      ) : (
+        <L.Container>
+          {/* 토스 스타일 통합 토스트 알림 */}
+          <C.ToastContainer $show={toastConfig.show} $type={toastConfig.type}>
+            {toastConfig.type === 'success' && <IoCheckmarkCircle size={18} color="#2ecc71" />}
+            {toastConfig.type === 'error' && <IoAlertCircle size={18} color="#ffffff" />}
+            {toastConfig.type === 'info' && <IoInformationCircle size={18} color="#3182f6" />}
+            <span style={{ marginLeft: '2px' }}>{toastConfig.message}</span>
+          </C.ToastContainer>
 
-        {CurrentStep}
+          {CurrentStep}
 
-        {dialogConfig.isOpen && (
-          <TossDialog
-            title={dialogConfig.title}
-            description={dialogConfig.description}
-            showCancel={dialogConfig.showCancel}
-            onConfirm={dialogConfig.onConfirm}
-            onClose={() => setDialogConfig((p) => ({ ...p, isOpen: false }))}
-          />
-        )}
-        <BottomSheet isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
-      </L.Container>
+          {dialogConfig.isOpen && (
+            <TossDialog
+              title={dialogConfig.title}
+              description={dialogConfig.description}
+              showCancel={dialogConfig.showCancel}
+              onConfirm={dialogConfig.onConfirm}
+              onClose={() => setDialogConfig((p) => ({ ...p, isOpen: false }))}
+            />
+          )}
+          <BottomSheet isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+        </L.Container>
+      )}
     </>
   );
 }
