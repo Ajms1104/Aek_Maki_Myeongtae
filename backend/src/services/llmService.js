@@ -5,7 +5,13 @@ const { OpenAI } = require('openai');
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o';
 const MODERATION_MODEL = process.env.OPENAI_MODERATION_MODEL || 'omni-moderation-latest';
 
-const MOCK_MODE = !process.env.OPENAI_API_KEY;
+const IS_PROD = process.env.NODE_ENV === 'production';
+const MOCK_MODE = !process.env.OPENAI_API_KEY && !IS_PROD;
+
+if (IS_PROD && !process.env.OPENAI_API_KEY) {
+  throw new Error('[CRITICAL] OPENAI_API_KEY is missing in production environment!');
+}
+
 const ENABLE_MODERATION_PRECHECK = process.env.OPENAI_MODERATION_PRECHECK === 'true';
 const ENABLE_MODERATION_POSTCHECK = process.env.OPENAI_MODERATION_POSTCHECK === 'true';
 

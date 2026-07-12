@@ -11,7 +11,7 @@ import * as C from './styles/commonStyles';
 import { useNavigation } from './hooks/useNavigation';
 import { useTalisman } from './hooks/useTalisman';
 import { useUI } from './hooks/useUI';
-import { tokenStorage, remoteLog } from './utils/api';
+import { tokenStorage, remoteLog, logAccessLog } from './utils/api';
 import { loginWithToss } from './utils/auth';
 
 import { TossDialog } from './components/TossDialog';
@@ -39,11 +39,13 @@ export default function App() {
     setDialogConfig,
   } = useUI();
 
-  // ✅ [수정] 앱 시작 시 자동 로그인 제거 (사용자 경험 개선)
+  // ✅ [수정] 앱 시작 시 자동 로그인 제거 (사용자 경험 개선) & 진입 로그 전송
   useEffect(() => {
     const checkToken = async () => {
-      if (tokenStorage.get()) {
+      const token = tokenStorage.get();
+      if (token) {
         remoteLog('[App] 기존 로그인 세션 확인 - 동기화 진행');
+        logAccessLog('APP_ENTER');
         try {
           await refreshCollection();
         } catch (e) {
@@ -53,6 +55,39 @@ export default function App() {
     };
     checkToken();
   }, [refreshCollection]);
+
+  // 앱 체류 시간 로깅
+  useEffect(() => {
+    const startTime = Date.now();
+    const handleLeave = () => {
+      const token = tokenStorage.get();
+      if (token) {
+        const duration = Math.round((Date.now() - startTime) / 1000);
+        const body = JSON.stringify({ action: 'APP_LEAVE', durationSeconds: duration });
+        const url = 'https://aekmaki.site/api/v1/me/access-log';
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }));
+        } else {
+          fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body,
+            keepalive: true
+          }).catch(() => {});
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', handleLeave);
+    window.addEventListener('pagehide', handleLeave);
+    return () => {
+      window.removeEventListener('beforeunload', handleLeave);
+      window.removeEventListener('pagehide', handleLeave);
+    };
+  }, [step]);
 
   // 인증 가드 (보호된 단계 접근 제어)
   useEffect(() => {

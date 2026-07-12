@@ -62,11 +62,57 @@ exports.getDashboardStats = async () => {
   const { rows: amuletStats } = await db.query('SELECT COUNT(*) AS count FROM user_amulets');
   const { rows: consultStats } = await db.query('SELECT COUNT(*) AS count FROM consultations');
   const { rows: todayUsers } = await db.query('SELECT COUNT(*) AS count FROM users WHERE created_at >= CURRENT_DATE');
+  
+  // 부적 등급 분포 집계
+  const { rows: gradeStats } = await db.query(
+    'SELECT a.grade, COUNT(*) AS count FROM user_amulets ua JOIN amulets a ON ua.amulet_id = a.id GROUP BY a.grade'
+  );
+  const gradeDistribution = {};
+  gradeStats.forEach(row => {
+    gradeDistribution[row.grade] = parseInt(row.count);
+  });
+
+  // 평균 체류 시간 계산 (APP_LEAVE 이벤트를 기반으로 하거나 전체 로그 평균)
+  const { rows: durationStats } = await db.query(
+    "SELECT COALESCE(ROUND(AVG(duration_seconds)), 0) AS avg FROM user_access_logs WHERE action = 'APP_LEAVE' AND duration_seconds > 0"
+  );
+
+  // 최근 7일간 일별 활동 유저 수 (DAU)
+  const { rows: dauStats } = await db.query(
+    `SELECT to_char(created_at, 'YYYY-MM-DD') AS date, COUNT(DISTINCT user_id) AS count 
+     FROM user_access_logs 
+     WHERE created_at >= CURRENT_DATE - INTERVAL '7 days'
+     GROUP BY date 
+     ORDER BY date DESC`
+  );
+
+  // 최근 15개 접속 로그
+  const { rows: recentAccessLogs } = await db.query(
+    `SELECT l.id, l.user_id AS "userId", u.toss_user_key AS "tossUserKey", l.action, l.duration_seconds AS "durationSeconds", l.created_at AS "createdAt"
+     FROM user_access_logs l
+     LEFT JOIN users u ON l.user_id = u.id
+     ORDER BY l.created_at DESC
+     LIMIT 15`
+  );
+
+  // 최근 15개 시스템 에러 로그 (단순 오류 파악용)
+  const { rows: recentSystemLogs } = await db.query(
+    `SELECT l.id, l.user_id AS "userId", u.toss_user_key AS "tossUserKey", l.level, l.message, l.data, l.created_at AS "createdAt"
+     FROM system_logs l
+     LEFT JOIN users u ON l.user_id = u.id
+     ORDER BY l.created_at DESC
+     LIMIT 15`
+  );
+
   return {
     totalUsers: parseInt(userStats[0].count),
     totalAmuletsIssued: parseInt(amuletStats[0].count),
     totalConsultations: parseInt(consultStats[0].count),
     todayNewUsers: parseInt(todayUsers[0].count),
-    gradeDistribution: {}
+    gradeDistribution,
+    avgDurationSeconds: parseInt(durationStats[0].avg),
+    dauStats: dauStats.map(row => ({ date: row.date, count: parseInt(row.count) })),
+    recentAccessLogs,
+    recentSystemLogs
   };
 };

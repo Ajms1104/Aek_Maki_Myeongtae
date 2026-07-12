@@ -14,6 +14,7 @@ export default function AdminStep() {
   const [editCredit, setEditCredit] = useState('');
   const [stats, setStats] = useState<any>(null);
   const [showStats, setShowStats] = useState(false);
+  const [selectedErrorLog, setSelectedErrorLog] = useState<any>(null);
 
   useEffect(() => {
     if (!selectedUser && !showStats) fetchUsers();
@@ -110,6 +111,7 @@ export default function AdminStep() {
               <StatCard icon={<IoSparklesOutline color="#ff922b" />} label="발급된 부적" value={stats.totalAmuletsIssued} />
               <StatCard icon={<IoTicketOutline color="#2ecc71" />} label="전체 상담" value={stats.totalConsultations} />
               <StatCard icon={<IoPeopleOutline color="#3182f6" />} label="오늘 신규" value={stats.todayNewUsers} />
+              <StatCard icon={<IoStatsChartOutline color="#e74c3c" />} label="평균 체류 시간" value={`${stats.avgDurationSeconds || 0}초`} />
             </div>
             <Section title="부적 등급 분포">
               {Object.entries(stats.gradeDistribution || {}).map(([grade, count]: any) => (
@@ -118,6 +120,77 @@ export default function AdminStep() {
                   <span style={{ fontSize: '14px', color: '#3182f6', fontWeight: 700 }}>{count}개</span>
                 </div>
               ))}
+            </Section>
+            
+            {/* 실시간 시스템 에러 로그 패널 (디버깅 도구) */}
+            <Section title="최근 시스템 오류 로그 (디버깅)">
+              <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {stats.recentSystemLogs && stats.recentSystemLogs.length > 0 ? (
+                  stats.recentSystemLogs.map((log: any) => (
+                    <div 
+                      key={log.id} 
+                      onClick={() => setSelectedErrorLog(selectedErrorLog?.id === log.id ? null : log)}
+                      style={{ 
+                        padding: '10px', 
+                        backgroundColor: '#fff0f0', 
+                        borderLeft: '4px solid #f04452', 
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        textAlign: 'left'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontWeight: 700, color: '#f04452' }}>
+                        <span>[{log.level}] {log.tossUserKey ? `User: ${log.tossUserKey.substring(0, 8)}...` : 'GUEST'}</span>
+                        <span style={{ fontSize: '10px', color: '#8b95a1' }}>{new Date(log.createdAt).toLocaleTimeString()}</span>
+                      </div>
+                      <div style={{ fontWeight: 600, color: '#333d4b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{log.message}</div>
+                      
+                      {selectedErrorLog?.id === log.id && log.data && (
+                        <pre style={{ marginTop: '8px', padding: '8px', backgroundColor: '#333', color: '#fff', borderRadius: '4px', overflowX: 'auto', fontSize: '10px', whiteSpace: 'pre-wrap', wordBreak: 'break-all', textAlign: 'left' }}>
+                          {JSON.stringify(log.data, null, 2)}
+                        </pre>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <p style={{ textAlign: 'center', color: '#8b95a1', fontSize: '13px', padding: '10px 0' }}>수집된 오류 로그가 없습니다.</p>
+                )}
+              </div>
+            </Section>
+
+            {/* 접속 로그 현황 패널 */}
+            <Section title="최근 접속자 활동 및 체류 로그">
+              <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {stats.recentAccessLogs && stats.recentAccessLogs.length > 0 ? (
+                  stats.recentAccessLogs.map((log: any) => (
+                    <div 
+                      key={log.id} 
+                      style={{ 
+                        padding: '10px', 
+                        backgroundColor: '#f9fafb', 
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        border: '1px solid #f2f4f6',
+                        textAlign: 'left'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontWeight: 700, color: '#4a5568' }}>
+                        <span>ID: #{log.userId} ({log.tossUserKey ? log.tossUserKey.substring(0, 10) + '...' : 'Guest'})</span>
+                        <span style={{ fontSize: '10px', color: '#8b95a1' }}>{new Date(log.createdAt).toLocaleTimeString()}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#191f28' }}>
+                        <span style={{ fontWeight: 600 }}>액션: <span style={{ color: '#3182f6' }}>{log.action}</span></span>
+                        {log.action === 'APP_LEAVE' && (
+                          <span style={{ color: '#6b7684' }}>체류 시간: {log.durationSeconds}초</span>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p style={{ textAlign: 'center', color: '#8b95a1', fontSize: '13px', padding: '10px 0' }}>수집된 접속 로그가 없습니다.</p>
+                )}
+              </div>
             </Section>
           </div>
         ) : selectedUser ? (

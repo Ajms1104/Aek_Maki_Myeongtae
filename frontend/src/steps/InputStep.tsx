@@ -167,9 +167,10 @@ const InputStep: React.FC = () => {
       ]);
       setWish('');
       replaceTo('result');
-    } catch (err) {
+    } catch (err: any) {
       console.error('[InputStep] 에러:', err);
-      triggerToast('액운을 쫓는 데 실패했어요.', 'error');
+      const errMsg = err?.message || '액운을 쫓는 데 실패했어요.';
+      triggerToast(errMsg, 'error');
       replaceTo('input');
     }
   };

@@ -12,9 +12,15 @@ const TOSS_API_BASE = 'https://apps-in-toss-api.toss.im';
 const certPath = process.env.TOSS_CLIENT_CERT_PATH ? path.resolve(process.env.TOSS_CLIENT_CERT_PATH) : null;
 const keyPath = process.env.TOSS_CLIENT_KEY_PATH ? path.resolve(process.env.TOSS_CLIENT_KEY_PATH) : null;
 
+const IS_PROD = process.env.NODE_ENV === 'production';
 const hasCerts = certPath && keyPath && fs.existsSync(certPath) && fs.existsSync(keyPath);
 
-const MOCK_MODE = !hasCerts;
+if (IS_PROD && !hasCerts) {
+  console.error('[CRITICAL] Toss Client Certificates (CRT/KEY) are missing in production!');
+  throw new Error('Toss Client Certificates are required in production environment');
+}
+
+const MOCK_MODE = !hasCerts && !IS_PROD;
 
 if (MOCK_MODE) {
   console.warn('⚠️ [Toss API] 인증서가 없거나 경로가 틀려 MOCK 모드로 동작합니다.');
@@ -27,9 +33,12 @@ exports.decryptTossData = (encryptedText) => {
   if (!encryptedText || MOCK_MODE) return encryptedText;
   try {
     const DECRYPT_KEY = process.env.TOSS_DECRYPT_KEY;
-    const AAD = process.env.TOSS_AAD || 'TOSS';
+    const AAD = process.env.TOSS_AAD || process.env.OSS_AAD || 'TOSS';
     
     if (!DECRYPT_KEY) {
+      if (IS_PROD) {
+        throw new Error('[CRITICAL] TOSS_DECRYPT_KEY is missing in production!');
+      }
       console.warn('⚠️ [Toss API] TOSS_DECRYPT_KEY가 .env에 없습니다. 개인정보 복호화를 스킵합니다.');
       return encryptedText;
     }

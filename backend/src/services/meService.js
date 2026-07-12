@@ -34,3 +34,16 @@ exports.handleUnlink = async (tossUserKey, referrer) => {
     console.info(`[UNLINK] ${referrer} - soft delete 완료 userId=${user.id}`);
   }
 };
+
+// 접속자 로그 기록 및 최종 활동 시각 업데이트
+exports.logAccess = async (userId, action, durationSeconds) => {
+  await db.query(
+    'INSERT INTO user_access_logs (user_id, action, duration_seconds) VALUES ($1, $2, $3)',
+    [userId, action, durationSeconds]
+  );
+  
+  await db.query(
+    'UPDATE users SET last_seen_at = NOW() WHERE id = $1',
+    [userId]
+  );
+};

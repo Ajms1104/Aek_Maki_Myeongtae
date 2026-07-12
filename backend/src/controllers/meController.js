@@ -34,3 +34,21 @@ exports.unlinkCallback = async (req, res) => {
     return res.status(500).json({ error: '서버 내부 에러' });
   }
 };
+
+// 접속 로그 저장
+exports.logAccess = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { action, durationSeconds } = req.body;
+    
+    if (!action) {
+      return res.status(400).json({ error: 'action은 필수 항목입니다.' });
+    }
+    
+    await meService.logAccess(userId, action, durationSeconds || 0);
+    return res.status(200).json({ success: true });
+  } catch (err) {
+    console.error('logAccess 에러:', err);
+    return res.status(500).json({ error: '서버 내부 에러' });
+  }
+};

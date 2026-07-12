@@ -27,6 +27,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
  *         description: 인증 실패
  */
 router.delete('/data', authMiddleware, meController.deleteMyData);
+router.post('/access-log', authMiddleware, meController.logAccess);
 
 /**
  * @swagger

@@ -29,7 +29,15 @@ const swaggerSpec = require('./configuration/swagger');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+const IS_PROD = process.env.NODE_ENV === 'production';
+const corsOptions = {
+  origin: IS_PROD 
+    ? ['https://aekmaki.site'] 
+    : true, // 개발 모드에서는 모든 origin 허용
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // ✅ 이미지 정적 파일 서비스 (캐싱 및 CORS 설정 추가)
