@@ -384,26 +384,48 @@ const MainStep: React.FC = () => {
           ))}
         </div>
 
-        <div style={{ marginTop: '4px', background: '#ffffff', borderRadius: '20px', padding: '12px 16px', border: '1px solid #f2f4f6', boxShadow: '0 4px 12px rgba(0,0,0,0.01)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <div style={{ marginTop: '4px', background: '#ffffff', borderRadius: '20px', padding: '12px 14px', border: '1px solid #f2f4f6', boxShadow: '0 4px 12px rgba(0,0,0,0.01)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', fontWeight: 900, color: '#191f28' }}>
               <IoTrophyOutline size={16} color="#3182f6" /> 도전과제
             </div>
-            <div style={{ fontSize: '11px', fontWeight: 800, color: '#8b95a1' }}>{attendanceStreak}일 연속</div>
+            <div style={{ fontSize: '12px', fontWeight: 800, color: '#8b95a1' }}>{attendanceStreak}일 연속</div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 10px' }}>
             {visibleChallenges.map((challenge) => {
               const copy = challengeCopy[challenge.key] || { title: challenge.title, description: `+${challenge.rewardCredits} tokens` };
               const progress = Math.min(challenge.progress, challenge.target);
               const percent = challenge.target > 0 ? Math.min(100, (progress / challenge.target) * 100) : 0;
               return (
-                <div key={challenge.key} style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+                <div key={challenge.key} style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '6px', 
+                  minWidth: 0,
+                  background: '#f9fafb',
+                  borderRadius: '12px',
+                  padding: '8px 10px',
+                  border: '1px solid #f2f4f6'
+                }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: '4px', alignItems: 'center' }}>
-                    <span style={{ fontSize: '11px', fontWeight: 800, color: challenge.completed ? '#3182f6' : '#333d4b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{copy.title}</span>
-                    <span style={{ fontSize: '9px', fontWeight: 800, color: '#8b95a1', flexShrink: 0 }}>{progress}/{challenge.target}</span>
+                    <span style={{ fontSize: '12px', fontWeight: 850, color: challenge.completed ? '#3182f6' : '#333d4b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{copy.title}</span>
+                    <span style={{ 
+                      fontSize: '9px', 
+                      fontWeight: 900, 
+                      color: challenge.completed ? '#27ae60' : '#3182f6', 
+                      background: challenge.completed ? '#e8f5e9' : '#e8f3ff', 
+                      borderRadius: '5px', 
+                      padding: '2px 5px', 
+                      flexShrink: 0 
+                    }}>
+                      {challenge.completed ? '완료' : `+${challenge.rewardCredits || 1}`}
+                    </span>
                   </div>
-                  <div style={{ height: '5px', background: '#f2f4f6', borderRadius: '999px', overflow: 'hidden' }}>
-                    <div style={{ width: `${percent}%`, height: '100%', borderRadius: '999px', background: challenge.completed ? '#3182f6' : '#b4d4ff', transition: 'width 0.2s ease' }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ height: '6px', background: '#e5e8eb', borderRadius: '999px', overflow: 'hidden', flex: 1, marginRight: '6px' }}>
+                      <div style={{ width: `${percent}%`, height: '100%', borderRadius: '999px', background: challenge.completed ? '#27ae60' : '#3182f6', transition: 'width 0.2s ease' }} />
+                    </div>
+                    <span style={{ fontSize: '9px', fontWeight: 800, color: '#8b95a1', flexShrink: 0 }}>{progress}/{challenge.target}</span>
                   </div>
                 </div>
               );
