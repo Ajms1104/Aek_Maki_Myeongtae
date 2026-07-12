@@ -366,7 +366,8 @@ export default function AdminStep() {
               ))}
             </div>
           </div>
-        )}
+        </div>
+
       </div>
     </div>
   );
