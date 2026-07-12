@@ -55,7 +55,7 @@ router.post('/reward/attendance', authMiddleware, async (req, res) => {
       if (diffHours < 24) {
         const remainingHours = Math.ceil(24 - diffHours);
         return res.status(400).json({
-          error: `Attendance reward is available again in ${remainingHours} hours.`,
+          error: `출석 보상은 ${remainingHours}시간 후에 다시 받을 수 있어요.`,
         });
       }
     }
@@ -79,7 +79,7 @@ router.post('/reward/attendance', authMiddleware, async (req, res) => {
       credits,
       attendanceStreak,
       awards: challengeResult.awards,
-      message: 'Attendance reward claimed.',
+      message: '오늘의 출석 보상으로 1 토큰을 받았어요!',
     });
   } catch (err) {
     console.error('[ATTENDANCE FATAL ERROR]', err);
