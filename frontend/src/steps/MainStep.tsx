@@ -290,8 +290,8 @@ const MainStep: React.FC = () => {
   };
 
   return (
-    <L.Content style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '0 16px 16px', justifyContent: 'space-between', overflow: 'hidden' }}> 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingTop: '16px' }}>
+    <L.Content style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '0 16px 16px', justifyContent: 'flex-start', overflow: 'hidden' }}> 
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingTop: '16px', width: '100%' }}>
         <div style={{
           background: 'linear-gradient(135deg, #f9fafb 0%, #f2f4f6 100%)',
           borderRadius: '24px',
@@ -301,7 +301,7 @@ const MainStep: React.FC = () => {
           position: 'relative',
           overflow: 'hidden',
           width: '100%',
-          aspectRatio: '2.8 / 1',
+          aspectRatio: '2.4 / 1',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
@@ -312,11 +312,11 @@ const MainStep: React.FC = () => {
             onClick={handleDebugReset}
             style={{ 
               position: 'absolute',
-              top: '55%', 
+              top: '50%', 
               left: '50%',
-              transform: 'translate(-50%, -50%) scale(1.15)',
-              width: '100%',
-              height: '100%',
+              transform: 'translate(-50%, -50%)',
+              width: '95%',
+              height: '95%',
               objectFit: 'contain',
               zIndex: 0,
               pointerEvents: 'auto'
@@ -412,7 +412,7 @@ const MainStep: React.FC = () => {
         </div>
       </div>
 
-      <div style={{ width: '100%', paddingBottom: '8px', flexShrink: 0 }}>
+      <div style={{ width: '100%', paddingBottom: '8px', flexShrink: 0, marginTop: 'auto' }}>
         <C.MainButton 
           onClick={handleStart}
           disabled={isLoggingIn}
