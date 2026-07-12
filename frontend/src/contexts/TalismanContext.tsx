@@ -1,4 +1,4 @@
-﻿import React, { createContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useState, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { Talisman, Grade, Challenge } from '../types';
 import { INITIAL_TALISMAN_DATA, HIDDEN_TALISMAN_DATA, STORAGE_KEYS } from '../constants/talisman';
@@ -80,6 +80,8 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
     if (!token || !token.includes('.')) {
       setTalismanData(INITIAL_TALISMAN_DATA.filter(t => t.grade !== 'hidden'));
       setHasHiddenPass(false);
+      setCredits(0);
+      storage.set(STORAGE_KEYS.CREDITS, 0);
       return;
     }
     
@@ -126,6 +128,11 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
       }
     } catch (err) {
       console.error('Failed to fetch collection:', err);
+      // DB가 리셋되거나 세션 만료 시 프론트의 크레딧 캐시와 토큰을 완전 자동 리셋
+      tokenStorage.remove();
+      setCredits(0);
+      storage.set(STORAGE_KEYS.CREDITS, 0);
+      setHasHiddenPass(false);
       throw err;
     }
   }, []);
