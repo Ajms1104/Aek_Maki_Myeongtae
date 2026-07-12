@@ -103,7 +103,7 @@ const CollectionStep: React.FC = () => {
 
   return (
     <L.Content style={{ padding: 0, background: 'linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%)' }}>
-      <div style={{ padding: '12px 24px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ padding: '12px 24px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
         <L.Title style={{ textAlign: 'left', margin: 0, fontSize: '26px', fontWeight: 900 }}>나의 보관함</L.Title>
         <button onClick={handleManualRefresh} disabled={isRefreshing} style={{ border: 'none', background: 'none', display: 'flex', alignItems: 'center', gap: '4px', color: '#8b95a1', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
           <IoRefresh size={18} style={{ transform: isRefreshing ? 'rotate(360deg)' : 'none', transition: 'transform 0.5s ease' }} />
@@ -111,7 +111,23 @@ const CollectionStep: React.FC = () => {
         </button>
       </div>
 
-      <S.ScrollArea style={{ padding: '10px 24px 140px' }}>
+      {/* 고정 배너 광고 지면 (스크롤 영역 밖 최상단 고정) */}
+      <div style={{ padding: '0 24px 10px', flexShrink: 0 }}>
+        <div 
+          ref={bannerRef} 
+          style={{ 
+            width: '100%', 
+            minHeight: '64px', 
+            borderRadius: '20px', 
+            overflow: 'hidden',
+            border: '1px solid #f2f4f6',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.01)',
+            backgroundColor: '#ffffff'
+          }} 
+        />
+      </div>
+
+      <S.ScrollArea style={{ padding: '10px 24px 140px', flex: 1 }}>
         {/* 획득 현황 프리미엄 대시보드 카드화 */}
         <div style={{ 
           padding: '20px 24px', 
@@ -134,21 +150,6 @@ const CollectionStep: React.FC = () => {
           </div>
           <button onClick={() => navigateTo('payment')} style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', background: '#3182f6', padding: '10px 16px', borderRadius: '12px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(49, 130, 246, 0.25)' }}>히든 얻기</button>
         </div>
-
-        {/* 토스 배너 광고 지면 */}
-        <div 
-          ref={bannerRef} 
-          style={{ 
-            width: '100%', 
-            minHeight: '64px', 
-            borderRadius: '20px', 
-            overflow: 'hidden',
-            border: '1px solid #f2f4f6',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.01)',
-            backgroundColor: '#ffffff',
-            marginBottom: '24px'
-          }} 
-        />
 
         <S.TalismanGrid style={{ gap: '20px 14px' }}>
           {displayData.map((item, index) => {
