@@ -68,6 +68,12 @@ const CollectionStep: React.FC = () => {
       const t3 = setTimeout(() => {
         setRevealStage('done');
         unlockHiddenInState(); 
+
+        // 🐟 히든 해금 즉시 첫 번째 개발자 히든 부적을 팝업하여 감사 카드가 실시간 자동 노출되게 함
+        const firstHidden = talismanData.find(t => t.grade === 'hidden');
+        if (firstHidden) {
+          setSelectedTalisman({ ...firstHidden, unlocked: true });
+        }
       }, 5500);
       const t4 = setTimeout(() => {
         setRevealStage('none');
@@ -75,7 +81,7 @@ const CollectionStep: React.FC = () => {
       }, 8000);
       return () => [t1, t2, t3, t4].forEach(clearTimeout);
     }
-  }, [justUnlockedHidden, setJustUnlockedHidden, unlockHiddenInState]);
+  }, [justUnlockedHidden, setJustUnlockedHidden, unlockHiddenInState, talismanData]);
 
   const displayData = useMemo(() => {
     const uniqueMap = new Map<number, Talisman>();

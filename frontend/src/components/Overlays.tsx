@@ -10,7 +10,7 @@ export const TalismanDetailModal: React.FC<{
   talisman: Talisman;
   onClose: () => void;
 }> = ({ talisman, onClose }) => {
-  const [showLetter, setShowLetter] = React.useState(false);
+  const [showLetter, setShowLetter] = React.useState(talisman.grade === 'hidden' && talisman.unlocked);
   const theme = GRADE_COLORS[talisman.grade];
   const isHiddenGrade = talisman.grade === 'hidden';
 
