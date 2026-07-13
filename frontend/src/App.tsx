@@ -142,6 +142,15 @@ export default function App() {
   return (
     <>
       <GlobalStyle />
+      {/* 🐟 감성 웹 폰트 선제 프리로딩용 투명 안보임 DIV (감사 편지 로드 시 폰트 깨짐/깜빡임 완전 방지) */}
+      <div style={{ position: 'absolute', opacity: 0, width: 0, height: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+        <span style={{ fontFamily: '"Nanum Pen Script"' }}>Preload Nanum Pen Script</span>
+        <span style={{ fontFamily: '"Gamja Flower"' }}>Preload Gamja Flower</span>
+        <span style={{ fontFamily: '"East Sea Dokdo"' }}>Preload East Sea Dokdo</span>
+        <span style={{ fontFamily: '"Gowun Dodum"' }}>Preload Gowun Dodum</span>
+        <span style={{ fontFamily: '"Hi Melody"' }}>Preload Hi Melody</span>
+      </div>
+
       {isAdminStep ? (
         <>
           <C.ToastContainer $show={toastConfig.show} $type={toastConfig.type}>
