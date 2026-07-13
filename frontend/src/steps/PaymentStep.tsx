@@ -60,7 +60,7 @@ const ProductCard = styled.div<{ $active: boolean; $disabled?: boolean }>`
 
 const PaymentStep: React.FC = () => {
   const { navigateTo } = useNavigation();
-  const { handlePaymentComplete, hasHiddenPass, refreshCollection } = useTalisman();
+  const { handlePaymentComplete, hasHiddenPass, refreshCollection, setJustUnlockedHidden, credits } = useTalisman();
   const { triggerToast } = useUI();
   
   const [isSuccess, setIsSuccess] = useState(false);
@@ -70,9 +70,56 @@ const PaymentStep: React.FC = () => {
   );
   const [purchasedProduct, setPurchasedProduct] = useState<'credit' | 'hidden' | null>(null);
 
+  // 실시간 관리자 지급 상태 감지용 레퍼런스
+  const prevHiddenRef = useRef(hasHiddenPass);
+  const prevCreditsRef = useRef(credits);
+
   // ✅ 토스 광고 배너 연동
   const bannerRef = useRef<HTMLDivElement>(null);
   const { isInitialized, attachBanner } = useTossBanner();
+
+  useEffect(() => {
+    prevHiddenRef.current = hasHiddenPass;
+    prevCreditsRef.current = credits;
+  }, []);
+
+  // 2초 간격 백엔드 동기화 폴링 루프
+  useEffect(() => {
+    if (isSuccess || isProcessing) return;
+
+    const interval = setInterval(async () => {
+      try {
+        await refreshCollection();
+      } catch (err) {
+        console.error('[PaymentStep Polling Error]', err);
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [refreshCollection, isSuccess, isProcessing]);
+
+  // Context 전역 변수 변화 실시간 트래킹 및 보상 지급 연출
+  useEffect(() => {
+    // 1. 히든 해금 실시간 감지 -> 해금 이펙트 페이지로 워프
+    if (!prevHiddenRef.current && hasHiddenPass) {
+      prevHiddenRef.current = true;
+      setJustUnlockedHidden(true); // 보관함 이동 시 8초 웅장한 봉인 해금 이펙트 자동 활성화
+      setPurchasedProduct('hidden');
+      setIsSuccess(true);
+      triggerToast('🎉 히든 부적 패키지가 실시간으로 해금되었습니다!', 'success');
+    }
+
+    // 2. 크레딧 실시간 지급 감지 -> 성공 팝업 워프
+    if (credits > prevCreditsRef.current && prevCreditsRef.current !== 0) {
+      const diff = credits - prevCreditsRef.current;
+      prevCreditsRef.current = credits;
+      setPurchasedProduct('credit');
+      setIsSuccess(true);
+      triggerToast(`🐟 ${diff} 크레딧이 실시간 지급되었습니다!`, 'success');
+    } else if (credits !== prevCreditsRef.current) {
+      prevCreditsRef.current = credits;
+    }
+  }, [hasHiddenPass, credits, setJustUnlockedHidden, triggerToast]);
 
   useEffect(() => {
     if (!isInitialized || !bannerRef.current) return;

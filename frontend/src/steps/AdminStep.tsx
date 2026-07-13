@@ -87,6 +87,19 @@ export default function AdminStep() {
     }
   };
 
+  const handleGift10Credits = async () => {
+    if (!selectedUser) return;
+    const newCredit = (selectedUser.credit || 0) + 10;
+    try {
+      await updateAdminUserCredit(selectedUser.id, newCredit);
+      alert(`유저 #${selectedUser.id}에게 10 크레딧 패키지를 지급했습니다. (총 ${newCredit} 크레딧)`);
+      handleSelectUser(selectedUser.id);
+      fetchUsers();
+    } catch (err) {
+      alert('크레딧 패키지 지급에 실패했습니다.');
+    }
+  };
+
   return (
     <div style={{ backgroundColor: '#f2f4f6', minHeight: '100vh', width: '100%', display: 'flex', flexDirection: 'column', fontFamily: '"Pretendard", sans-serif' }}>
       {/* 1. 상단 바 헤더 */}
@@ -122,11 +135,11 @@ export default function AdminStep() {
           <div style={{ padding: '16px', backgroundColor: '#fff', borderRadius: '16px', textAlign: 'center', color: '#8b95a1' }}>종합 대시보드 지표 로딩 중...</div>
         )}
 
-        {/* [B] 하단 2단 반응형 그리드 레이아웃 (40% : 60%) */}
-        <div style={{ display: 'grid', gridTemplateColumns: '40% 60%', gap: '20px', alignItems: 'flex-start' }}>
+        {/* [B] 하단 2단 반응형 그리드 레이아웃 (짤림 방지용 auto-fit minmax) */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '20px', alignItems: 'flex-start', width: '100%', boxSizing: 'border-box' }}>
           
           {/* [B-1] 좌측 열: 유저 제어 및 등급 분포 분석 */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', boxSizing: 'border-box' }}>
             <Section title="👥 실시간 유저 조회 및 마스터 제어">
               {selectedUser ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -140,21 +153,42 @@ export default function AdminStep() {
                     <span style={{ fontSize: '14px', fontWeight: 800, color: '#333d4b' }}>유저 #{selectedUser.id} 제어판</span>
                   </div>
 
-                  <div style={{ padding: '16px', backgroundColor: '#f8f9fa', borderRadius: '12px', border: '1px solid #e9ecef' }}>
-                    <div style={{ fontSize: '14px', fontWeight: 800, color: '#191f28', marginBottom: '10px' }}>
-                      히든 해금 상태: <span style={{ color: selectedUser.hasHiddenPass ? '#27ae60' : '#f04452' }}>{selectedUser.hasHiddenPass ? '해금 완료' : '잠금'}</span>
+                  {/* 결제 우회 시뮬레이터 카드 */}
+                  <div style={{ padding: '16px', backgroundColor: '#f4f6f8', borderRadius: '14px', border: '1px solid #e5e8eb' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 800, color: '#4e5968', marginBottom: '10px' }}>
+                      ⚡ 모바일 결제 우회 시뮬레이터 (실시간 반영)
                     </div>
-                    {!selectedUser.hasHiddenPass && (
-                      <C.Button onClick={handleManualUnlock} $variant="primary" style={{ backgroundColor: '#3182f6', height: '40px', width: '100%', fontSize: '13px', borderRadius: '8px' }}>
-                        히든 부적 강제 해금하기
-                      </C.Button>
-                    )}
+                    <div style={{ display: 'flex', gap: '8px', flexDirection: 'column' }}>
+                      <button 
+                        onClick={handleGift10Credits}
+                        style={{ width: '100%', backgroundColor: '#e8f3ff', color: '#3182f6', border: 'none', padding: '12px', borderRadius: '10px', fontSize: '13px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                      >
+                        🐟 10 크레딧 패키지 지급 (+1,100원 충전 연출)
+                      </button>
+                      <button 
+                        onClick={handleManualUnlock}
+                        style={{ 
+                          width: '100%', 
+                          backgroundColor: selectedUser.hasHiddenPass ? '#e5e8eb' : '#f4edff', 
+                          color: selectedUser.hasHiddenPass ? '#8b95a1' : '#a25df5', 
+                          border: 'none', 
+                          padding: '12px', 
+                          borderRadius: '10px', 
+                          fontSize: '13px', 
+                          fontWeight: 800, 
+                          cursor: selectedUser.hasHiddenPass ? 'default' : 'pointer' 
+                        }}
+                        disabled={selectedUser.hasHiddenPass}
+                      >
+                        {selectedUser.hasHiddenPass ? '🔒 히든 패키지 해금 완료 상태' : '🔒 히든 패키지 강제 해금 (2,200원 해금 연출)'}
+                      </button>
+                    </div>
                   </div>
 
-                  <div style={{ padding: '16px', backgroundColor: '#f8f9fa', borderRadius: '12px', border: '1px solid #e9ecef' }}>
+                  <div style={{ padding: '16px', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f2f4f6' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div>
-                        <div style={{ fontSize: '11px', color: '#8b95a1' }}>보유 크레딧</div>
+                        <div style={{ fontSize: '11px', color: '#8b95a1' }}>보유 크레딧 (수동 직접수정)</div>
                         <div style={{ fontSize: '20px', fontWeight: 900, color: '#191f28' }}>{selectedUser.credit}개</div>
                       </div>
                       <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
@@ -455,7 +489,16 @@ function StatCard({ icon, label, value }: any) {
 
 function Section({ title, children }: any) {
   return (
-    <div style={{ backgroundColor: '#fff', padding: '18px', borderRadius: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', marginBottom: '16px' }}>
+    <div style={{ 
+      backgroundColor: '#fff', 
+      padding: '18px', 
+      borderRadius: '16px', 
+      boxShadow: '0 2px 8px rgba(0,0,0,0.02)', 
+      marginBottom: '16px',
+      width: '100%',
+      boxSizing: 'border-box',
+      overflow: 'hidden'
+    }}>
       <h3 style={{ fontSize: '15px', fontWeight: 800, margin: '0 0 12px 0', color: '#191f28' }}>{title}</h3>
       {children}
     </div>
