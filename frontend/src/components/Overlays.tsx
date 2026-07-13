@@ -95,10 +95,10 @@ export const TalismanDetailModal: React.FC<{
       <O.ModalContent 
         onClick={(e) => e.stopPropagation()}
         style={{
-          maxHeight: '52vh', // 높이 제한을 타이트하게 52vh로 줄여 확인 버튼 짤림 완전 방지
+          maxHeight: '80vh', // 최대 높이를 80vh로 넉넉히 늘려 텍스트와 레이아웃이 찌부러지는 것 완전 해결
           display: 'flex',
           flexDirection: 'column',
-          padding: '16px 20px 20px', 
+          padding: '20px 20px 24px', 
           background: '#fdfcf9', 
           border: `2px solid ${talisman.unlocked ? theme.sub : '#e5e8eb'}`,
           borderRadius: '32px',
@@ -129,7 +129,7 @@ export const TalismanDetailModal: React.FC<{
               padding: '3px 8px', 
               borderRadius: '8px', 
               border: `1.5px solid ${talisman.unlocked ? theme.sub : '#e5e8eb'}`,
-              marginBottom: '10px',
+              marginBottom: '12px',
               letterSpacing: '0.5px',
               flexShrink: 0
             }}>
@@ -146,7 +146,7 @@ export const TalismanDetailModal: React.FC<{
                 height: '120px',
                 borderRadius: '20px',
                 boxShadow: talisman.unlocked ? `0 12px 36px ${theme.sub}40` : 'none',
-                marginBottom: '12px'
+                marginBottom: '16px'
               }}
             >
               <img
@@ -164,7 +164,7 @@ export const TalismanDetailModal: React.FC<{
                 fontSize: '20px', 
                 fontWeight: 900,
                 marginBottom: '3px',
-                marginTop: '8px',
+                marginTop: '4px',
                 color: '#191f28',
                 textAlign: 'center',
                 fontFamily: '"Pretendard", "Noto Serif KR", sans-serif'
@@ -174,22 +174,22 @@ export const TalismanDetailModal: React.FC<{
             </h2>
 
             {/* 등급 색상 미니 데코 바 */}
-            <div style={{ width: '24px', height: '2px', background: talisman.unlocked ? theme.sub : '#e5e8eb', borderRadius: '999px', marginBottom: '10px', flexShrink: 0 }} />
+            <div style={{ width: '24px', height: '2px', background: talisman.unlocked ? theme.sub : '#e5e8eb', borderRadius: '999px', marginBottom: '14px', flexShrink: 0 }} />
 
             <O.DescriptionBox style={{ 
               width: '100%', 
-              padding: '10px 14px', 
+              padding: '12px 16px', 
               background: '#f5f2eb', 
               borderRadius: '16px',
               border: '1px solid #eae5db',
-              maxHeight: '85px', // 85px로 설명글 상자 크기 제한하여 가두기
-              overflowY: 'auto' // 초과 시 한지 박스 내부에서 정갈하게 스크롤 처리
+              maxHeight: '120px', // 설명 박스의 최대 높이를 120px로 확장
+              overflowY: 'auto' // 본문 텍스트 짤림 방지 및 스크롤
             }}>
               <p
                 style={{
-                  fontSize: '13px', // 가독성 유지하며 폰트 축소 (14px -> 13px)
+                  fontSize: '13px', 
                   color: '#4e5968',
-                  lineHeight: '1.5',
+                  lineHeight: '1.6',
                   margin: 0,
                   whiteSpace: 'pre-wrap',
                   textAlign: 'center',
