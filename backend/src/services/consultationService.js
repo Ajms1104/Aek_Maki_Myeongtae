@@ -6,22 +6,20 @@ const userRepository = require('../repositories/userRepository');
 const llmService = require('./llmService');
 const challengeService = require('./challengeService');
 
-// 怨좊? ?깅줉 + 遺??諛쒓툒
+// 怨좊? ?깅줉 + 遺€?? 諛쒓툒
 exports.createConsultation = async ({ userId, content, category }) => {
-  const remainingCredits = await userRepository.deductCredit(userId, 1);
-  if (remainingCredits === null) {
-    const err = new Error('?щ젅?㏃씠 遺議깊빀?덈떎.');
+  // 1. 크레딧 선검증 (차감은 하지 않고 보유량만 선조회)
+  const user = await userRepository.findById(userId);
+  if (!user || user.credits < 1) {
+    const err = new Error('크레딧이 부족합니다.');
     err.status = 403;
     throw err;
   }
 
-   // const remainingCredits = 999; // AI ?뚯뒪?몄떆 ?ъ슜??寃? ?꾩쓽 肄붾뱶??二쇱꽍泥섎━?섍퀬
-
-
   // 2. preview ?앹꽦
   const preview = content.slice(0, 50) + (content.length > 50 ? '...' : '');
 
-  // DB ???
+  // DB ?€??
   const consultation = await consultationRepository.create({
     userId,
     category,
@@ -66,7 +64,15 @@ exports.createConsultation = async ({ userId, content, category }) => {
     isNew = false;
   }
 
-  // 5. 吏€湲?
+  // 5. 실질적 크레딧 차감 (모든 위험 요소 통과 후 최종 확정)
+  const remainingCredits = await userRepository.deductCredit(userId, 1);
+  if (remainingCredits === null) {
+    const err = new Error('크레딧이 부족합니다.');
+    err.status = 403;
+    throw err;
+  }
+
+  // 6. 吏€湲?
   await amuletRepository.giveToUser(userId, selected.id);
 
   const challengeResult = await challengeService.evaluateAmuletCreated(userId, selected);
