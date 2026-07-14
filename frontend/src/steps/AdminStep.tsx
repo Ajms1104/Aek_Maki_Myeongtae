@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import * as S from '../styles/stepStyles';
 import * as C from '../styles/commonStyles';
 import { getAdminUsers, getAdminUserDetail, updateAdminUserUnlock, updateAdminUserCredit, getAdminStats } from '../utils/api';
+import { useNavigation } from '../hooks/useNavigation';
 import { 
   IoArrowBack, IoSearch, IoCheckmarkCircleOutline, IoStatsChartOutline, IoPeopleOutline, IoTicketOutline, IoSparklesOutline 
 } from 'react-icons/io5';
 
 export default function AdminStep() {
+  const { navigateTo } = useNavigation();
   const [users, setUsers] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,8 +27,14 @@ export default function AdminStep() {
       setLoading(true);
       const data = await getAdminUsers(1, search);
       setUsers(data.users || []);
-    } catch (err) {
+    } catch (err: any) {
       console.error('[AdminStep] fetchUsers Error:', err);
+      // 🔒 [보안장치] 관리자 권한 만료(403) 시 로그인 화면으로 리다이렉트
+      if (err.status === 403 || (err.message && err.message.includes('403'))) {
+        alert('관리자 로그인 세션이 만료되었습니다. 다시 로그인해주세요.');
+        navigateTo('admin_login');
+        return;
+      }
       alert('유저 목록을 불러오지 못했습니다.');
     } finally {
       setLoading(false);
@@ -38,8 +46,11 @@ export default function AdminStep() {
       setLoading(true);
       const data = await getAdminStats();
       setStats(data);
-    } catch (err) {
+    } catch (err: any) {
       console.error('[AdminStep] fetchStats Error:', err);
+      if (err.status === 403 || (err.message && err.message.includes('403'))) {
+        navigateTo('admin_login');
+      }
     } finally {
       setLoading(false);
     }

@@ -121,6 +121,12 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
       return;
     }
 
+    // 🔒 [안전장치] ReactNativeWebView가 없는 일반 PC 웹 브라우저 환경에서는 토스 뒤로가기 리스너 바인딩 스킵!
+    if (typeof window === 'undefined' || !(window as any).ReactNativeWebView) {
+      console.log('[Navigation] 일반 브라우저 환경: Toss 네이티브 backEvent 바인딩 건너뜀');
+      return;
+    }
+
     let unsubscription: (() => void) | undefined;
     
     try {
