@@ -126,13 +126,21 @@ export const TalismanProvider: React.FC<{ children: ReactNode }> = ({ children }
         });
         setTalismanData(mappedItems);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to fetch collection:', err);
-      // DB가 리셋되거나 세션 만료 시 프론트의 크레딧 캐시와 토큰을 완전 자동 리셋
-      tokenStorage.remove();
-      setCredits(0);
-      storage.set(STORAGE_KEYS.CREDITS, 0);
-      setHasHiddenPass(false);
+      // 🔒 [안전장치] 단순 서버 점검(502/503)이나 네트워크 지연 시 토큰이 억울하게 날아가는 현상 차단
+      // 오직 401 Unauthorized 또는 404 Not Found 등 인증 도메인 실패 시에만 세션을 리셋합니다.
+      const isAuthError = 
+        err.status === 401 || 
+        err.status === 404 || 
+        (err.message && (err.message.includes('401') || err.message.includes('404')));
+
+      if (isAuthError) {
+        tokenStorage.remove();
+        setCredits(0);
+        storage.set(STORAGE_KEYS.CREDITS, 0);
+        setHasHiddenPass(false);
+      }
       throw err;
     }
   }, []);
