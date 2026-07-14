@@ -60,6 +60,12 @@ const CollectionStep: React.FC = () => {
     common: 3,
   };
 
+  // 🔒 talismanData의 변경에 따른 무한 루프 트리거 방지용 Ref 우회 기법
+  const talismanRef = useRef(talismanData);
+  useEffect(() => {
+    talismanRef.current = talismanData;
+  }, [talismanData]);
+
   useEffect(() => {
     if (justUnlockedHidden) {
       setRevealStage('sealed');
@@ -69,8 +75,7 @@ const CollectionStep: React.FC = () => {
         setRevealStage('done');
         unlockHiddenInState(); 
 
-        // 🐟 히든 해금 즉시 첫 번째 개발자 히든 부적을 팝업하여 감사 카드가 실시간 자동 노출되게 함
-        const firstHidden = talismanData.find(t => t.grade === 'hidden');
+        const firstHidden = talismanRef.current.find(t => t.grade === 'hidden');
         if (firstHidden) {
           setSelectedTalisman({ ...firstHidden, unlocked: true });
         }
@@ -81,7 +86,7 @@ const CollectionStep: React.FC = () => {
       }, 8000);
       return () => [t1, t2, t3, t4].forEach(clearTimeout);
     }
-  }, [justUnlockedHidden, setJustUnlockedHidden, unlockHiddenInState, talismanData]);
+  }, [justUnlockedHidden, setJustUnlockedHidden, unlockHiddenInState]);
 
   const displayData = useMemo(() => {
     const uniqueMap = new Map<number, Talisman>();
