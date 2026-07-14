@@ -50,7 +50,7 @@ const ProductCard = styled.div<{ $active: boolean; $disabled?: boolean }>`
   background: #ffffff;
   border: 2px solid ${props => props.$active ? '#3182f6' : '#f2f4f6'};
   border-radius: 20px;
-  padding: 18px;
+  padding: 14px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -261,8 +261,8 @@ const PaymentStep: React.FC = () => {
         <p style={{ color: '#6b7684', fontSize: '15px', marginTop: '6px' }}>명태의 위로가 더 필요하신가요?</p>
       </div>
 
-      <S.ScrollArea style={{ padding: '10px 20px 200px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      <S.ScrollArea style={{ padding: '10px 20px 170px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {/* 🐟 무료 혜택: 친구 공유 리워드 */}
             <ProductCard $active={false} onClick={handleShareViral} style={{ border: '2px dashed #3182f6', background: '#f8f9fa' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -296,8 +296,8 @@ const PaymentStep: React.FC = () => {
             </ProductCard>
 
             <div style={{ 
-              marginTop: '12px', 
-              padding: '16px', 
+              marginTop: '6px', 
+              padding: '10px 14px', 
               background: '#f9fafb', 
               borderRadius: '16px',
               textAlign: 'center'
