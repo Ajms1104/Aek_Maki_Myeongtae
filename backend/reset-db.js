@@ -34,8 +34,26 @@ async function reset() {
     // 2. init.sql 로드 및 실행
     console.log('Executing init.sql...');
     const sqlPath = path.join(__dirname, 'src', 'sql', 'init.sql');
-    const sql = fs.readFileSync(sqlPath, 'utf8');
-    await client.query(sql);
+    let sql = fs.readFileSync(sqlPath, 'utf8');
+
+    // 🔒 [안전장치] 한글 인코딩 깨짐 주석 및 다중 행 주석 일괄 청소
+    sql = sql.replace(/--.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+
+    // 세미콜론(;) 단위로 분할하여 개별 쿼리 순차 실행
+    const statements = sql
+      .split(';')
+      .map(stmt => stmt.trim())
+      .filter(stmt => stmt.length > 0);
+
+    for (let i = 0; i < statements.length; i++) {
+      const stmt = statements[i];
+      try {
+        await client.query(stmt);
+      } catch (err) {
+        console.error(`[SQL Error at statement ${i + 1}]:`, stmt);
+        throw err;
+      }
+    }
 
     console.log('DB Reset completed successfully!');
   } catch (err) {
