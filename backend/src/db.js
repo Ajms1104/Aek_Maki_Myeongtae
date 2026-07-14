@@ -12,6 +12,16 @@ const client = new Client({
 client.connect()
   .then(async () => {
     console.log('DB connected');
+
+    // 🐟 [가중치 마이그레이션] 1번 밸런스형 황금 비율 가중치 자동 갱신 (일반 20, 희귀 9, 전설 4)
+    try {
+      await client.query("UPDATE amulets SET weight = 20, draft_weight = 20 WHERE grade = 'common'");
+      await client.query("UPDATE amulets SET weight = 9, draft_weight = 9 WHERE grade = 'rare'");
+      await client.query("UPDATE amulets SET weight = 4, draft_weight = 4 WHERE grade = 'legend'");
+      console.log('Amulet weights synced to 1st Balance Option (Common:20, Rare:9, Legend:4)');
+    } catch (e) {
+      console.error('Amulet weights sync failed:', e.message);
+    }
     
     // 다중 인스턴스 배포 시 테이블 락 충돌 방지를 위해, 개발 환경이거나 AUTO_MIGRATE=true 일 때만 마이그레이션을 구동함
     const shouldMigrate = process.env.AUTO_MIGRATE === 'true' || process.env.NODE_ENV !== 'production';
