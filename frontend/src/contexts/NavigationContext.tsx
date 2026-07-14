@@ -91,6 +91,12 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
         return;
       }
 
+      // 🐟 결과 화면(result)에서 뒤로가기를 하면 무조건 메인 화면(main)으로 강제 리다이렉트하여 버그 차단!
+      if (step === 'result') {
+        resetToMain();
+        return;
+      }
+
       if (event.state && event.state.step) {
         setStep(event.state.step);
       } else {
@@ -121,7 +127,14 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
       console.log('[Navigation] backEvent 리스너 등록 (단계:', step, ')');
       unsubscription = graniteEvent.addEventListener('backEvent', {
         onEvent: () => {
-          console.log('[Navigation] 네이티브 뒤로가기 감지 -> 이전 단계로 이동');
+          console.log('[Navigation] 네이티브 뒤로가기 감지 (단계:', step, ')');
+          
+          // 🐟 결과 화면(result)에서 네이티브 뒤로가기를 누르면 메인 화면(main)으로 즉각 복귀!
+          if (step === 'result') {
+            resetToMain();
+            return;
+          }
+
           window.history.back();
         },
         onError: (error) => {
