@@ -66,7 +66,11 @@ export const TalismanDetailModal: React.FC<{
             fontFamily: talisman.fontFamily || '"Nanum Pen Script", cursive',
             fontWeight: 500,
             margin: 0,
-            whiteSpace: 'pre-wrap'
+            whiteSpace: 'pre-wrap',
+            maxHeight: '40vh',
+            overflowY: 'auto',
+            width: '100%',
+            padding: '4px 8px'
           }}>
             {talisman.letter}
           </p>
