@@ -47,14 +47,12 @@ router.post('/reward/attendance', authMiddleware, async (req, res) => {
 
     const now = new Date();
     if (user.last_attendance_at) {
-      const lastAttendance = new Date(user.last_attendance_at);
-      const diffMs = now.getTime() - lastAttendance.getTime();
-      const diffHours = diffMs / (1000 * 60 * 60);
+      const lastKey = challengeService.toKoreaDateKey(user.last_attendance_at);
+      const nowKey = challengeService.toKoreaDateKey(now);
 
-      if (diffHours < 24) {
-        const remainingHours = Math.ceil(24 - diffHours);
+      if (lastKey === nowKey) {
         return res.status(400).json({
-          error: `출석 보상은 ${remainingHours}시간 후에 다시 받을 수 있어요.`,
+          error: '오늘의 출석 보상을 이미 받았어요. 내일 자정(00시) 이후에 다시 만나요!',
         });
       }
     }

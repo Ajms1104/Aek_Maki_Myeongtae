@@ -75,6 +75,7 @@ const awardEligible = async (userId, challenges, repository) => {
 };
 
 exports.CHALLENGES = CHALLENGES;
+exports.toKoreaDateKey = toKoreaDateKey;
 
 exports.calculateNextAttendanceStreak = (lastAttendanceAt, currentStreak = 0, now = new Date()) => {
   if (!lastAttendanceAt) return 1;
