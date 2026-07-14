@@ -261,7 +261,7 @@ const PaymentStep: React.FC = () => {
         <p style={{ color: '#6b7684', fontSize: '15px', marginTop: '6px' }}>명태의 위로가 더 필요하신가요?</p>
       </div>
 
-      <S.ScrollArea style={{ padding: '10px 20px 140px' }}>
+      <S.ScrollArea style={{ padding: '10px 20px 200px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {/* 🐟 무료 혜택: 친구 공유 리워드 */}
             <ProductCard $active={false} onClick={handleShareViral} style={{ border: '2px dashed #3182f6', background: '#f8f9fa' }}>

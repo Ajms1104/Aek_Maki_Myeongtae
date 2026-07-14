@@ -1,4 +1,4 @@
-import React, { createContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useCallback, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { graniteEvent, partner } from '@apps-in-toss/web-framework';
 import { useUI } from '../hooks/useUI';
@@ -39,30 +39,34 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
   const [step, setStep] = useState<Step>(getInitialStep);
   const { setDialogConfig } = useUI();
 
+  // 🐟 step 상태의 Stale Closure 및 네이티브 리스너 재등록 유실 예방용 레퍼런스
+  const stepRef = useRef(step);
+  useEffect(() => {
+    stepRef.current = step;
+  }, [step]);
+
   // --- 핵심 로직 (useEffect에서 참조하므로 위로 이동) ---
 
   const handleBack = useCallback((_onMainBack?: (config: DialogConfig) => void) => {
-    console.log('[Navigation] handleBack 실행 (현재 단계:', step, ')');
-    // 메인 화면에서는 이 함수가 호출되지 않도록 (네이티브 종료에 맡김) 처리하지만, 
-    // 만약 호출된다면 브라우저 뒤로가기를 시도합니다.
+    console.log('[Navigation] handleBack 실행 (현재 단계:', stepRef.current, ')');
     window.history.back();
-  }, [step]);
+  }, []);
 
   const navigateTo = useCallback((nextStep: Step) => {
-    if (nextStep !== step) {
+    if (nextStep !== stepRef.current) {
       const path = nextStep === 'main' ? '/' : `/${nextStep}`;
       window.history.pushState({ step: nextStep }, '', path);
       setStep(nextStep);
     }
-  }, [step]);
+  }, []);
 
   const replaceTo = useCallback((nextStep: Step) => {
-    if (nextStep !== step) {
+    if (nextStep !== stepRef.current) {
       const path = nextStep === 'main' ? '/' : `/${nextStep}`;
       window.history.replaceState({ step: nextStep }, '', path);
       setStep(nextStep);
     }
-  }, [step]);
+  }, []);
 
   const resetToMain = useCallback(() => {
     setStep('main');
@@ -73,17 +77,18 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
 
   // 앱 진입 시 초기 히스토리 상태 설정
   useEffect(() => {
-    const initialPath = step === 'main' ? '/' : `/${step}`;
-    window.history.replaceState({ step }, '', initialPath);
+    const initialPath = stepRef.current === 'main' ? '/' : `/${stepRef.current}`;
+    window.history.replaceState({ step: stepRef.current }, '', initialPath);
   }, []);
 
-  // 브라우저/상단바 뒤로가기 감지 (브라우저 표준 popstate)
+  // 브라우저/상단바 뒤로가기 감지 (브라우저 표준 popstate - 단 1회 등록)
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
-      console.log('[Navigation] popstate 감지 (현재 단계:', step, ')');
+      const currentStep = stepRef.current;
+      console.log('[Navigation] popstate 감지 (현재 단계:', currentStep, ')');
       
       // 🐟 메인 화면에서 일반 웹 뒤로가기가 감지되면 이탈 방지 및 종료 팝업 활성화
-      if (step === 'main') {
+      if (currentStep === 'main') {
         window.history.pushState({ step: 'main' }, '', '/');
         setDialogConfig({
           isOpen: true,
@@ -122,18 +127,20 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [step, setDialogConfig]);
+  }, [setDialogConfig]);
 
-  // 토스 네이티브 뒤로가기 버튼 이벤트 감지 (graniteEvent 사용)
+  // 토스 네이티브 뒤로가기 버튼 이벤트 감지 (graniteEvent 사용 - 최초 1회 견고히 등록)
   useEffect(() => {
     let unsubscription: (() => void) | undefined;
     
     try {
-      console.log('[Navigation] backEvent 리스너 등록 (단계:', step, ')');
+      console.log('[Navigation] backEvent 리스너 등록 진행');
       unsubscription = graniteEvent.addEventListener('backEvent', {
         onEvent: () => {
-          console.log('[Navigation] 네이티브 뒤로가기 감지 (현재 단계:', step, ')');
-          if (step === 'main') {
+          const currentStep = stepRef.current;
+          console.log('[Navigation] 네이티브 뒤로가기 감지 (현재 단계:', currentStep, ')');
+          
+          if (currentStep === 'main') {
             // 메인 화면인 경우 종료 의사 다이얼로그 팝업 노출!
             setDialogConfig({
               isOpen: true,
@@ -156,7 +163,8 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
               }
             });
           } else {
-            handleBack();
+            // 서브 단계일 때는 뒤로가기 동작 (브라우저 이전 히스토리)
+            window.history.back();
           }
         },
         onError: (error) => {
@@ -173,7 +181,7 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
         unsubscription();
       }
     };
-  }, [step, handleBack, setDialogConfig]); 
+  }, [setDialogConfig]); 
 
   return (
     <NavigationContext.Provider value={{ step, history: [], navigateTo, replaceTo, handleBack, resetToMain }}>

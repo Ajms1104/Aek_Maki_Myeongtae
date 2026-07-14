@@ -117,7 +117,7 @@ const CollectionStep: React.FC = () => {
         </button>
       </div>
 
-      <S.ScrollArea style={{ padding: '10px 24px 140px' }}>
+      <S.ScrollArea style={{ padding: '10px 24px 200px' }}>
         {/* 획득 현황 프리미엄 대시보드 카드화 */}
         <div style={{ 
           padding: '20px 24px', 
