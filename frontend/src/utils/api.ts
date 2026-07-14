@@ -48,6 +48,7 @@ export const createConsultation = (content: string, category?: string) => reques
 export const getCollection = () => request('/api/v1/amulets/collection');
 export const recordPayment = (productType: 'credit' | 'hidden') => request('/api/v1/payments/record', { method: 'POST', body: JSON.stringify({ productType }) });
 export const claimAttendanceReward = () => request('/api/v1/payments/reward/attendance', { method: 'POST' });
+export const claimViralReward = () => request('/api/v1/payments/reward/viral', { method: 'POST' });
 export const getCatalog = () => request('/api/v1/amulets/catalog');
 export const getPublicStats = () => request('/api/v1/amulets/public-stats');
 export const getAdminUsers = (page = 1, search = '') => request(`/api/v1/admin/users?page=${page}&search=${search}`);

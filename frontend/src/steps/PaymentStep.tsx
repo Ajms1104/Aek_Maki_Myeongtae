@@ -13,8 +13,9 @@ import { useNavigation } from '../hooks/useNavigation';
 import { useTalisman } from '../hooks/useTalisman';
 import { useUI } from '../hooks/useUI';
 import { loginWithToss } from '../utils/auth';
-import { tokenStorage } from '../utils/api';
+import { tokenStorage, claimViralReward } from '../utils/api';
 import { useTossBanner } from '../hooks/useTossBanner';
+import { contactsViral } from '@apps-in-toss/web-framework';
 
 const SKU_HIDDEN = 'ait.0000019636.8223c8cb.17d7c52664.7277637768';
 const SKU_CREDIT = 'ait.0000019636.26612546.7356f68591.7277541916';
@@ -65,10 +66,54 @@ const PaymentStep: React.FC = () => {
   
   const [isSuccess, setIsSuccess] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isViralProcessing, setIsViralProcessing] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<'credit' | 'hidden'>(
     hasHiddenPass ? 'credit' : 'hidden'
   );
   const [purchasedProduct, setPurchasedProduct] = useState<'credit' | 'hidden' | null>(null);
+
+  // 🐟 친구 초대 공유 리워드 브릿지 핸들러
+  const handleShareViral = () => {
+    if (isViralProcessing) return;
+    
+    if (!tokenStorage.get()) {
+      loginWithToss().then(() => refreshCollection());
+      return;
+    }
+
+    try {
+      setIsViralProcessing(true);
+      const cleanup = contactsViral({
+        options: { moduleId: '9656bdde-b8b8-493d-bc5c-7a7daa4dca59' },
+        onEvent: async (event) => {
+          if (event.type === 'sendViral') {
+            try {
+              const res = await claimViralReward();
+              if (res && res.success) {
+                await refreshCollection();
+                triggerToast('🎉 친구 공유 완료 보상으로 2 크레딧이 지급되었습니다!', 'success');
+              }
+            } catch (err: any) {
+              console.error('공유 보상 지급 API 에러:', err);
+              const msg = err?.message || '이미 오늘 한도를 채웠거나 에러가 발생했어요.';
+              triggerToast(msg, 'error');
+            }
+          } else if (event.type === 'close') {
+            setIsViralProcessing(false);
+            cleanup();
+          }
+        },
+        onError: (err) => {
+          console.error('공유 브릿지 에러:', err);
+          setIsViralProcessing(false);
+          cleanup?.();
+        }
+      });
+    } catch (err) {
+      console.error('contactsViral 실행 실패:', err);
+      setIsViralProcessing(false);
+    }
+  };
 
   // 실시간 관리자 지급 상태 감지용 레퍼런스
   const prevHiddenRef = useRef(hasHiddenPass);
@@ -218,7 +263,22 @@ const PaymentStep: React.FC = () => {
 
       <S.ScrollArea style={{ padding: '10px 20px 140px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {/* 상품 카드들... */}
+            {/* 🐟 무료 혜택: 친구 공유 리워드 */}
+            <ProductCard $active={false} onClick={handleShareViral} style={{ border: '2px dashed #3182f6', background: '#f8f9fa' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ width: '44px', height: '48px', background: '#e5f9ed', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <IoGiftOutline size={24} color="#00d082" />
+                </div>
+                <div>
+                  <div style={{ fontSize: '15px', fontWeight: 800, color: '#191f28' }}>친구에게 공유하기</div>
+                  <div style={{ fontSize: '11px', color: '#6b7684', fontWeight: 600 }}>공유 완료 시 크레딧 지급 (하루 최대 5회)</div>
+                </div>
+              </div>
+              <div style={{ fontSize: '14px', fontWeight: 800, color: '#3182f6', background: '#e8f3ff', padding: '6px 10px', borderRadius: '10px', whiteSpace: 'nowrap' }}>
+                +2 크레딧
+              </div>
+            </ProductCard>
+
             <ProductCard $active={selectedProduct === 'hidden'} $disabled={hasHiddenPass} onClick={() => !hasHiddenPass && setSelectedProduct('hidden')}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <div style={{ width: '44px', height: '48px', background: hasHiddenPass ? '#e5e8eb' : '#f4edff', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IoGiftOutline size={24} color={hasHiddenPass ? '#adb5bd' : '#a25df5'} /></div>
