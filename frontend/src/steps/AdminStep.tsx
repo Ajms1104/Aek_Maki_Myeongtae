@@ -332,6 +332,50 @@ export default function AdminStep() {
           </div>
         </div>
 
+        {/* 📈 [과거 기록 복구] 최근 30일 과거 종합 통계 추이 리포트 */}
+        <Section title="📊 최근 30일간 과거 일별 통계 추이 리포트">
+          <div style={{ overflowX: 'auto', borderRadius: '12px', border: '1px solid #e5e8eb' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px', backgroundColor: '#fff' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e8eb', color: '#6b7684', fontWeight: 800 }}>
+                  <th style={{ padding: '12px 16px' }}>기준 일자</th>
+                  <th style={{ padding: '12px 16px' }}>신규 가입 유저</th>
+                  <th style={{ padding: '12px 16px' }}>생성된 부적 수</th>
+                  <th style={{ padding: '12px 16px' }}>AI 고민 상담 수</th>
+                  <th style={{ padding: '12px 16px' }}>일일 활동 유저 (DAU)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats && stats.dailyTrends && stats.dailyTrends.length > 0 ? (
+                  [...stats.dailyTrends].reverse().map((trend: any) => (
+                    <tr key={trend.date} style={{ borderBottom: '1px solid #f2f4f6', backgroundColor: '#fff' }}>
+                      <td style={{ padding: '12px 16px', fontWeight: 750, color: '#333d4b' }}>{trend.date}</td>
+                      <td style={{ padding: '12px 16px', fontWeight: 800, color: trend.newUsers > 0 ? '#3182f6' : '#8b95a1' }}>
+                        {trend.newUsers > 0 ? `+${trend.newUsers}명` : '-'}
+                      </td>
+                      <td style={{ padding: '12px 16px', fontWeight: 800, color: trend.amuletsIssued > 0 ? '#ff922b' : '#8b95a1' }}>
+                        {trend.amuletsIssued > 0 ? `${trend.amuletsIssued}개` : '-'}
+                      </td>
+                      <td style={{ padding: '12px 16px', fontWeight: 800, color: trend.consultations > 0 ? '#2ecc71' : '#8b95a1' }}>
+                        {trend.consultations > 0 ? `${trend.consultations}건` : '-'}
+                      </td>
+                      <td style={{ padding: '12px 16px', fontWeight: 800, color: trend.dau > 0 ? '#191f28' : '#8b95a1' }}>
+                        {trend.dau > 0 ? `${trend.dau}명` : '-'}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} style={{ padding: '30px', textAlign: 'center', color: '#8b95a1', fontWeight: 700 }}>
+                      최근 30일 내 수집된 트렌드 데이터가 존재하지 않습니다.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Section>
+
       </div>
     </div>
   );

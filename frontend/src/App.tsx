@@ -57,6 +57,7 @@ export default function App() {
   }, [refreshCollection]);
 
   // 앱 체류 시간 로깅
+  // 앱 체류 시간 로깅
   useEffect(() => {
     const startTime = Date.now();
     const handleLeave = () => {
@@ -64,20 +65,18 @@ export default function App() {
       if (token) {
         const duration = Math.round((Date.now() - startTime) / 1000);
         const body = JSON.stringify({ action: 'APP_LEAVE', durationSeconds: duration });
-        const url = 'https://aekmaki.site/api/v1/me/access-log';
-        if (navigator.sendBeacon) {
-          navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }));
-        } else {
-          fetch(url, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`
-            },
-            body,
-            keepalive: true
-          }).catch(() => {});
-        }
+        
+        // 🔒 [수리] 하드코딩 URL을 상대 경로로 고치고, 인증 토큰이 누락되던 sendBeacon 대신 keepalive fetch로 무결 전송!
+        const url = '/api/v1/me/access-log';
+        fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body,
+          keepalive: true
+        }).catch(() => {});
       }
     };
 
@@ -87,6 +86,28 @@ export default function App() {
       window.removeEventListener('beforeunload', handleLeave);
       window.removeEventListener('pagehide', handleLeave);
     };
+  }, [step]);
+
+  // 💓 [하트비트] 20초 주기 핑 송신을 통해 실시간 DAU 정밀성 및 누적 체류 시간 계산 무결성 확보!
+  useEffect(() => {
+    const token = tokenStorage.get();
+    if (!token) return;
+
+    const sendHeartbeat = () => {
+      const url = '/api/v1/me/access-log';
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ action: 'HEARTBEAT', durationSeconds: 20 }),
+        keepalive: true
+      }).catch(() => {});
+    };
+
+    const interval = setInterval(sendHeartbeat, 20000);
+    return () => clearInterval(interval);
   }, [step]);
 
   // 인증 가드 (보호된 단계 접근 제어)

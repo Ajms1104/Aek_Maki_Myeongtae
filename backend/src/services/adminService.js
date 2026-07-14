@@ -72,10 +72,18 @@ exports.getDashboardStats = async () => {
     gradeDistribution[row.grade] = parseInt(row.count);
   });
 
-  // 평균 체류 시간 계산 (APP_LEAVE 이벤트를 기반으로 하거나 전체 로그 평균)
-  const { rows: durationStats } = await db.query(
-    "SELECT COALESCE(ROUND(AVG(duration_seconds)), 0) AS avg FROM user_access_logs WHERE action = 'APP_LEAVE' AND duration_seconds > 0"
-  );
+  // 🐟 [체류 시간 보정] 이탈 로그(APP_LEAVE)가 유실되어도 동일인/일자별 첫 접속과 마지막 접속 로그 시간차를 토대로 실질 체류 시간 계산
+  const { rows: durationStats } = await db.query(`
+    SELECT COALESCE(ROUND(AVG(duration)), 0) AS avg
+    FROM (
+      SELECT user_id, 
+             EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) AS duration
+      FROM user_access_logs
+      WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
+      GROUP BY user_id, to_char(created_at, 'YYYY-MM-DD')
+      HAVING EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) > 0
+    ) sub
+  `);
 
   // 최근 7일간 일별 활동 유저 수 (DAU)
   const { rows: dauStats } = await db.query(
@@ -84,6 +92,37 @@ exports.getDashboardStats = async () => {
      WHERE created_at >= CURRENT_DATE - INTERVAL '7 days'
      GROUP BY date 
      ORDER BY date DESC`
+  );
+
+  // 📈 [과거 기록 복구] 최근 30일간의 가입자수, 부적발행수, 상담수, DAU 일일 추이 통계 수집
+  const { rows: dailyTrends } = await db.query(
+    `SELECT 
+       d.date::text AS "date",
+       COALESCE(u.new_users, 0)::int AS "newUsers",
+       COALESCE(a.amulets_issued, 0)::int AS "amuletsIssued",
+       COALESCE(c.consultations, 0)::int AS "consultations",
+       COALESCE(dau.dau_count, 0)::int AS "dau"
+     FROM (
+       SELECT (CURRENT_DATE - i)::date AS date 
+       FROM generate_series(0, 29) i
+     ) d
+     LEFT JOIN (
+       SELECT created_at::date AS date, COUNT(*) AS new_users 
+       FROM users WHERE is_deleted = FALSE GROUP BY date
+     ) u ON d.date = u.date
+     LEFT JOIN (
+       SELECT first_acquired_at::date AS date, SUM(count) AS amulets_issued 
+       FROM user_amulets GROUP BY date
+     ) a ON d.date = a.date
+     LEFT JOIN (
+       SELECT created_at::date AS date, COUNT(*) AS consultations 
+       FROM consultations GROUP BY date
+     ) c ON d.date = c.date
+     LEFT JOIN (
+       SELECT created_at::date AS date, COUNT(DISTINCT user_id) AS dau_count
+       FROM user_access_logs GROUP BY date
+     ) dau ON d.date = dau.date
+     ORDER BY d.date ASC`
   );
 
   // 최근 15개 접속 로그
@@ -112,6 +151,7 @@ exports.getDashboardStats = async () => {
     gradeDistribution,
     avgDurationSeconds: parseInt(durationStats[0].avg),
     dauStats: dauStats.map(row => ({ date: row.date, count: parseInt(row.count) })),
+    dailyTrends, // 관리자 페이지에서 과거 통계 추이를 확인할 수 있는 핵심 정보 전달
     recentAccessLogs,
     recentSystemLogs
   };
