@@ -30,6 +30,14 @@ exports.exchangeAndIssueToken = async (authorizationCode, referrer) => {
     const user = await userRepository.upsertByTossUserKey(userKey);
     console.log(`[Auth] 유저 데이터 저장 완료: userId=${user.id}`);
 
+    // 🔒 [추가] 신규 가입/로그인 성공 시 즉각 접속 로그(APP_ENTER)를 남겨 DAU 통계 누락을 완치함
+    try {
+      const meService = require('./meService');
+      await meService.logAccess(user.id, 'APP_ENTER', 0);
+    } catch (e) {
+      console.error('[Auth] 접속 로그 적립 실패:', e.message);
+    }
+
     const accessToken = jwt.sign(
       { userId: user.id },
       process.env.JWT_SECRET,

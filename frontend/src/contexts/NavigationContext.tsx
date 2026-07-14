@@ -81,42 +81,19 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
     window.history.replaceState({ step: stepRef.current }, '', initialPath);
   }, []);
 
-  // 브라우저/상단바 뒤로가기 감지 (브라우저 표준 popstate - 단 1회 등록)
+  // 브라우저/상단바 뒤로가기 감지 (브라우저 표준 popstate)
+  // 메인 화면('main')일 때는 popstate를 강제로 가두지 않고 내버려두어, 토스 네이티브 종료 시퀀스가 정상 가동되도록 합니다.
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
-      const currentStep = stepRef.current;
-      console.log('[Navigation] popstate 감지 (현재 단계:', currentStep, ')');
+      console.log('[Navigation] popstate 감지 (현재 단계:', step, ')');
       
-      // 🐟 메인 화면에서 일반 웹 뒤로가기가 감지되면 이탈 방지 및 종료 팝업 활성화
-      if (currentStep === 'main') {
-        window.history.pushState({ step: 'main' }, '', '/');
-        setDialogConfig({
-          isOpen: true,
-          title: '액막이 명태를 종료할까요?',
-          description: '앱을 종료하고 토스 화면으로 돌아갑니다.',
-          showCancel: true,
-          cancelText: '머무르기',
-          confirmText: '종료하기',
-          onConfirm: () => {
-            try {
-              (partner as any).exit();
-            } catch (e) {
-              try {
-                (partner as any).close();
-              } catch (err) {
-                console.error('[Navigation] partner exit/close 실패:', err);
-                window.close();
-              }
-            }
-          }
-        });
+      if (step === 'main') {
         return;
       }
 
       if (event.state && event.state.step) {
         setStep(event.state.step);
       } else {
-        // 브라우저 기본 동작으로 돌아왔을 때 현재 경로 기준으로 복구
         const path = window.location.pathname;
         if (path === '/collection') setStep('collection');
         else if (path === '/payment') setStep('payment');
@@ -127,45 +104,25 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [setDialogConfig]);
+  }, [step]);
 
-  // 토스 네이티브 뒤로가기 버튼 이벤트 감지 (graniteEvent 사용 - 최초 1회 견고히 등록)
+  // 토스 네이티브 뒤로가기 버튼 이벤트 감지 (graniteEvent 사용)
+  // 현재 스텝이 'main' 이 아닐 때만 뒤로가기 이벤트를 가로채서 이전 브라우저 스택으로 돌려줍니다.
+  // 메인 화면('main')일 때는 리스너를 해제해두므로, 토스앱 네이티브 뒤로가기가 미니앱을 정상적이고 확실하게 종료(Exit)시킵니다.
   useEffect(() => {
+    if (step === 'main') {
+      console.log('[Navigation] 메인 화면: 네이티브 뒤로가기 가로채기 해제 (Toss 기본 종료 시퀀스 사용)');
+      return;
+    }
+
     let unsubscription: (() => void) | undefined;
     
     try {
-      console.log('[Navigation] backEvent 리스너 등록 진행');
+      console.log('[Navigation] backEvent 리스너 등록 (단계:', step, ')');
       unsubscription = graniteEvent.addEventListener('backEvent', {
         onEvent: () => {
-          const currentStep = stepRef.current;
-          console.log('[Navigation] 네이티브 뒤로가기 감지 (현재 단계:', currentStep, ')');
-          
-          if (currentStep === 'main') {
-            // 메인 화면인 경우 종료 의사 다이얼로그 팝업 노출!
-            setDialogConfig({
-              isOpen: true,
-              title: '액막이 명태를 종료할까요?',
-              description: '앱을 종료하고 토스 화면으로 돌아갑니다.',
-              showCancel: true,
-              cancelText: '머무르기',
-              confirmText: '종료하기',
-              onConfirm: () => {
-                try {
-                  (partner as any).exit();
-                } catch (e) {
-                  try {
-                    (partner as any).close();
-                  } catch (err) {
-                    console.error('[Navigation] partner exit/close 실패:', err);
-                    window.close();
-                  }
-                }
-              }
-            });
-          } else {
-            // 서브 단계일 때는 뒤로가기 동작 (브라우저 이전 히스토리)
-            window.history.back();
-          }
+          console.log('[Navigation] 네이티브 뒤로가기 감지 -> 이전 단계로 이동');
+          window.history.back();
         },
         onError: (error) => {
           console.error('[Navigation] backEvent 에러:', error);
@@ -177,11 +134,11 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
     
     return () => {
       if (unsubscription) {
-        console.log('[Navigation] backEvent 리스너 해제');
+        console.log('[Navigation] backEvent 리스너 해제 (단계:', step, ')');
         unsubscription();
       }
     };
-  }, [setDialogConfig]); 
+  }, [step]); 
 
   return (
     <NavigationContext.Provider value={{ step, history: [], navigateTo, replaceTo, handleBack, resetToMain }}>
