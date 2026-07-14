@@ -3,13 +3,13 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
-const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) {
-  console.error('DATABASE_URL is missing in .env');
-  process.exit(1);
-}
-
-const client = new Client({ connectionString: databaseUrl });
+const client = new Client({
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 5432,
+});
 
 async function reset() {
   try {
