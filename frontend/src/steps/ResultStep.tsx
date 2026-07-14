@@ -254,26 +254,16 @@ const ResultStep: React.FC = () => {
         img.onload = () => res(true);
         img.onerror = () => rej(new Error('이미지 로드 실패')); 
       });
-      ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = 0.95;
-      ctx.drawImage(img, 250, 180, 500, 500); ctx.restore();
 
-      // 6. 맞춤형 한글 요약 키워드 및 다변화된 서브 텍스트 로직
       let customKeyword = '만사형통';
       const targetComment = isDebug ? "취업 면접 때문에 너무 떨려요." : comment;
       const keywordMatch = targetComment.match(/\[키워드:\s*(.+?)\]/);
-
       if (keywordMatch && keywordMatch[1]) {
-        customKeyword = keywordMatch[1].substring(0, 4);
-      } else {
-        if (targetComment.includes('취업') || targetComment.includes('면접') || targetComment.includes('합격')) customKeyword = '취업성공';
-        else if (targetComment.includes('돈') || targetComment.includes('재물') || targetComment.includes('부자')) customKeyword = '재물가득';
-        else if (targetComment.includes('건강') || targetComment.includes('병') || targetComment.includes('아프')) customKeyword = '무병장수';
-        else if (targetComment.includes('연애') || targetComment.includes('사랑') || targetComment.includes('인연')) customKeyword = '천생연분';
-        else if (targetComment.includes('시험') || targetComment.includes('공부') || targetComment.includes('성적')) customKeyword = '시험합격';
-        else if (targetComment.includes('인간관계') || targetComment.includes('사람') || targetComment.includes('친구')) customKeyword = '인복가득';
-        else if (targetGrade === 'legend') customKeyword = '소원성취';
-        else if (targetGrade === 'rare') customKeyword = '행운가득';
+        customKeyword = keywordMatch[1].trim().substring(0, 4);
       }
+      
+      ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = 0.95;
+      ctx.drawImage(img, 250, 180, 500, 500); ctx.restore();
 
       // 키워드별 맞춤형 서브 텍스트 매핑
       const subTextMap: Record<string, string> = {

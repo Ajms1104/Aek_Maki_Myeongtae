@@ -444,7 +444,7 @@ async function createValidatedReply(client, { content, category }) {
   }
 
   if (issues.length > 0) {
-    return SAFE_FALLBACK_REPLY;
+    throw createHttpError(`AI 답변의 형식이 올바르지 않습니다: ${issues.join(', ')}`, 500, 'LLM_SHAPE_ERROR');
   }
 
   return reply;
@@ -466,11 +466,6 @@ exports.generateReply = async ({ content, category }) => {
 
   if (detectHighRiskRequest(safeContent)) {
     return HIGH_RISK_REPLY;
-  }
-
-  if (MOCK_MODE) {
-    console.warn('[MOCK] OpenAI API 스킵 - 더미 답변 반환');
-    return MOCK_REPLY;
   }
 
   try {
@@ -515,8 +510,13 @@ exports.generateReply = async ({ content, category }) => {
         const retryModeration = await moderateText(client, reply);
         const retryDecision = getModerationDecision(retryModeration, 'output');
 
-        if (retryDecision.action !== 'allow' || validateReplyShape(reply).length > 0) {
-          return SAFE_FALLBACK_REPLY;
+        if (retryDecision.action !== 'allow') {
+          throw createHttpError('생성된 AI 답변이 안전성 검사를 통과하지 못했습니다.', 500, 'LLM_SAFETY_ERROR');
+        }
+        
+        const retryIssues = validateReplyShape(reply);
+        if (retryIssues.length > 0) {
+          throw createHttpError(`재생성된 AI 답변의 형식이 올바르지 않습니다: ${retryIssues.join(', ')}`, 500, 'LLM_SHAPE_ERROR');
         }
       }
     }
