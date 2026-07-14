@@ -227,18 +227,7 @@ const MainStep: React.FC = () => {
     } catch (e) { console.error(e); }
   };
 
-  // ✅ 개발용 세션 초기화 기능 (메인 화면 물고기 로고 5번 클릭 시 발동)
-  const [debugClick, setDebugClick] = useState(0);
-  const handleDebugReset = () => {
-    if (debugClick >= 4) {
-      tokenStorage.remove();
-      triggerToast('세션이 초기화되었습니다.', 'info');
-      setDebugClick(0);
-      refreshCollection().catch(() => {});
-    } else {
-      setDebugClick(prev => prev + 1);
-    }
-  };
+
 
   const attemptLogin = async () => {
     setIsLoggingIn(true);
@@ -311,7 +300,6 @@ const MainStep: React.FC = () => {
           <img
             src={main_fish}
             alt="AI 명태"
-            onClick={handleDebugReset}
             style={{ 
               position: 'absolute',
               top: '50%', 
@@ -321,7 +309,7 @@ const MainStep: React.FC = () => {
               height: '95%',
               objectFit: 'contain',
               zIndex: 0,
-              pointerEvents: 'auto'
+              pointerEvents: 'none'
             }} 
           />
 
