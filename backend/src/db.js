@@ -13,12 +13,12 @@ client.connect()
   .then(async () => {
     console.log('DB connected');
 
-    // 🐟 [가중치 마이그레이션] 1번 밸런스형 황금 비율 가중치 자동 갱신 (일반 20, 희귀 9, 전설 4)
+    // 🐟 [가중치 마이그레이션] 전설 5% / 희귀 30% / 일반 65% 최적 가중치 자동 갱신 (일반 21, 희귀 8, 전설 3)
     try {
-      await client.query("UPDATE amulets SET weight = 20, draft_weight = 20 WHERE grade = 'common'");
-      await client.query("UPDATE amulets SET weight = 9, draft_weight = 9 WHERE grade = 'rare'");
-      await client.query("UPDATE amulets SET weight = 4, draft_weight = 4 WHERE grade = 'legend'");
-      console.log('Amulet weights synced to 1st Balance Option (Common:20, Rare:9, Legend:4)');
+      await client.query("UPDATE amulets SET weight = 21, draft_weight = 21 WHERE grade = 'common'");
+      await client.query("UPDATE amulets SET weight = 8, draft_weight = 8 WHERE grade = 'rare'");
+      await client.query("UPDATE amulets SET weight = 3, draft_weight = 3 WHERE grade = 'legend'");
+      console.log('Amulet weights synced to Custom Option (Common:21, Rare:8, Legend:3)');
     } catch (e) {
       console.error('Amulet weights sync failed:', e.message);
     }
