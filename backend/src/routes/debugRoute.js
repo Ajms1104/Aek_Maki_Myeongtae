@@ -16,7 +16,7 @@ router.post('/log', async (req, res) => {
   if (authHeader && authHeader.startsWith('Bearer ')) {
     try {
       const token = authHeader.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'myeongtae-jwt-secret-2026');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       userId = decoded.userId;
     } catch (e) {
       // 토큰 검증 에러 시 userId는 null로 유지

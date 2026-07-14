@@ -100,3 +100,15 @@ exports.addCredit = async (userId, amount = 1) => {
   );
   return rows[0] ? rows[0].credits : null;
 };
+
+exports.unlockHiddenPassWithCredits = async (userId, bonusCredits = 5) => {
+  const { rows } = await db.query(
+    `UPDATE users
+     SET has_hidden_pass = TRUE,
+         credits = credits + $1
+     WHERE id = $2
+     RETURNING has_hidden_pass, credits`,
+    [bonusCredits, userId]
+  );
+  return rows[0] || null;
+};

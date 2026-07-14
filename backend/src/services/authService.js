@@ -17,6 +17,10 @@ exports.exchangeAndIssueToken = async (authorizationCode, referrer) => {
       throw new Error('Toss API returned empty userKey');
     }
   } catch (err) {
+    if (process.env.NODE_ENV === 'production') {
+      console.error(`[Auth] [CRITICAL] 토스 API 교환 실패 - 가입 우회 차단: ${err.message}`);
+      throw err;
+    }
     console.warn(`[Auth] 토스 API 교환 실패 (모의 토큰 사용 가능성): ${err.message}`);
     userKey = authorizationCode;
   }

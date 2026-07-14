@@ -22,11 +22,18 @@ const paymentRoutes = require('./routes/paymentRoute');
 const debugRoutes = require('./routes/debugRoute');
 
 
-//Swagger 관련
+// Swagger 관련
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./configuration/swagger');
 
+// 🔒 [보안 검증] 상용 환경 대비 핵심 비밀키 누락 시 강제 중단 처리
+if (!process.env.JWT_SECRET) {
+  console.error('❌ [CRITICAL ERROR] JWT_SECRET이 .env 파일에 누락되었습니다! 보안을 위해 서버 가동을 즉시 중단합니다.');
+  process.exit(1);
+}
+
 const app = express();
+app.disable('x-powered-by'); // 🔒 Express 프레임워크 유출 헤더 제거
 const PORT = process.env.PORT || 3000;
 
 const IS_PROD = process.env.NODE_ENV === 'production';

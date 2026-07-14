@@ -18,8 +18,7 @@ router.post('/record', authMiddleware, async (req, res) => {
 
     if (productType === 'hidden') {
       if (!user.has_hidden_pass) {
-        await userRepository.unlockHiddenPass(userId);
-        await userRepository.addCredit(userId, 5);
+        await userRepository.unlockHiddenPassWithCredits(userId, 5);
       }
     } else if (productType === 'credit') {
       await userRepository.addCredit(userId, 10);

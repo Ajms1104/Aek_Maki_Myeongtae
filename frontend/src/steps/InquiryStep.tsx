@@ -3,9 +3,7 @@ import * as L from '../styles/layoutStyles';
 import * as C from '../styles/commonStyles';
 import { useNavigation } from '../hooks/useNavigation';
 import { useUI } from '../hooks/useUI';
-import { tokenStorage } from '../utils/api'
-
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+import { tokenStorage, BASE_URL } from '../utils/api';
 
 const InquiryStep: React.FC = () => {
   const { navigateTo } = useNavigation();
