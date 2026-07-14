@@ -276,7 +276,7 @@ function hasEmoji(text) {
 }
 
 function hasMarkdown(text) {
-  return /[`*_#>|[\]]/.test(text) || /^\s*[-+]\s+/m.test(text) || /^\s*\d+\.\s+/m.test(text);
+  return /[`*_#>|]/.test(text) || /^\s*[-+]\s+/m.test(text) || /^\s*\d+\.\s+/m.test(text);
 }
 
 function hasPromptLeakage(text) {
