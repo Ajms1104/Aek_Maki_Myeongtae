@@ -49,12 +49,10 @@ exports.createSchedule = async (version, weights, effectiveAt) => {
 
 // 확률 일괄 적용 및 동기화
 exports.applyWeights = async (version, weights) => {
-  try {
-    await db.query('BEGIN');
-
+  return await db.transaction(async (client) => {
     // 1. 모든 부적의 weight와 draft_weight를 동기화
     for (const item of weights) {
-      await db.query(
+      await client.query(
         'UPDATE amulets SET weight = $1, draft_weight = $1 WHERE id = $2',
         [item.weight, item.amuletId]
       );
@@ -67,14 +65,9 @@ exports.applyWeights = async (version, weights) => {
                 updated_at = CURRENT_TIMESTAMP
             RETURNING version, updated_at AS "effectiveAt"
         `;
-    const result = await db.query(updateConfigQuery, [version]);
-
-    await db.query('COMMIT');
+    const result = await client.query(updateConfigQuery, [version]);
     return result.rows[0];
-  } catch (error) {
-    await db.query('ROLLBACK');
-    throw error;
-  }
+  });
 };
 
 // 드래프트 덤프
