@@ -5,13 +5,19 @@ export const useTypingEffect = (text: string, speed: number = 50) => {
   const [isFinished, setIsFinished] = useState(false);
 
   useEffect(() => {
+    if (!text) {
+      setDisplayedText('');
+      setIsFinished(false);
+      return;
+    }
+
     let i = 0;
     setDisplayedText('');
     setIsFinished(false);
     
     const timer = setInterval(() => {
-      if (i < text.length) {
-        setDisplayedText((prev) => prev + text.charAt(i));
+      if (i <= text.length) {
+        setDisplayedText(text.slice(0, i));
         i++;
       } else {
         clearInterval(timer);
