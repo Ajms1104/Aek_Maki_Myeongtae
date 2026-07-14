@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 const consultationRepository = require('../repositories/consultationRepository');
 const amuletRepository = require('../repositories/amuletRepository');
@@ -32,25 +32,41 @@ exports.createConsultation = async ({ userId, content, category }) => {
   // GPT ?듬? ?앹꽦
   const reply = await llmService.generateReply({ content, category });
 
-  // 4. 遺??戮묎린 (以묐났 諛⑹? 濡쒖쭅 ?곸슜)
-  // ?좎?媛 ?꾩쭅 ?살? 紐삵븳 遺??紐⑸줉??議고쉶?⑸땲??
+  // 4. 부적 뽑기 (가중치 기반 무작위 추첨 적용)
   const uncollected = await amuletRepository.findUncollectedByUser(userId);
   
   let selected;
   let isNew = true;
 
+  // 가중치(weight) 기반 무작위 선택 헬퍼 함수
+  const selectWeightedRandom = (items) => {
+    if (!items || items.length === 0) return null;
+    const totalWeight = items.reduce((sum, item) => sum + (Number(item.weight) || 0), 0);
+    if (totalWeight <= 0) {
+      return items[Math.floor(Math.random() * items.length)];
+    }
+    let randomValue = Math.random() * totalWeight;
+    for (const item of items) {
+      randomValue -= (Number(item.weight) || 0);
+      if (randomValue <= 0) {
+        return item;
+      }
+    }
+    return items[items.length - 1];
+  };
+
   if (uncollected && uncollected.length > 0) {
-    // ?꾩쭅 紐??살? 寃??덈떎硫?洹?以묒뿉???쒕뜡 ?좏깮
-    selected = uncollected[Math.floor(Math.random() * uncollected.length)];
+    // 아직 못 얻은 게 있다면 가중치 기반으로 랜덤 선택
+    selected = selectWeightedRandom(uncollected);
   } else {
-    // ??紐⑥븯?ㅻ㈃ ?꾩껜 以묒뿉???쒕뜡 ?좏깮 (以묐났 諛쒖깮)
+    // 다 모았다면 전체 중에서 가중치 기반으로 랜덤 선택 (중복 발생)
     const amulets = await amuletRepository.getAll();
-    if (!amulets || amulets.length === 0) throw new Error('?깅줉??遺?곸씠 ?놁뒿?덈떎.');
-    selected = amulets[Math.floor(Math.random() * amulets.length)];
+    if (!amulets || amulets.length === 0) throw new Error('등록된 부적이 없습니다.');
+    selected = selectWeightedRandom(amulets);
     isNew = false;
   }
 
-  // 5. 吏湲?
+  // 5. 吏€湲?
   await amuletRepository.giveToUser(userId, selected.id);
 
   const challengeResult = await challengeService.evaluateAmuletCreated(userId, selected);
