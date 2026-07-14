@@ -80,6 +80,34 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
   // 브라우저/상단바 뒤로가기 감지 (브라우저 표준 popstate)
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
+      console.log('[Navigation] popstate 감지 (현재 단계:', step, ')');
+      
+      // 🐟 메인 화면에서 일반 웹 뒤로가기가 감지되면 이탈 방지 및 종료 팝업 활성화
+      if (step === 'main') {
+        window.history.pushState({ step: 'main' }, '', '/');
+        setDialogConfig({
+          isOpen: true,
+          title: '액막이 명태를 종료할까요?',
+          description: '앱을 종료하고 토스 화면으로 돌아갑니다.',
+          showCancel: true,
+          cancelText: '머무르기',
+          confirmText: '종료하기',
+          onConfirm: () => {
+            try {
+              (partner as any).exit();
+            } catch (e) {
+              try {
+                (partner as any).close();
+              } catch (err) {
+                console.error('[Navigation] partner exit/close 실패:', err);
+                window.close();
+              }
+            }
+          }
+        });
+        return;
+      }
+
       if (event.state && event.state.step) {
         setStep(event.state.step);
       } else {
@@ -94,7 +122,7 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  }, [step, setDialogConfig]);
 
   // 토스 네이티브 뒤로가기 버튼 이벤트 감지 (graniteEvent 사용)
   useEffect(() => {
