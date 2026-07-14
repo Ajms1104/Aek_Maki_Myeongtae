@@ -180,6 +180,8 @@ export default function App() {
               showCancel={dialogConfig.showCancel}
               onConfirm={dialogConfig.onConfirm}
               onClose={() => setDialogConfig((p) => ({ ...p, isOpen: false }))}
+              cancelText={dialogConfig.cancelText}
+              confirmText={dialogConfig.confirmText}
             />
           )}
           <BottomSheet isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />

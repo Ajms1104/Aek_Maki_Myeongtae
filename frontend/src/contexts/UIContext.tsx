@@ -50,6 +50,8 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
       showCancel: options?.showCancel ?? false,
       onConfirm: options?.onConfirm || (() => setDialogConfig((p) => ({ ...p, isOpen: false }))),
       onClose: options?.onClose,
+      cancelText: options?.cancelText,
+      confirmText: options?.confirmText,
     });
   }, []);
 

@@ -1,4 +1,4 @@
-﻿export type Step =
+export type Step =
   | 'main'
   | 'input'
   | 'loading'
@@ -32,6 +32,8 @@ export interface DialogConfig {
   showCancel?: boolean;
   onConfirm: () => void;
   onClose?: () => void;
+  cancelText?: string;
+  confirmText?: string;
 }
 
 export interface Challenge {

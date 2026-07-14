@@ -98,21 +98,38 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
 
   // 토스 네이티브 뒤로가기 버튼 이벤트 감지 (graniteEvent 사용)
   useEffect(() => {
-    // ✅ 메인 화면에서는 뒤로가기를 가로채지 않습니다.
-    // 이렇게 하면 토스 앱이 자체적으로 "종료하시겠습니까?" 팝업(X 버튼과 동일한 것)을 띄워줍니다.
-    if (step === 'main') {
-      console.log('[Navigation] 메인 화면: 네이티브 뒤로가기 가로채기 해제 (Toss 기본 동작 사용)');
-      return;
-    }
-
     let unsubscription: (() => void) | undefined;
     
     try {
       console.log('[Navigation] backEvent 리스너 등록 (단계:', step, ')');
       unsubscription = graniteEvent.addEventListener('backEvent', {
         onEvent: () => {
-          console.log('[Navigation] 네이티브 뒤로가기 감지 -> 이전 단계로 이동');
-          handleBack();
+          console.log('[Navigation] 네이티브 뒤로가기 감지 (현재 단계:', step, ')');
+          if (step === 'main') {
+            // 메인 화면인 경우 종료 의사 다이얼로그 팝업 노출!
+            setDialogConfig({
+              isOpen: true,
+              title: '액막이 명태를 종료할까요?',
+              description: '앱을 종료하고 토스 화면으로 돌아갑니다.',
+              showCancel: true,
+              cancelText: '머무르기',
+              confirmText: '종료하기',
+              onConfirm: () => {
+                try {
+                  (partner as any).exit();
+                } catch (e) {
+                  try {
+                    (partner as any).close();
+                  } catch (err) {
+                    console.error('[Navigation] partner exit/close 실패:', err);
+                    window.close();
+                  }
+                }
+              }
+            });
+          } else {
+            handleBack();
+          }
         },
         onError: (error) => {
           console.error('[Navigation] backEvent 에러:', error);
@@ -128,7 +145,7 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
         unsubscription();
       }
     };
-  }, [step, handleBack]); 
+  }, [step, handleBack, setDialogConfig]); 
 
   return (
     <NavigationContext.Provider value={{ step, history: [], navigateTo, replaceTo, handleBack, resetToMain }}>
