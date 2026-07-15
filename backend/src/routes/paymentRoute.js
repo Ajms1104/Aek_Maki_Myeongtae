@@ -110,8 +110,8 @@ router.post('/reward/viral', authMiddleware, async (req, res) => {
       });
     }
 
-    // 2 크레딧 가산
-    const updatedCredits = await userRepository.addCredit(userId, 2);
+    // 1 크레딧 가산 (리워드 밸런스 조정)
+    const updatedCredits = await userRepository.addCredit(userId, 1);
     
     // 이력 로깅 (Idempotency 및 한도 계산용)
     await db.query(
@@ -122,7 +122,7 @@ router.post('/reward/viral', authMiddleware, async (req, res) => {
     return res.status(200).json({
       success: true,
       credits: updatedCredits,
-      message: '친구 공유 완료 보상으로 2 크레딧을 받았어요!',
+      message: '친구 공유 완료 보상으로 1 크레딧을 받았어요!',
     });
   } catch (err) {
     console.error('[VIRAL REWARD ERROR]', err);

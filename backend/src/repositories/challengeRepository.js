@@ -57,3 +57,24 @@ exports.awardChallenge = async (userId, challenge) => {
     throw err;
   }
 };
+
+// 🐟 유저가 생성한 총 누적 부적 갯수 쿼리
+exports.countUserCreatedAmulets = async (userId) => {
+  const { rows } = await db.query(
+    'SELECT COUNT(*) AS count FROM user_amulets WHERE user_id = $1',
+    [userId]
+  );
+  return parseInt(rows[0]?.count || '0', 10);
+};
+
+// 🐟 유저가 획득한 서로 다른 고유 전설 등급 부적 종수 쿼리
+exports.countUserUniqueLegendAmulets = async (userId) => {
+  const { rows } = await db.query(
+    `SELECT COUNT(DISTINCT ua.amulet_id) AS count
+     FROM user_amulets ua
+     JOIN amulets a ON ua.amulet_id = a.id
+     WHERE ua.user_id = $1 AND a.grade = 'legend'`,
+    [userId]
+  );
+  return parseInt(rows[0]?.count || '0', 10);
+};

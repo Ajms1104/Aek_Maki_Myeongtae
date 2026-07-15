@@ -2,7 +2,7 @@
 
 const { OpenAI } = require('openai');
 
-const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o';
+const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 const MODERATION_MODEL = process.env.OPENAI_MODERATION_MODEL || 'omni-moderation-latest';
 
 const IS_PROD = process.env.NODE_ENV === 'production';

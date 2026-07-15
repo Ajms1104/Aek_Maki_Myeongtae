@@ -31,16 +31,20 @@ const MainStep: React.FC = () => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const challengeCopy: Record<string, { title: string; description: string }> = {
-    ATTENDANCE_3_DAYS: { title: '\u0033\uC77C \uC5F0\uC18D \uCD9C\uC11D', description: '+1 \uC774\uC6A9\uD1A0\uD070' },
-    ATTENDANCE_7_DAYS: { title: '\u0037\uC77C \uC5F0\uC18D \uCD9C\uC11D', description: '+2 \uC774\uC6A9\uD1A0\uD070' },
-    FIRST_AMULET: { title: '\uBD80\uC801 \uB9CC\uB4E4\uC5B4\uBCF4\uAE30', description: '+1 \uC774\uC6A9\uD1A0\uD070' },
-    FIRST_LEGEND: { title: '\uC804\uC124 \uB4F1\uAE09 \uBD80\uC801 \uC5BB\uAE30', description: '+3 \uC774\uC6A9\uD1A0\uD070' },
+    ATTENDANCE_3_DAYS: { title: '3일 연속 출석', description: '+1 크레딧' },
+    ATTENDANCE_15_DAYS: { title: '15일 연속 출석', description: '+2 크레딧' },
+    ATTENDANCE_30_DAYS: { title: '30일 연속 출석', description: '+5 크레딧' },
+    AMULET_10_CREATIONS: { title: '부적 10개 생성', description: '+2 크레딧' },
+    AMULET_50_CREATIONS: { title: '부적 50개 생성', description: '+5 크레딧' },
+    LEGEND_3_COLLECT: { title: '전설 부적 3종 수집', description: '+3 크레딧' },
   };
   const visibleChallenges = challenges.length > 0 ? challenges : [
-    { key: 'ATTENDANCE_3_DAYS', title: '3-day streak', description: '', rewardCredits: 1, target: 3, progress: Math.min(attendanceStreak, 3), completed: false },
-    { key: 'ATTENDANCE_7_DAYS', title: '7-day streak', description: '', rewardCredits: 2, target: 7, progress: Math.min(attendanceStreak, 7), completed: false },
-    { key: 'FIRST_AMULET', title: 'Create first amulet', description: '', rewardCredits: 1, target: 1, progress: 0, completed: false },
-    { key: 'FIRST_LEGEND', title: 'Get legendary amulet', description: '', rewardCredits: 3, target: 1, progress: 0, completed: false },
+    { key: 'ATTENDANCE_3_DAYS', title: '3일 연속 출석', description: '', rewardCredits: 1, target: 3, progress: Math.min(attendanceStreak, 3), completed: false },
+    { key: 'ATTENDANCE_15_DAYS', title: '15일 연속 출석', description: '', rewardCredits: 2, target: 15, progress: Math.min(attendanceStreak, 15), completed: false },
+    { key: 'ATTENDANCE_30_DAYS', title: '30일 연속 출석', description: '', rewardCredits: 5, target: 30, progress: Math.min(attendanceStreak, 30), completed: false },
+    { key: 'AMULET_10_CREATIONS', title: '부적 10개 생성', description: '', rewardCredits: 2, target: 10, progress: 0, completed: false },
+    { key: 'AMULET_50_CREATIONS', title: '부적 50개 생성', description: '', rewardCredits: 5, target: 50, progress: 0, completed: false },
+    { key: 'LEGEND_3_COLLECT', title: '전설 부적 3종 수집', description: '', rewardCredits: 3, target: 3, progress: 0, completed: false },
   ];
 
   // ✅ 다변화된 프리미엄 퀄리티 프리뷰 로직 (옵션별 생성)

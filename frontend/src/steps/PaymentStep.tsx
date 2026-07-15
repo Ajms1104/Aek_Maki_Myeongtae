@@ -91,7 +91,7 @@ const PaymentStep: React.FC = () => {
               const res = await claimViralReward();
               if (res && res.success) {
                 await refreshCollection();
-                triggerToast('🎉 친구 공유 완료 보상으로 2 크레딧이 지급되었습니다!', 'success');
+                triggerToast('🎉 친구 공유 완료 보상으로 1 크레딧이 지급되었습니다!', 'success');
               }
             } catch (err: any) {
               console.error('공유 보상 지급 API 에러:', err);
@@ -275,7 +275,7 @@ const PaymentStep: React.FC = () => {
                 </div>
               </div>
               <div style={{ fontSize: '14px', fontWeight: 800, color: '#3182f6', background: '#e8f3ff', padding: '6px 10px', borderRadius: '10px', whiteSpace: 'nowrap' }}>
-                +2 크레딧
+                +1 크레딧
               </div>
             </ProductCard>
 
@@ -284,7 +284,7 @@ const PaymentStep: React.FC = () => {
                 <div style={{ width: '44px', height: '48px', background: hasHiddenPass ? '#e5e8eb' : '#f4edff', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IoGiftOutline size={24} color={hasHiddenPass ? '#adb5bd' : '#a25df5'} /></div>
                 <div><div style={{ fontSize: '16px', fontWeight: 700, color: '#191f28' }}>히든 부적 패키지</div><div style={{ fontSize: '12px', color: '#8b95a1' }}>영구 해금 + 5 크레딧</div></div>
               </div>
-              <div style={{ fontSize: '17px', fontWeight: 800, color: hasHiddenPass ? '#adb5bd' : '#191f28' }}>{hasHiddenPass ? '소유함' : '2,200원'}</div>
+              <div style={{ fontSize: '17px', fontWeight: 800, color: hasHiddenPass ? '#adb5bd' : '#191f28' }}>{hasHiddenPass ? '소유함' : '3,300원'}</div>
             </ProductCard>
 
             <ProductCard $active={selectedProduct === 'credit'} onClick={() => setSelectedProduct('credit')}>
@@ -292,7 +292,7 @@ const PaymentStep: React.FC = () => {
                 <div style={{ width: '44px', height: '48px', background: '#e8f3ff', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IoDiamondOutline size={24} color="#3182f6" /></div>
                 <div><div style={{ fontSize: '16px', fontWeight: 700, color: '#191f28' }}>10 크레딧 충전</div><div style={{ fontSize: '12px', color: '#8b95a1' }}>상담 10회 가능</div></div>
               </div>
-              <div style={{ fontSize: '17px', fontWeight: 800, color: '#191f28' }}>1,100원</div>
+              <div style={{ fontSize: '17px', fontWeight: 800, color: '#191f28' }}>2,200원</div>
             </ProductCard>
 
             <div style={{ 
