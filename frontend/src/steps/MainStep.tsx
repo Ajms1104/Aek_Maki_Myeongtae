@@ -30,6 +30,26 @@ const MainStep: React.FC = () => {
   const { openDialog, triggerToast } = useUI();
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // 🚪 [출석체크 고도화] 메인 화면(첫 화면) 진입 시 이미 로그인 상태라면 즉시 자동 출석체크를 실행합니다.
+  useEffect(() => {
+    const autoAttendance = async () => {
+      const existingToken = tokenStorage.get();
+      if (existingToken) {
+        try {
+          const msg = await handleAttendanceReward();
+          if (msg) {
+            triggerToast(msg, 'success');
+            await refreshCollection();
+          }
+        } catch (err) {
+          console.error('[Main] 자동 출석체크 실패:', err);
+        }
+      }
+    };
+    autoAttendance();
+  }, [handleAttendanceReward, refreshCollection, triggerToast]);
+
   const challengeCopy: Record<string, { title: string; description: string }> = {
     ATTENDANCE_3_DAYS: { title: '3일 연속 출석', description: '+1 크레딧' },
     ATTENDANCE_10_DAYS_TOTAL: { title: '누적 10일 출석', description: '+2 크레딧' },
