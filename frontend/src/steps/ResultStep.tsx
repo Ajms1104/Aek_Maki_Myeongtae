@@ -355,7 +355,22 @@ const ResultStep: React.FC = () => {
     <L.Content style={{ display: 'flex', flexDirection: 'column', height: '100%', background: `radial-gradient(circle at 50% 30%, ${theme.bg} 0%, #ffffff 70%)`, padding: '0 20px', overflow: 'hidden', justifyContent: 'flex-start' }}>
       <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '65px', marginBottom: '20px' }}>
         <div style={{ width: '190px', position: 'relative' }}>
-          {isNew && <div style={{ position: 'absolute', top: '-45px', left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 100 }}><NewBadge $grade={grade}><IoSparkles size={14} />{grade === 'legend' ? '전설 부적!' : grade === 'rare' ? '희귀 부적!' : '새로운 부적!'}</NewBadge></div>}
+          <div style={{ position: 'absolute', top: '-45px', left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 100 }}>
+            <NewBadge $grade={grade}>
+              <IoSparkles size={14} />
+              {isNew ? (
+                grade === 'legend' ? '새로운 전설 부적!' :
+                grade === 'rare' ? '새로운 희귀 부적!' :
+                grade === 'hidden' ? '새로운 히든 부적!' :
+                '새로운 일반 부적!'
+              ) : (
+                grade === 'legend' ? '전설 부적 획득!' :
+                grade === 'rare' ? '희귀 부적 획득!' :
+                grade === 'hidden' ? '히든 부적 획득!' :
+                '일반 부적 획득!'
+              )}
+            </NewBadge>
+          </div>
           <AnimatedCardWrapper $isFlying={isFlying}><S.ImageBox $bg="#ffffff" $glow={grade === 'legend'} style={{ padding: '16px', border: `2px solid ${theme.sub}`, boxShadow: `0 20px 40px ${theme.sub}40` }}><img src={getAmuletImage(consultationResult?.amulet?.imageUrl || '', 'ui')} alt="부적" style={{ width: '100%', height: 'auto', objectFit : 'contain' }} /></S.ImageBox></AnimatedCardWrapper>
         </div>
       </div>

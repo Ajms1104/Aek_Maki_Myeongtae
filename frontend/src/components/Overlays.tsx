@@ -146,10 +146,10 @@ export const TalismanDetailModal: React.FC<{
               $bg={talisman.unlocked ? theme.bg : '#f2f4f6'}
               style={{ 
                 flexShrink: 0, 
-                width: '120px', 
-                height: '120px',
-                borderRadius: '20px',
-                boxShadow: talisman.unlocked ? `0 12px 36px ${theme.sub}40` : 'none',
+                width: '180px', 
+                height: '180px',
+                borderRadius: '24px',
+                boxShadow: talisman.unlocked ? `0 16px 48px ${theme.sub}40` : 'none',
                 marginBottom: '16px'
               }}
             >
@@ -157,7 +157,7 @@ export const TalismanDetailModal: React.FC<{
                 src={talisman.img}
                 alt={talisman.name}
                 style={{
-                  width: '80%',
+                  width: '90%',
                   filter: talisman.unlocked ? 'none' : 'grayscale(1)',
                 }}
               />
