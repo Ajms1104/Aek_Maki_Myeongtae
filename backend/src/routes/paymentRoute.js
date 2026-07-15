@@ -99,9 +99,9 @@ router.post('/reward/attendance', authMiddleware, async (req, res) => {
       : `오늘의 출석 체크가 완료되었습니다! (${attendanceStreak}일 연속)`;
 
     if (creditAdded) {
-      msg += ` (보유 크레딧이 없어 1 크레딧 추가 지급!)`;
+      msg += ` (🎁 1 크레딧이 충전되었습니다!)`;
     } else if (!hasAward) {
-      msg += ` (이미 크레딧을 보유하고 있어 추가 보상은 지급 제외)`;
+      msg += ` (💡 무료 크레딧은 최대 1개까지 보관할 수 있어요!)`;
     }
 
     return res.status(200).json({
