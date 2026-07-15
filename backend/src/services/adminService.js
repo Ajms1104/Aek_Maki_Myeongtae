@@ -266,6 +266,40 @@ exports.getDashboardStats = async (range = '30d') => {
      LIMIT 15`
   );
 
+  // 🔗 [공유 바이럴 전환율 지표]
+  // 공유 시도 횟수
+  const { rows: shareAttemptRows } = await db.query(
+    `SELECT COUNT(*) AS count FROM user_access_logs
+     WHERE action = 'SHARE_ATTEMPT' AND created_at >= NOW() - INTERVAL '${daysLimit} days'`
+  );
+  // 공유 링크(referrer)를 통해 신규 진입한 유저 수
+  const { rows: referralUserRows } = await db.query(
+    `SELECT COUNT(DISTINCT user_id) AS count FROM user_access_logs
+     WHERE referrer IS NOT NULL AND referrer != '' AND created_at >= NOW() - INTERVAL '${daysLimit} days'`
+  );
+  // 공유 유입 유저 중 재방문율 (다음날 이후 재방문한 비율)
+  const { rows: referralRetentionRows } = await db.query(
+    `SELECT COALESCE(ROUND(
+      100.0 * COUNT(DISTINCT r.user_id) / NULLIF(COUNT(DISTINCT f.user_id), 0)
+    ), 0) AS rate
+    FROM (
+      SELECT DISTINCT user_id, DATE(created_at AT TIME ZONE 'Asia/Seoul') AS first_date
+      FROM user_access_logs
+      WHERE referrer IS NOT NULL AND referrer != ''
+        AND created_at >= NOW() - INTERVAL '${daysLimit} days'
+    ) f
+    LEFT JOIN (
+      SELECT DISTINCT l.user_id
+      FROM user_access_logs l
+      JOIN (
+        SELECT DISTINCT user_id, MIN(DATE(created_at AT TIME ZONE 'Asia/Seoul')) AS first_date
+        FROM user_access_logs WHERE referrer IS NOT NULL AND referrer != ''
+        GROUP BY user_id
+      ) fd ON l.user_id = fd.user_id
+      WHERE DATE(l.created_at AT TIME ZONE 'Asia/Seoul') > fd.first_date
+    ) r ON f.user_id = r.user_id`
+  );
+
   return {
     totalUsers: parseInt(userStats[0].count),
     totalAmuletsIssued: parseInt(amuletStats[0].count),
@@ -292,6 +326,11 @@ exports.getDashboardStats = async (range = '30d') => {
       dayOfWeek: dayOfWeekStats,
       hourOfDay: hourOfDayStats
     },
-    cohortStats
+    cohortStats,
+    shareFunnelStats: {
+      shareAttempt: parseInt(shareAttemptRows[0]?.count || 0),
+      referralUsers: parseInt(referralUserRows[0]?.count || 0),
+      referralRetention: parseInt(referralRetentionRows[0]?.rate || 0),
+    }
   };
 };

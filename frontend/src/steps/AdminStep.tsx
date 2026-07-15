@@ -321,33 +321,47 @@ export default function AdminStep() {
             </Section>
 
             {/* 실시간 접속 및 이용 여정 타임라인 */}
-            <Section title="⚡ 실시간 접속 및 이용 현황 (유저 여정 로그)">
-              <div style={{ maxHeight: '280px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {stats && stats.recentAccessLogs && stats.recentAccessLogs.length > 0 ? (
-                  stats.recentAccessLogs.map((log: any) => (
-                    <div 
-                      key={log.id} 
-                      style={{ padding: '10px', backgroundColor: '#f9fafb', borderRadius: '8px', fontSize: '12px', border: '1px solid #f2f4f6', textAlign: 'left' }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px', fontWeight: 700, color: '#4c566a' }}>
-                        <span>User: #{log.userId} ({log.tossUserKey ? log.tossUserKey.substring(0, 16) + '...' : 'Guest'})</span>
-                        <span style={{ fontSize: '10px', color: '#8b95a1' }}>{new Date(log.createdAt).toLocaleString()}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#191f28', marginTop: '2px' }}>
-                        <span style={{ fontWeight: 650 }}>액션: <span style={{ color: '#3182f6' }}>{log.action}</span></span>
-                        {log.action === 'APP_LEAVE' && (
-                          <span style={{ color: '#e74c3c', fontWeight: 750 }}>{log.durationSeconds}초 체류</span>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p style={{ textAlign: 'center', color: '#8b95a1', fontSize: '12px', padding: '20px 0' }}>수집된 접속 로그가 없습니다.</p>
-                )}
+            <Section title="⚡ 실시간 접속 및 이용 현황">
+              <div style={{ maxHeight: '280px', overflowY: 'auto', overscrollBehavior: 'contain', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {(() => {
+                  const actionMap: Record<string, { label: string; color: string; bg: string; icon: string }> = {
+                    APP_ENTER:      { label: '앱 진입',      color: '#3182f6', bg: '#e8f3ff', icon: '🚪' },
+                    APP_LEAVE:      { label: '앱 이탈',      color: '#e74c3c', bg: '#fff0f0', icon: '👋' },
+                    MAIN_VISIT:     { label: '메인 화면',    color: '#2ecc71', bg: '#eafaf1', icon: '🏠' },
+                    GUIDE_CLICK:    { label: '가이드 열람',  color: '#f39c12', bg: '#fef9e7', icon: '📖' },
+                    PAYMENT_VISIT:  { label: '충전소 진입',  color: '#9b59b6', bg: '#f5eef8', icon: '💳' },
+                    PAYMENT_DONE:   { label: '결제 완료',    color: '#27ae60', bg: '#e9f7ef', icon: '✅' },
+                    SHARE_ATTEMPT:  { label: '공유 시도',    color: '#e67e22', bg: '#fef5e7', icon: '🔗' },
+                    RESULT_DOWNLOAD:{ label: '이미지 저장',  color: '#1abc9c', bg: '#e8f8f5', icon: '💾' },
+                    VAULT_VISIT:    { label: '보관함 열람',  color: '#34495e', bg: '#f2f3f4', icon: '📦' },
+                  };
+                  return stats && stats.recentAccessLogs && stats.recentAccessLogs.length > 0 ? (
+                    stats.recentAccessLogs.map((log: any) => {
+                      const a = actionMap[log.action] || { label: log.action, color: '#8b95a1', bg: '#f9fafb', icon: '•' };
+                      const timeStr = new Date(log.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                      const dateStr = new Date(log.createdAt).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' });
+                      return (
+                        <div key={log.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', backgroundColor: a.bg, borderRadius: '8px', border: `1px solid ${a.color}22` }}>
+                          <span style={{ fontSize: '16px', flexShrink: 0 }}>{a.icon}</span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span style={{ fontSize: '12px', fontWeight: 800, color: a.color, background: `${a.color}18`, padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap' }}>{a.label}</span>
+                              <span style={{ fontSize: '11px', color: '#8b95a1', whiteSpace: 'nowrap' }}>유저 #{log.userId}</span>
+                              {log.action === 'APP_LEAVE' && log.durationSeconds && (
+                                <span style={{ fontSize: '11px', fontWeight: 700, color: '#e74c3c' }}>{log.durationSeconds}초 체류</span>
+                              )}
+                            </div>
+                          </div>
+                          <span style={{ fontSize: '10px', color: '#adb5bd', whiteSpace: 'nowrap', flexShrink: 0 }}>{dateStr} {timeStr}</span>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p style={{ textAlign: 'center', color: '#8b95a1', fontSize: '12px', padding: '20px 0' }}>수집된 접속 로그가 없습니다.</p>
+                  );
+                })()}
               </div>
             </Section>
-
-
 
           </div>
         </div>
@@ -592,31 +606,43 @@ export default function AdminStep() {
             )}
           </Section>
 
-          {/* 친구 공유 유입 Referrer 랭킹 */}
-          <Section title="🔗 카카오톡/공유하기 유입 랭킹 (Referrer TOP 5)">
-            {stats && stats.referrerStats ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {stats.referrerStats.length > 0 ? (
-                  stats.referrerStats.map((ref: any, idx: number) => {
-                    const maxVal = stats.referrerStats[0]?.count || 1;
-                    const pct = Math.min(100, Math.round((ref.count / maxVal) * 100));
-                    return (
-                      <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 700 }}>
-                          <span>추천 유저: #{ref.referrer}</span>
-                          <span style={{ color: '#3182f6' }}>+{ref.count}명 신규 유입</span>
-                        </div>
-                        <div style={{ width: '100%', height: '8px', background: '#f2f4f6', borderRadius: '4px', overflow: 'hidden' }}>
-                          <div style={{ width: `${pct}%`, height: '100%', background: '#3182f6', borderRadius: '4px' }} />
-                        </div>
+          {/* 🔗 공유 바이럴 전환율 지표 */}
+          <Section title="🔗 공유 바이럴 전환율 분석">
+            {stats ? (() => {
+              const shareCnt = stats.shareFunnelStats?.shareAttempt || 0;
+              const referralCnt = stats.shareFunnelStats?.referralUsers || 0;
+              const referralRetention = stats.shareFunnelStats?.referralRetention || 0;
+              const convRate = shareCnt > 0 ? Math.round((referralCnt / shareCnt) * 100) : 0;
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {/* 핵심 지표 3종 */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                    {[
+                      { label: '공유하기 시도', value: `${shareCnt}회`, color: '#e67e22', icon: '🔗' },
+                      { label: '공유 통해 신규 진입', value: `${referralCnt}명`, color: '#3182f6', icon: '👥' },
+                      { label: '공유→진입 전환율', value: `${convRate}%`, color: '#27ae60', icon: '📈' },
+                    ].map(m => (
+                      <div key={m.label} style={{ textAlign: 'center', padding: '14px 8px', background: '#f9fafb', borderRadius: '12px', border: '1px solid #e5e8eb' }}>
+                        <div style={{ fontSize: '20px', marginBottom: '4px' }}>{m.icon}</div>
+                        <div style={{ fontSize: '22px', fontWeight: 900, color: m.color }}>{m.value}</div>
+                        <div style={{ fontSize: '11px', color: '#8b95a1', marginTop: '4px', fontWeight: 600 }}>{m.label}</div>
                       </div>
-                    );
-                  })
-                ) : (
-                  <p style={{ textAlign: 'center', color: '#8b95a1', fontSize: '12px', padding: '20px 0' }}>공유 링크 유입 이력이 아직 없습니다.</p>
-                )}
-              </div>
-            ) : (
+                    ))}
+                  </div>
+                  {/* 공유 유저 재방문율 게이지 */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 700, marginBottom: '6px' }}>
+                      <span style={{ color: '#4e5968' }}>📊 공유 유입 유저 재방문율</span>
+                      <span style={{ color: referralRetention >= 30 ? '#27ae60' : referralRetention >= 10 ? '#f39c12' : '#e74c3c', fontWeight: 900 }}>{referralRetention}%</span>
+                    </div>
+                    <div style={{ width: '100%', height: '10px', background: '#f2f4f6', borderRadius: '5px', overflow: 'hidden' }}>
+                      <div style={{ width: `${Math.min(referralRetention, 100)}%`, height: '100%', background: referralRetention >= 30 ? '#27ae60' : referralRetention >= 10 ? '#f39c12' : '#e74c3c', borderRadius: '5px', transition: 'width 0.5s' }} />
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#adb5bd', marginTop: '6px' }}>공유 링크로 진입한 유저 중 다음날 이후 재방문한 비율</div>
+                  </div>
+                </div>
+              );
+            })() : (
               <p style={{ textAlign: 'center', color: '#8b95a1', fontSize: '13px' }}>유입 데이터 로딩 중...</p>
             )}
           </Section>
