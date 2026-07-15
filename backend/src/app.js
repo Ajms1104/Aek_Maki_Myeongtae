@@ -107,6 +107,15 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
   }
 }));
 
+// 🔒 [PC 어드민 독립 정적 서빙 - 백엔드 일원화]
+// Nginx의 골치 아픈 에셋 꼬임 문제 없이, 백엔드가 직접 /admin 접속 시 격리된 admin.html 및 assets 폴더를 서빙합니다.
+const adminWebPath = path.join(__dirname, '../../frontend/dist/web');
+app.use('/admin', express.static(adminWebPath, {
+  index: 'admin.html'
+}));
+app.use('/assets', express.static(path.join(adminWebPath, 'assets')));
+
+
 // Swagger UI
 if (process.env.NODE_ENV !== 'production') {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
