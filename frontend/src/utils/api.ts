@@ -16,7 +16,12 @@ export const remoteLog = (message: string, level: 'info' | 'warn' | 'error' = 'i
 };
 
 const request = async (url: string, options: RequestInit = {}) => {
-  const token = tokenStorage.get();
+  // 🔒 [어드민과 모바일 토큰 저장소 격리]
+  const isAdminRequest = url.startsWith('/api/v1/admin');
+  const token = isAdminRequest 
+    ? localStorage.getItem('adminToken') 
+    : tokenStorage.get();
+
   const fullUrl = `${BASE_URL}${url}`;
 
   try {
@@ -30,7 +35,13 @@ const request = async (url: string, options: RequestInit = {}) => {
     });
 
     if (!res.ok) {
-      if (res.status === 401 || res.status === 404) tokenStorage.remove();
+      if (res.status === 401 || res.status === 404) {
+        if (isAdminRequest) {
+          localStorage.removeItem('adminToken');
+        } else {
+          tokenStorage.remove();
+        }
+      }
       const error = await res.json().catch(() => ({ error: '서버 오류' }));
       throw new Error(error.error || '서버 오류');
     }

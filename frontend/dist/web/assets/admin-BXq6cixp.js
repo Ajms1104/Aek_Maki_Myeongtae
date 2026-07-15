@@ -1,0 +1,1 @@
+import{R as r,j as e,a as o,U as s,b as a,N as i,A as t}from"./App-CB1PylVA.js";console.log("[Admin Init] 어드민 대시보드 콘솔 앱 구동");r.createRoot(document.getElementById("root")).render(e.jsx(o.StrictMode,{children:e.jsx(s,{children:e.jsx(a,{children:e.jsx(i,{children:e.jsx(t,{})})})})}));

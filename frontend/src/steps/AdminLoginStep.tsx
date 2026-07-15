@@ -16,8 +16,8 @@ export default function AdminLoginStep() {
     }
 
     // 백엔드 verifyAdmin 미들웨어가 헤더의 Bearer 토큰과 ADMIN_SECRET_KEY를 비교하므로
-    // 입력한 비밀번호를 토큰 저장소에 저장하고 관리자 페이지로 이동합니다.
-    tokenStorage.set(password);
+    // 입력한 비밀번호를 어드민 전용 로컬 저장소(adminToken)에 영구 저장하고 관리자 페이지로 이동합니다.
+    localStorage.setItem('adminToken', password);
     navigateTo('admin');
   };
 

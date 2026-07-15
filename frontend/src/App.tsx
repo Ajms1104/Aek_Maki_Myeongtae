@@ -120,6 +120,13 @@ export default function App() {
 
   // 인증 가드 (보호된 단계 접근 제어)
   useEffect(() => {
+    // 🔒 [어드민 선제 진입 가드] 관리자 토큰(adminToken)이 없는데 admin 화면으로 진입하려 하면, API를 쏘기 전에 로그인창으로 튕겨서 403을 예방합니다.
+    const hasAdminToken = !!localStorage.getItem('adminToken');
+    if (step === 'admin' && !hasAdminToken) {
+      navigateTo('admin_login');
+      return;
+    }
+
     const publicSteps = ['main', 'admin_login', 'admin', 'payment'];
     const isProtectedStep = !publicSteps.includes(step);
     const hasToken = !!tokenStorage.get();
