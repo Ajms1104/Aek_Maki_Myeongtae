@@ -78,3 +78,13 @@ exports.countUserUniqueLegendAmulets = async (userId) => {
   );
   return parseInt(rows[0]?.count || '0', 10);
 };
+
+// 🐟 유저의 누적(비연속) 출석 체크 총 일수 쿼리
+exports.countUserTotalAttendanceDays = async (userId) => {
+  const { rows } = await db.query(
+    `SELECT COUNT(*) AS count FROM user_access_logs 
+     WHERE user_id = $1 AND action = 'ATTENDANCE'`,
+    [userId]
+  );
+  return parseInt(rows[0]?.count || '0', 10);
+};

@@ -10,44 +10,44 @@ const CHALLENGES = [
     target: 3,
   },
   {
-    key: 'ATTENDANCE_15_DAYS',
-    title: '15일 연속 출석',
-    description: '15일 연속으로 명태를 찾아오세요.',
+    key: 'ATTENDANCE_10_DAYS_TOTAL',
+    title: '누적 10일 출석',
+    description: '연속이 아니어도 괜찮아요. 누적 10일 방문 달성!',
     rewardCredits: 2,
-    type: 'attendance',
-    target: 15,
-  },
-  {
-    key: 'ATTENDANCE_30_DAYS',
-    title: '30일 연속 출석',
-    description: '30일 연속으로 명태를 찾아오는 진정한 신도!',
-    rewardCredits: 5,
-    type: 'attendance',
-    target: 30,
-  },
-  {
-    key: 'AMULET_10_CREATIONS',
-    title: '부적 10개 생성',
-    description: '명태와 함께 액운을 10번 물리치세요.',
-    rewardCredits: 2,
-    type: 'amulet_count',
+    type: 'attendance_total',
     target: 10,
   },
   {
-    key: 'AMULET_50_CREATIONS',
-    title: '부적 50개 생성',
-    description: '명태와 함께 액운을 50번 물리친 액막이 마스터!',
-    rewardCredits: 5,
+    key: 'AMULET_3_CREATIONS',
+    title: '부적 3개 생성',
+    description: '명태와 함께 액운을 3번 물리치세요.',
+    rewardCredits: 1,
     type: 'amulet_count',
-    target: 50,
+    target: 3,
   },
   {
-    key: 'LEGEND_3_COLLECT',
-    title: '전설 부적 3종 수집',
-    description: '서로 다른 전설 등급 부적을 3종 수집하세요.',
+    key: 'FIRST_LEGEND',
+    title: '전설 등급 부적 획득',
+    description: '5%의 기적! 전설 등급 부적 최초 획득',
     rewardCredits: 3,
-    type: 'legend_collect',
-    target: 3,
+    type: 'legend_first',
+    target: 1,
+  },
+  {
+    key: 'PAYMENT_CREDIT',
+    title: '10 크레딧 충전 완료',
+    description: '크레딧 10개 상품을 구매하여 준비성 인증!',
+    rewardCredits: 2,
+    type: 'payment_credit',
+    target: 1,
+  },
+  {
+    key: 'PAYMENT_HIDDEN',
+    title: '히든 패키지 해금 완료',
+    description: '감사 편지와 함께 히든 등급 5종 영구 해금!',
+    rewardCredits: 3,
+    type: 'payment_hidden',
+    target: 1,
   },
 ];
 
@@ -107,32 +107,52 @@ exports.calculateNextAttendanceStreak = (lastAttendanceAt, currentStreak = 0, no
 
 exports.evaluateAttendance = async (userId, attendanceStreak, options = {}) => {
   const repository = options.repository || getRepository();
-  const eligible = CHALLENGES.filter(
-    (challenge) => challenge.type === 'attendance' && attendanceStreak >= challenge.target
-  );
+  const eligible = [];
 
-  return awardEligible(userId, eligible, repository);
+  // A. 3일 연속 출석 체크
+  if (attendanceStreak >= 3) {
+    eligible.push(CHALLENGE_BY_KEY.get('ATTENDANCE_3_DAYS'));
+  }
+
+  // B. 비연속 누적 10일 출석 체크
+  const totalAttendanceDays = await repository.countUserTotalAttendanceDays(userId);
+  if (totalAttendanceDays >= 10) {
+    eligible.push(CHALLENGE_BY_KEY.get('ATTENDANCE_10_DAYS_TOTAL'));
+  }
+
+  return awardEligible(userId, eligible.filter(Boolean), repository);
 };
 
 exports.evaluateAmuletCreated = async (userId, amulet, options = {}) => {
   const repository = options.repository || getRepository();
   const eligible = [];
 
-  // A. 누적 부적 생성 수 가져오기
+  // A. 누적 부적 생성 수 체크 (3개 이상 시 달성)
   const createdCount = await repository.countUserCreatedAmulets(userId);
-  const countChallenges = CHALLENGES.filter(
-    (c) => c.type === 'amulet_count' && createdCount >= c.target
-  );
-  eligible.push(...countChallenges);
+  if (createdCount >= 3) {
+    eligible.push(CHALLENGE_BY_KEY.get('AMULET_3_CREATIONS'));
+  }
 
-  // B. 유니크 전설 부적 획득 수 가져오기
-  const uniqueLegendCount = await repository.countUserUniqueLegendAmulets(userId);
-  const legendChallenges = CHALLENGES.filter(
-    (c) => c.type === 'legend_collect' && uniqueLegendCount >= c.target
-  );
-  eligible.push(...legendChallenges);
+  // B. 전설 등급 1개 최초 획득 체크
+  if (amulet?.grade === 'legend') {
+    eligible.push(CHALLENGE_BY_KEY.get('FIRST_LEGEND'));
+  }
 
-  return awardEligible(userId, eligible, repository);
+  return awardEligible(userId, eligible.filter(Boolean), repository);
+};
+
+// 🔒 [유료 결제 도전과제 실시간 평가]
+exports.evaluatePayment = async (userId, productType, options = {}) => {
+  const repository = options.repository || getRepository();
+  const eligible = [];
+
+  if (productType === 'credit') {
+    eligible.push(CHALLENGE_BY_KEY.get('PAYMENT_CREDIT'));
+  } else if (productType === 'hidden') {
+    eligible.push(CHALLENGE_BY_KEY.get('PAYMENT_HIDDEN'));
+  }
+
+  return awardEligible(userId, eligible.filter(Boolean), repository);
 };
 
 exports.getChallengeProgress = async (userId, user, options = {}) => {
@@ -140,18 +160,25 @@ exports.getChallengeProgress = async (userId, user, options = {}) => {
   const awardedKeys = new Set(await repository.getChallengeKeysForUser(userId));
   const attendanceStreak = user?.current_attendance_streak || 0;
 
-  // 진척도 계산을 위해 미리 누적 DB 카운트를 획득합니다.
+  // 진척도 게이지용 누적 데이터 쿼리
   const createdCount = await repository.countUserCreatedAmulets(userId);
-  const uniqueLegendCount = await repository.countUserUniqueLegendAmulets(userId);
+  const totalAttendanceDays = await repository.countUserTotalAttendanceDays(userId);
 
   return CHALLENGES.map((challenge) => {
     let progress = 0;
-    if (challenge.type === 'attendance') {
+    if (challenge.key === 'ATTENDANCE_3_DAYS') {
       progress = Math.min(attendanceStreak, challenge.target);
-    } else if (challenge.type === 'amulet_count') {
+    } else if (challenge.key === 'ATTENDANCE_10_DAYS_TOTAL') {
+      progress = Math.min(totalAttendanceDays, challenge.target);
+    } else if (challenge.key === 'AMULET_3_CREATIONS') {
       progress = Math.min(createdCount, challenge.target);
-    } else if (challenge.type === 'legend_collect') {
-      progress = Math.min(uniqueLegendCount, challenge.target);
+    } else if (
+      challenge.key === 'FIRST_LEGEND' ||
+      challenge.key === 'PAYMENT_CREDIT' ||
+      challenge.key === 'PAYMENT_HIDDEN'
+    ) {
+      // 일회성 및 결제 챌린지는 달성 여부에 따라 진척도 부여
+      progress = awardedKeys.has(challenge.key) ? challenge.target : 0;
     }
 
     return {

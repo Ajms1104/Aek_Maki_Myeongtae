@@ -32,19 +32,19 @@ const MainStep: React.FC = () => {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const challengeCopy: Record<string, { title: string; description: string }> = {
     ATTENDANCE_3_DAYS: { title: '3일 연속 출석', description: '+1 크레딧' },
-    ATTENDANCE_15_DAYS: { title: '15일 연속 출석', description: '+2 크레딧' },
-    ATTENDANCE_30_DAYS: { title: '30일 연속 출석', description: '+5 크레딧' },
-    AMULET_10_CREATIONS: { title: '부적 10개 생성', description: '+2 크레딧' },
-    AMULET_50_CREATIONS: { title: '부적 50개 생성', description: '+5 크레딧' },
-    LEGEND_3_COLLECT: { title: '전설 부적 3종 수집', description: '+3 크레딧' },
+    ATTENDANCE_10_DAYS_TOTAL: { title: '누적 10일 출석', description: '+2 크레딧' },
+    AMULET_3_CREATIONS: { title: '부적 3개 생성', description: '+1 크레딧' },
+    FIRST_LEGEND: { title: '전설 등급 부적 획득', description: '+3 크레딧' },
+    PAYMENT_CREDIT: { title: '10 크레딧 충전 완료', description: '+2 크레딧' },
+    PAYMENT_HIDDEN: { title: '히든 패키지 해금 완료', description: '+3 크레딧' },
   };
   const visibleChallenges = challenges.length > 0 ? challenges : [
     { key: 'ATTENDANCE_3_DAYS', title: '3일 연속 출석', description: '', rewardCredits: 1, target: 3, progress: Math.min(attendanceStreak, 3), completed: false },
-    { key: 'ATTENDANCE_15_DAYS', title: '15일 연속 출석', description: '', rewardCredits: 2, target: 15, progress: Math.min(attendanceStreak, 15), completed: false },
-    { key: 'ATTENDANCE_30_DAYS', title: '30일 연속 출석', description: '', rewardCredits: 5, target: 30, progress: Math.min(attendanceStreak, 30), completed: false },
-    { key: 'AMULET_10_CREATIONS', title: '부적 10개 생성', description: '', rewardCredits: 2, target: 10, progress: 0, completed: false },
-    { key: 'AMULET_50_CREATIONS', title: '부적 50개 생성', description: '', rewardCredits: 5, target: 50, progress: 0, completed: false },
-    { key: 'LEGEND_3_COLLECT', title: '전설 부적 3종 수집', description: '', rewardCredits: 3, target: 3, progress: 0, completed: false },
+    { key: 'ATTENDANCE_10_DAYS_TOTAL', title: '누적 10일 출석', description: '', rewardCredits: 2, target: 10, progress: 0, completed: false },
+    { key: 'AMULET_3_CREATIONS', title: '부적 3개 생성', description: '', rewardCredits: 1, target: 3, progress: 0, completed: false },
+    { key: 'FIRST_LEGEND', title: '전설 등급 부적 획득', description: '', rewardCredits: 3, target: 1, progress: 0, completed: false },
+    { key: 'PAYMENT_CREDIT', title: '10 크레딧 충전 완료', description: '', rewardCredits: 2, target: 1, progress: 0, completed: false },
+    { key: 'PAYMENT_HIDDEN', title: '히든 패키지 해금 완료', description: '', rewardCredits: 3, target: 1, progress: 0, completed: false },
   ];
 
   // ✅ 다변화된 프리미엄 퀄리티 프리뷰 로직 (옵션별 생성)

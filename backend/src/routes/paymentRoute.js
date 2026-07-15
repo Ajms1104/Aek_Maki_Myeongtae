@@ -25,11 +25,19 @@ router.post('/record', authMiddleware, async (req, res) => {
       await userRepository.addCredit(userId, 10);
     }
 
+    // 🔒 [결제 도전과제 평가]
+    let awards = [];
+    if (productType === 'hidden' || productType === 'credit') {
+      const challengeResult = await challengeService.evaluatePayment(userId, productType);
+      awards = challengeResult.awards;
+    }
+
     const updatedUser = await userRepository.findById(userId);
     return res.status(200).json({
       success: true,
       credits: updatedUser.credits,
       hasHiddenPass: updatedUser.has_hidden_pass,
+      awards,
     });
   } catch (err) {
     console.error('[PAYMENT FATAL ERROR]', err);
@@ -67,6 +75,12 @@ router.post('/reward/attendance', authMiddleware, async (req, res) => {
     // 🔒 [비즈니스 최적화] 매일 무조건 1크레딧을 자동 지급하던 로직 폐기!
     // 출석 챌린지(3일/15일/30일)를 달성했을 때만 한정판 일시적 보상으로 크레딧이 갱신됩니다.
     await userRepository.updateAttendance(userId, attendanceStreak);
+
+    // 🔒 [누적 출석용] 출석 이력 로깅
+    await db.query(
+      "INSERT INTO user_access_logs (user_id, action, duration_seconds) VALUES ($1, 'ATTENDANCE', 0)",
+      [userId]
+    );
 
     const challengeResult = await challengeService.evaluateAttendance(userId, attendanceStreak);
     
