@@ -53,7 +53,7 @@ router.post('/reward/attendance', authMiddleware, async (req, res) => {
 
       if (lastKey === nowKey) {
         return res.status(400).json({
-          error: '오늘의 출석 보상을 이미 받았어요. 내일 자정(00시) 이후에 다시 만나요!',
+          error: '오늘의 출석 체크를 이미 완료했어요. 내일 자정(00시) 이후에 다시 만나요!',
         });
       }
     }
@@ -64,24 +64,30 @@ router.post('/reward/attendance', authMiddleware, async (req, res) => {
       now
     );
 
-    let credits = await userRepository.addCredit(userId, 1);
+    // 🔒 [비즈니스 최적화] 매일 무조건 1크레딧을 자동 지급하던 로직 폐기!
+    // 출석 챌린지(3일/15일/30일)를 달성했을 때만 한정판 일시적 보상으로 크레딧이 갱신됩니다.
     await userRepository.updateAttendance(userId, attendanceStreak);
 
     const challengeResult = await challengeService.evaluateAttendance(userId, attendanceStreak);
-    if (challengeResult.awards.length > 0) {
-      credits = challengeResult.awards[challengeResult.awards.length - 1].credits;
-    }
+    
+    // 최종 가산된 최신 크레딧 정보를 DB에서 다시 동기화합니다.
+    const updatedUser = await userRepository.findById(userId);
+
+    const hasAward = challengeResult.awards.length > 0;
+    const msg = hasAward
+      ? `🎉 ${challengeResult.awards[challengeResult.awards.length - 1].title} 달성! 보상으로 크레딧을 받았어요!`
+      : `오늘의 출석 체크가 완료되었습니다! (${attendanceStreak}일 연속)`;
 
     return res.status(200).json({
       success: true,
-      credits,
+      credits: updatedUser.credits,
       attendanceStreak,
       awards: challengeResult.awards,
-      message: '오늘의 출석 보상으로 1 토큰을 받았어요!',
+      message: msg,
     });
   } catch (err) {
     console.error('[ATTENDANCE FATAL ERROR]', err);
-    return res.status(500).json({ error: 'Failed to grant attendance reward.' });
+    return res.status(500).json({ error: 'Failed to process attendance.' });
   }
 });
 
