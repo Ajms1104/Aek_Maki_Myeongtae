@@ -55,6 +55,7 @@ pool.connect()
         await client.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ');
         await client.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN NOT NULL DEFAULT FALSE');
         await client.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ');
+        await client.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS amulet_pity_count INTEGER NOT NULL DEFAULT 0');
         
         await client.query(`CREATE TABLE IF NOT EXISTS user_challenges (
           id SERIAL PRIMARY KEY,

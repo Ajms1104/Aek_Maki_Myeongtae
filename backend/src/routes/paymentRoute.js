@@ -72,8 +72,14 @@ router.post('/reward/attendance', authMiddleware, async (req, res) => {
       now
     );
 
-    // 🔒 [비즈니스 최적화] 매일 무조건 1크레딧을 자동 지급하던 로직 폐기!
-    // 출석 챌린지(3일/15일/30일)를 달성했을 때만 한정판 일시적 보상으로 크레딧이 갱신됩니다.
+    // 🔒 [출석 보상 크레딧 지급]
+    // 무료 크레딧이 무한히 쌓이는 것을 방지하기 위해, 보유 크레딧이 1개 미만(0개)인 경우에만 1크레딧을 추가 지급합니다.
+    let creditAdded = false;
+    if (user.credits < 1) {
+      await userRepository.addCredit(userId, 1);
+      creditAdded = true;
+    }
+
     await userRepository.updateAttendance(userId, attendanceStreak);
 
     // 🔒 [누적 출석용] 출석 이력 로깅
@@ -88,9 +94,15 @@ router.post('/reward/attendance', authMiddleware, async (req, res) => {
     const updatedUser = await userRepository.findById(userId);
 
     const hasAward = challengeResult.awards.length > 0;
-    const msg = hasAward
+    let msg = hasAward
       ? `🎉 ${challengeResult.awards[challengeResult.awards.length - 1].title} 달성! 보상으로 크레딧을 받았어요!`
       : `오늘의 출석 체크가 완료되었습니다! (${attendanceStreak}일 연속)`;
+
+    if (creditAdded) {
+      msg += `\n🎁 보유한 크레딧이 없어 1 크레딧이 추가 지급되었습니다.`;
+    } else if (!hasAward) {
+      msg += `\n💡 이미 크레딧을 보유하고 있어 추가 보상은 지급되지 않았습니다.`;
+    }
 
     return res.status(200).json({
       success: true,

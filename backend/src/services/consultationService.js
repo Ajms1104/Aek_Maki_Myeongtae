@@ -30,11 +30,9 @@ exports.createConsultation = async ({ userId, content, category }) => {
   // GPT ?듬? ?앹꽦
   const reply = await llmService.generateReply({ content, category });
 
-  // 4. 부적 뽑기 (가중치 기반 무작위 추첨 적용)
-  const uncollected = await amuletRepository.findUncollectedByUser(userId);
-  
-  let selected;
-  let isNew = true;
+  // 4. 부적 뽑기 (중복 획득 가능 + 천장/확률 보정 룰)
+  const amulets = await amuletRepository.getAll();
+  if (!amulets || amulets.length === 0) throw new Error('등록된 부적이 없습니다.');
 
   // 가중치(weight) 기반 무작위 선택 헬퍼 함수
   const selectWeightedRandom = (items) => {
@@ -53,14 +51,37 @@ exports.createConsultation = async ({ userId, content, category }) => {
     return items[items.length - 1];
   };
 
-  if (uncollected && uncollected.length > 0) {
-    // 아직 못 얻은 게 있다면 가중치 기반으로 랜덤 선택
-    selected = selectWeightedRandom(uncollected);
+  // 1차적으로 전체 부적 중에서 가중치 기반 랜덤 선택
+  let selected = selectWeightedRandom(amulets);
+  let isNew = true;
+
+  // 유저의 인벤토리와 미해금 목록 확인
+  const ownedAmulets = await amuletRepository.findUserInventory(userId);
+  const uncollected = await amuletRepository.findUncollectedByUser(userId);
+
+  const isAlreadyOwned = ownedAmulets.some(owned => owned.id === selected.id);
+
+  if (isAlreadyOwned && uncollected && uncollected.length > 0) {
+    // 중복 부적이 뽑혔고, 아직 획득하지 못한 부적이 남아있다면
+    const userPity = user.amulet_pity_count || 0;
+    const pityChance = userPity * 0.20; // 1회 중복당 20% 확률 보정
+
+    if (Math.random() < pityChance) {
+      // 보정 확률 통과: 미해금 부적 중에서 다시 가중치 기반으로 뽑기
+      selected = selectWeightedRandom(uncollected);
+      isNew = true;
+      await userRepository.resetAmuletPity(userId);
+    } else {
+      // 보정 확률 실패: 원래 뽑혔던 중복 부적 지급하고 스택 증가
+      isNew = false;
+      await userRepository.incrementAmuletPity(userId);
+    }
+  } else if (!isAlreadyOwned) {
+    // 처음 획득한 부적이면 천장 스택 리셋
+    isNew = true;
+    await userRepository.resetAmuletPity(userId);
   } else {
-    // 다 모았다면 전체 중에서 가중치 기반으로 랜덤 선택 (중복 발생)
-    const amulets = await amuletRepository.getAll();
-    if (!amulets || amulets.length === 0) throw new Error('등록된 부적이 없습니다.');
-    selected = selectWeightedRandom(amulets);
+    // 이미 모든 부적을 다 해금한 상태
     isNew = false;
   }
 

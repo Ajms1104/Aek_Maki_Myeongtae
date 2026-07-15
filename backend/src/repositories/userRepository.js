@@ -16,7 +16,7 @@ exports.upsertByTossUserKey = async (tossUserKey) => {
 
 exports.findById = async (userId) => {
   const { rows } = await db.query(
-    'SELECT id, toss_user_key, credits, has_hidden_pass, last_attendance_at, last_ad_watched_at, current_attendance_streak, created_at, is_deleted FROM users WHERE id = $1',
+    'SELECT id, toss_user_key, credits, has_hidden_pass, last_attendance_at, last_ad_watched_at, current_attendance_streak, amulet_pity_count, created_at, is_deleted FROM users WHERE id = $1',
     [userId]
   );
   return rows[0] || null;
@@ -26,6 +26,20 @@ exports.updateAttendance = async (userId, attendanceStreak = 1) => {
   await db.query(
     'UPDATE users SET last_attendance_at = NOW(), current_attendance_streak = $2 WHERE id = $1',
     [userId, attendanceStreak]
+  );
+};
+
+exports.incrementAmuletPity = async (userId) => {
+  await db.query(
+    'UPDATE users SET amulet_pity_count = amulet_pity_count + 1 WHERE id = $1',
+    [userId]
+  );
+};
+
+exports.resetAmuletPity = async (userId) => {
+  await db.query(
+    'UPDATE users SET amulet_pity_count = 0 WHERE id = $1',
+    [userId]
   );
 };
 
