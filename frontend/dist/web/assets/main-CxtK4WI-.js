@@ -1,0 +1,1 @@
+import{T as e,R as o,j as s,a as r,U as a,b as t,N as i,A as n}from"./App-Y7FYVmuS.js";window.TossPayments=e;console.log("[Init] Toss SDK 주입 완료");o.createRoot(document.getElementById("root")).render(s.jsx(r.StrictMode,{children:s.jsx(a,{children:s.jsx(t,{children:s.jsx(i,{children:s.jsx(n,{})})})})}));

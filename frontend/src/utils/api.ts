@@ -55,6 +55,6 @@ export const getAdminUsers = (page = 1, search = '') => request(`/api/v1/admin/u
 export const getAdminUserDetail = (userId: string | number) => request(`/api/v1/admin/users/${userId}`);
 export const updateAdminUserUnlock = (userId: string | number, unlocked: boolean) => request(`/api/v1/admin/users/${userId}/unlock`, { method: 'PATCH', body: JSON.stringify({ unlocked }) });
 export const updateAdminUserCredit = (userId: string | number, credits: number) => request(`/api/v1/admin/users/${userId}/credit`, { method: 'PATCH', body: JSON.stringify({ credits }) });
-export const getAdminStats = () => request('/api/v1/admin/stats');
-export const logAccessLog = (action: string, durationSeconds?: number) => 
-  request('/api/v1/me/access-log', { method: 'POST', body: JSON.stringify({ action, durationSeconds }) }).catch(() => {});
+export const getAdminStats = (range = '30d') => request(`/api/v1/admin/stats?range=${range}`);
+export const logAccessLog = (action: string, durationSeconds?: number, referrer?: string | null, metaData?: any) => 
+  request('/api/v1/me/access-log', { method: 'POST', body: JSON.stringify({ action, durationSeconds, referrer, metaData }) }).catch(() => {});

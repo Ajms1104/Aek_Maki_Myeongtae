@@ -36,10 +36,11 @@ exports.handleUnlink = async (tossUserKey, referrer) => {
 };
 
 // 접속자 로그 기록 및 최종 활동 시각 업데이트
-exports.logAccess = async (userId, action, durationSeconds) => {
+exports.logAccess = async (userId, action, durationSeconds, referrer = null, metaData = {}) => {
   await db.query(
-    'INSERT INTO user_access_logs (user_id, action, duration_seconds) VALUES ($1, $2, $3)',
-    [userId, action, durationSeconds]
+    `INSERT INTO user_access_logs (user_id, action, duration_seconds, referrer, meta_data) 
+     VALUES ($1, $2, $3, $4, $5)`,
+    [userId, action, durationSeconds, referrer, JSON.stringify(metaData)]
   );
   
   await db.query(

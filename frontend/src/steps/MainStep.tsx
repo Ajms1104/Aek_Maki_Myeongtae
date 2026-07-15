@@ -20,7 +20,7 @@ import { useNavigation } from '../hooks/useNavigation';
 import { useTalisman } from '../hooks/useTalisman';
 import { useUI } from '../hooks/useUI';
 import { loginWithToss } from '../utils/auth'; 
-import { tokenStorage, remoteLog } from '../utils/api';  
+import { tokenStorage, remoteLog, logAccessLog } from '../utils/api';  
 import { GRADE_COLORS } from '../constants/talisman';
 import { getAmuletImage } from '../utils/amuletAssets';
 
@@ -252,6 +252,7 @@ const MainStep: React.FC = () => {
 
   const handleStart = async () => {
     if (isLoggingIn) return;
+    logAccessLog('MAIN_VISIT');
     
     const existingToken = tokenStorage.get();
     remoteLog(`[Main] 시작하기 클릭. 토큰존재여부: ${!!existingToken}`);
@@ -296,7 +297,7 @@ const MainStep: React.FC = () => {
           position: 'relative',
           overflow: 'hidden',
           width: '100%',
-          aspectRatio: '1.6 / 1',
+          aspectRatio: '2.0 / 1',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
@@ -447,7 +448,7 @@ const MainStep: React.FC = () => {
             <IoWalletOutline size={16} /> 충전소
           </button>
           <div style={{ width: '1px', height: '10px', background: '#e5e8eb', alignSelf: 'center' }} />
-          <button onClick={() => setIsHelpOpen(true)} style={{ background: 'none', color: '#3182f6', fontSize: '13px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <button onClick={() => { setIsHelpOpen(true); logAccessLog('GUIDE_CLICK'); }} style={{ background: 'none', color: '#3182f6', fontSize: '13px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
             <IoHelpCircleOutline size={16} /> 상세 가이드
           </button>
         </div>

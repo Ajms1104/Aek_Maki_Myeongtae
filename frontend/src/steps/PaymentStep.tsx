@@ -13,7 +13,7 @@ import { useNavigation } from '../hooks/useNavigation';
 import { useTalisman } from '../hooks/useTalisman';
 import { useUI } from '../hooks/useUI';
 import { loginWithToss } from '../utils/auth';
-import { tokenStorage, claimViralReward } from '../utils/api';
+import { tokenStorage, claimViralReward, logAccessLog } from '../utils/api';
 import { useTossBanner } from '../hooks/useTossBanner';
 import { contactsViral } from '@apps-in-toss/web-framework';
 
@@ -75,6 +75,7 @@ const PaymentStep: React.FC = () => {
   // 🐟 친구 초대 공유 리워드 브릿지 핸들러
   const handleShareViral = () => {
     if (isViralProcessing) return;
+    logAccessLog('VIRAL_SHARE_CLICK');
     
     if (!tokenStorage.get()) {
       loginWithToss().then(() => refreshCollection());
@@ -181,9 +182,15 @@ const PaymentStep: React.FC = () => {
     refreshCollection().catch(console.error);
   }, [refreshCollection]);
 
+  // 🔒 [충전소 진입 로깅]
+  useEffect(() => {
+    logAccessLog('RECHARGE_PAGE_ENTER');
+  }, []);
+
   // 보상 지급 및 성공 화면 표시 공통 함수
   const completeReward = async (type: 'credit' | 'hidden') => {
     await handlePaymentComplete(type);
+    logAccessLog('PAYMENT_SUCCESS', 0, null, { productType: type });
     
     setPurchasedProduct(type);
     setIsSuccess(true);

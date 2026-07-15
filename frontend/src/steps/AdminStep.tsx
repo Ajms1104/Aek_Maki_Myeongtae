@@ -16,11 +16,17 @@ export default function AdminStep() {
   const [editCredit, setEditCredit] = useState('');
   const [stats, setStats] = useState<any>(null);
   const [selectedErrorLog, setSelectedErrorLog] = useState<any>(null);
+  
+  // 🔒 [통계 조회 기간 동적 필터 상태 추가]
+  const [range, setRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
 
   useEffect(() => {
     fetchUsers();
-    fetchStats();
   }, []);
+
+  useEffect(() => {
+    fetchStats(range);
+  }, [range]);
 
   const fetchUsers = async () => {
     try {
@@ -41,10 +47,10 @@ export default function AdminStep() {
     }
   };
 
-  const fetchStats = async () => {
+  const fetchStats = async (currentRange = range) => {
     try {
       setLoading(true);
-      const data = await getAdminStats();
+      const data = await getAdminStats(currentRange);
       setStats(data);
     } catch (err: any) {
       console.error('[AdminStep] fetchStats Error:', err);
@@ -119,14 +125,40 @@ export default function AdminStep() {
           <h1 style={{ fontSize: '20px', fontWeight: 900, margin: 0, color: '#191f28' }}>
             🐟 액막이 명태 - 실시간 통합 운영자 대시보드 (PC)
           </h1>
-          <button 
-            onClick={() => { fetchStats(); fetchUsers(); }} 
-            style={{ 
-              backgroundColor: '#3182f6', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '10px', fontWeight: 800, cursor: 'pointer', boxShadow: '0 2px 8px rgba(49, 130, 246, 0.15)' 
-            }}
-          >
-            대시보드 실시간 동기화
-          </button>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            {/* 🔒 [APM 동적 범위 필터 스위치] */}
+            <div style={{ display: 'flex', background: '#f2f4f6', borderRadius: '10px', padding: '3px', gap: '2px' }}>
+              {(['7d', '30d', '90d', 'all'] as const).map(r => (
+                <button
+                  key={r}
+                  onClick={() => setRange(r)}
+                  style={{
+                    border: 'none',
+                    background: range === r ? '#ffffff' : 'transparent',
+                    color: range === r ? '#191f28' : '#6b7684',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    boxShadow: range === r ? '0 2px 6px rgba(0,0,0,0.06)' : 'none',
+                    transition: 'all 0.15s'
+                  }}
+                >
+                  {r === 'all' ? '전체' : `${r.replace('d', '일')}`}
+                </button>
+              ))}
+            </div>
+
+            <button 
+              onClick={() => { fetchStats(range); fetchUsers(); }} 
+              style={{ 
+                backgroundColor: '#3182f6', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '10px', fontWeight: 800, cursor: 'pointer', boxShadow: '0 2px 8px rgba(49, 130, 246, 0.15)' 
+              }}
+            >
+              대시보드 실시간 동기화
+            </button>
+          </div>
         </div>
       </div>
 
@@ -385,6 +417,302 @@ export default function AdminStep() {
               </tbody>
             </table>
           </div>
+        </Section>
+
+        {/* 🔒 [APM & 빅데이터 정밀 분석 대시보드] */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(600px, 1fr))', gap: '20px', width: '100%', boxSizing: 'border-box' }}>
+          
+          {/* APM 성능 분석 패널 */}
+          <Section title="⚡ APM 실시간 시스템 성능 지표 (API & DB 병목 진단)">
+            {stats ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                
+                {/* 1. API 응답 레이턴시 TOP 5 */}
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: 800, color: '#4e5968', marginBottom: '10px' }}>
+                    🐢 느린 API 응답 속도 (Latency TOP 5)
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {stats.slowApis && stats.slowApis.length > 0 ? (
+                      stats.slowApis.map((api: any, idx: number) => {
+                        const maxVal = stats.slowApis[0]?.avgLatency || 1;
+                        const pct = Math.min(100, Math.round((api.avgLatency / maxVal) * 100));
+                        return (
+                          <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 650 }}>
+                              <span style={{ fontFamily: 'monospace' }}>[{api.method}] {api.path}</span>
+                              <span style={{ color: '#e74c3c' }}>{api.avgLatency}ms ({api.count}회)</span>
+                            </div>
+                            <div style={{ width: '100%', height: '8px', background: '#f2f4f6', borderRadius: '4px', overflow: 'hidden' }}>
+                              <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #ff8787, #fa5252)', borderRadius: '4px' }} />
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <span style={{ fontSize: '12px', color: '#8b95a1' }}>계측 데이터 없음</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* 2. DB 쿼리 실행 병목 TOP 5 */}
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: 800, color: '#4e5968', marginBottom: '10px' }}>
+                    🗄️ 느린 DB 트랜잭션 수행 지연 (DB Query Latency TOP 5)
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {stats.slowQueries && stats.slowQueries.length > 0 ? (
+                      stats.slowQueries.map((q: any, idx: number) => {
+                        const maxVal = stats.slowQueries[0]?.avgDbLatency || 1;
+                        const pct = Math.min(100, Math.round((q.avgDbLatency / maxVal) * 100));
+                        return (
+                          <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 650 }}>
+                              <span style={{ fontFamily: 'monospace' }}>[{q.method}] {q.path}</span>
+                              <span style={{ color: '#9c36b5' }}>총 {q.avgDbLatency}ms (평균 쿼리 {q.avgQueryCount}회)</span>
+                            </div>
+                            <div style={{ width: '100%', height: '8px', background: '#f2f4f6', borderRadius: '4px', overflow: 'hidden' }}>
+                              <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #e5dbff, #9c36b5)', borderRadius: '4px' }} />
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <span style={{ fontSize: '12px', color: '#8b95a1' }}>계측 데이터 없음</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* 3. HTTP 상태 코드 분포 */}
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: 800, color: '#4e5968', marginBottom: '8px' }}>
+                    🚦 HTTP API 상태 코드 분포
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {stats.statusCodeStats && stats.statusCodeStats.length > 0 ? (
+                      stats.statusCodeStats.map((sc: any, idx: number) => {
+                        const isSuccess = sc.status >= 200 && sc.status < 300;
+                        const isRedirection = sc.status >= 300 && sc.status < 400;
+                        const isClientError = sc.status >= 400 && sc.status < 500;
+                        const bgColor = isSuccess ? '#e5f9ed' : isRedirection ? '#fff4e6' : isClientError ? '#fff0f0' : '#f8f9fa';
+                        const color = isSuccess ? '#00d082' : isRedirection ? '#fd7e14' : isClientError ? '#f04452' : '#8b95a1';
+                        return (
+                          <div key={idx} style={{ padding: '8px 12px', background: bgColor, color, borderRadius: '10px', fontSize: '12px', fontWeight: 800 }}>
+                            HTTP {sc.status}: {sc.count}회
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <span style={{ fontSize: '12px', color: '#8b95a1' }}>상태 코드 이력 없음</span>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+            ) : (
+              <p style={{ textAlign: 'center', color: '#8b95a1', fontSize: '13px' }}>APM 로딩 중...</p>
+            )}
+          </Section>
+
+          {/* 사용 시간대 및 요일 트래픽 패턴 */}
+          <Section title="📅 사용 시간대 및 요일 분포 (usage_temporal_patterns)">
+            {stats && stats.temporalPatterns ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                
+                {/* 요일별 트래픽 분포 */}
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: 800, color: '#4e5968', marginBottom: '10px' }}>
+                    🗓️ 요일별 트래픽 분포
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', height: '100px', gap: '12px', paddingBottom: '16px', borderBottom: '1px solid #e5e8eb' }}>
+                    {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map(day => {
+                      const found = stats.temporalPatterns.dayOfWeek.find((d: any) => d.day_name.toUpperCase().startsWith(day));
+                      const count = found ? parseInt(found.count) : 0;
+                      const maxVal = Math.max(...stats.temporalPatterns.dayOfWeek.map((d: any) => parseInt(d.count)), 1);
+                      const pct = Math.round((count / maxVal) * 80); // 최대 높이 80% 제한
+                      
+                      const dayKorMap: Record<string, string> = { MON: '월', TUE: '화', WED: '수', THU: '목', FRI: '금', SAT: '토', SUN: '일' };
+                      
+                      return (
+                        <div key={day} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                          <div style={{ fontSize: '10px', fontWeight: 700, color: '#8b95a1' }}>{count}</div>
+                          <div style={{ width: '100%', height: `${pct}px`, background: count > 0 ? '#3182f6' : '#e5e8eb', borderRadius: '4px 4px 0 0' }} />
+                          <div style={{ fontSize: '12px', fontWeight: 800, color: '#191f28' }}>{dayKorMap[day]}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 24시간대 트래픽 분포 */}
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: 800, color: '#4e5968', marginBottom: '10px' }}>
+                    ⏰ 24시간 시간대별 트래픽 분포 (심야 트래픽 대처용)
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', height: '100px', gap: '4px' }}>
+                    {Array.from({ length: 24 }).map((_, hour) => {
+                      const found = stats.temporalPatterns.hourOfDay.find((h: any) => parseInt(h.hour) === hour);
+                      const count = found ? parseInt(found.count) : 0;
+                      const maxVal = Math.max(...stats.temporalPatterns.hourOfDay.map((h: any) => parseInt(h.count)), 1);
+                      const pct = Math.round((count / maxVal) * 80);
+                      
+                      const isNight = hour >= 22 || hour <= 4; // 심야 트래픽 강조 (22시 ~ 4시)
+                      
+                      return (
+                        <div key={hour} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                          <div style={{ width: '100%', height: `${pct}px`, background: isNight ? '#a25df5' : '#3182f6', opacity: count > 0 ? 1 : 0.2, borderRadius: '2px 2px 0 0' }} />
+                          <div style={{ fontSize: '9px', color: '#8b95a1', transform: 'scale(0.85)' }}>{hour}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '12px', fontSize: '11px', color: '#6b7684', fontWeight: 600 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <div style={{ width: '8px', height: '8px', background: '#3182f6', borderRadius: '50%' }} /> 주간 트래픽
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <div style={{ width: '8px', height: '8px', background: '#a25df5', borderRadius: '50%' }} /> 심야 트래픽 (22시 ~ 04시)
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            ) : (
+              <p style={{ textAlign: 'center', color: '#8b95a1', fontSize: '13px' }}>시간대 지표 로딩 중...</p>
+            )}
+          </Section>
+
+        </div>
+
+        {/* 🔒 [결제 전환율 & 유입 공유인 랭킹] */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(600px, 1fr))', gap: '20px', width: '100%', boxSizing: 'border-box' }}>
+          
+          {/* 결제 전환율 Funnel */}
+          <Section title="💎 결제 퍼널 전환율 분석 (충전소 CVR)">
+            {stats && stats.paymentFunnel ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '20px', background: '#f9fafb', borderRadius: '16px' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '12px', color: '#8b95a1', marginBottom: '6px' }}>충전소 진입</div>
+                    <div style={{ fontSize: '24px', fontWeight: 900, color: '#191f28' }}>{stats.paymentFunnel.rechargePageClicks}회</div>
+                  </div>
+                  <div style={{ fontSize: '20px', color: '#adb5bd', fontWeight: 700 }}>➔</div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '12px', color: '#8b95a1', marginBottom: '6px' }}>결제 성공</div>
+                    <div style={{ fontSize: '24px', fontWeight: 900, color: '#00d082' }}>{stats.paymentFunnel.paymentCompleted}회</div>
+                  </div>
+                  <div style={{ fontSize: '20px', color: '#adb5bd', fontWeight: 700 }}>=</div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '12px', color: '#8b95a1', marginBottom: '6px' }}>결제 CVR</div>
+                    <div style={{ fontSize: '28px', fontWeight: 950, color: '#3182f6' }}>{stats.paymentFunnel.conversionRate}%</div>
+                  </div>
+                </div>
+                <div style={{ width: '100%', height: '12px', background: '#e5e8eb', borderRadius: '6px', overflow: 'hidden', display: 'flex' }}>
+                  <div style={{ width: `${stats.paymentFunnel.conversionRate}%`, height: '100%', background: '#3182f6' }} />
+                  <div style={{ width: `${100 - stats.paymentFunnel.conversionRate}%`, height: '100%', background: '#e5e8eb' }} />
+                </div>
+              </div>
+            ) : (
+              <p style={{ textAlign: 'center', color: '#8b95a1', fontSize: '13px' }}>퍼널 데이터 로딩 중...</p>
+            )}
+          </Section>
+
+          {/* 친구 공유 유입 Referrer 랭킹 */}
+          <Section title="🔗 카카오톡/공유하기 유입 랭킹 (Referrer TOP 5)">
+            {stats && stats.referrerStats ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {stats.referrerStats.length > 0 ? (
+                  stats.referrerStats.map((ref: any, idx: number) => {
+                    const maxVal = stats.referrerStats[0]?.count || 1;
+                    const pct = Math.min(100, Math.round((ref.count / maxVal) * 100));
+                    return (
+                      <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 700 }}>
+                          <span>추천 유저: #{ref.referrer}</span>
+                          <span style={{ color: '#3182f6' }}>+{ref.count}명 신규 유입</span>
+                        </div>
+                        <div style={{ width: '100%', height: '8px', background: '#f2f4f6', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div style={{ width: `${pct}%`, height: '100%', background: '#3182f6', borderRadius: '4px' }} />
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p style={{ textAlign: 'center', color: '#8b95a1', fontSize: '12px', padding: '20px 0' }}>공유 링크 유입 이력이 아직 없습니다.</p>
+                )}
+              </div>
+            ) : (
+              <p style={{ textAlign: 'center', color: '#8b95a1', fontSize: '13px' }}>유입 데이터 로딩 중...</p>
+            )}
+          </Section>
+
+        </div>
+
+        {/* 🔒 [코호트 재방문 분석 매트릭스 리포트] */}
+        <Section title="📅 가입일 기준 경과일수별 코호트 재방문 분석 (Cohort Retention Heatmap)">
+          {stats && stats.cohortStats ? (
+            <div style={{ overflowX: 'auto', borderRadius: '12px', border: '1px solid #e5e8eb' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', fontSize: '13px', backgroundColor: '#fff' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e8eb', color: '#6b7684', fontWeight: 800 }}>
+                    <th style={{ padding: '12px 16px', textAlign: 'left' }}>가입 일자</th>
+                    <th style={{ padding: '12px 16px' }}>획득 수 (Cohort Size)</th>
+                    <th style={{ padding: '12px 16px' }}>당일 (Day 0)</th>
+                    <th style={{ padding: '12px 16px' }}>1일차 (Day 1)</th>
+                    <th style={{ padding: '12px 16px' }}>7일차 (Day 7)</th>
+                    <th style={{ padding: '12px 16px' }}>14일차 (Day 14)</th>
+                    <th style={{ padding: '12px 16px' }}>30일차 (Day 30)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.cohortStats.length > 0 ? (
+                    stats.cohortStats.map((cohort: any) => {
+                      const size = parseInt(cohort.cohortSize) || 0;
+                      
+                      const getRetentionDetails = (dayVal: number) => {
+                        if (size === 0) return { pct: 0, bg: 'transparent', color: '#8b95a1' };
+                        const rawPct = (dayVal / size) * 100;
+                        const pct = parseFloat(rawPct.toFixed(1));
+                        
+                        const opacity = Math.min(1.0, Math.max(0.0, rawPct / 100));
+                        const bg = opacity > 0 ? `rgba(49, 130, 246, ${opacity * 0.85 + 0.15})` : 'transparent';
+                        const color = opacity > 0.4 ? '#ffffff' : '#191f28';
+                        
+                        return { pct, bg, color };
+                      };
+
+                      const d0Info = getRetentionDetails(cohort.d0);
+                      const d1Info = getRetentionDetails(cohort.d1);
+                      const d7Info = getRetentionDetails(cohort.d7);
+                      const d14Info = getRetentionDetails(cohort.d14);
+                      const d30Info = getRetentionDetails(cohort.d30);
+
+                      return (
+                        <tr key={cohort.joinDate} style={{ borderBottom: '1px solid #f2f4f6' }}>
+                          <td style={{ padding: '12px 16px', fontWeight: 800, color: '#333d4b', textAlign: 'left' }}>{cohort.joinDate}</td>
+                          <td style={{ padding: '12px 16px', fontWeight: 700, color: '#191f28', backgroundColor: '#f8f9fa' }}>{size}명</td>
+                          
+                          <td style={{ padding: '12px 16px', fontWeight: 800, backgroundColor: d0Info.bg, color: d0Info.color }}>{d0Info.pct}%</td>
+                          <td style={{ padding: '12px 16px', fontWeight: 800, backgroundColor: d1Info.bg, color: d1Info.color }}>{d1Info.pct}%</td>
+                          <td style={{ padding: '12px 16px', fontWeight: 800, backgroundColor: d7Info.bg, color: d7Info.color }}>{d7Info.pct}%</td>
+                          <td style={{ padding: '12px 16px', fontWeight: 800, backgroundColor: d14Info.bg, color: d14Info.color }}>{d14Info.pct}%</td>
+                          <td style={{ padding: '12px 16px', fontWeight: 800, backgroundColor: d30Info.bg, color: d30Info.color }}>{d30Info.pct}%</td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={7} style={{ padding: '30px', textAlign: 'center', color: '#8b95a1', fontWeight: 700 }}>
+                        수집된 코호트 재방문 이력이 존재하지 않습니다.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p style={{ textAlign: 'center', color: '#8b95a1', fontSize: '13px' }}>코호트 리포트 로딩 중...</p>
+          )}
         </Section>
 
       </div>

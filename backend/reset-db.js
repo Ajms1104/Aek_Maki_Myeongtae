@@ -100,6 +100,7 @@ async function reset() {
     // 1. 기존 테이블 강제 드랍
     console.log('Dropping tables...');
     await client.query(`
+      DROP TABLE IF EXISTS system_performance_logs CASCADE;
       DROP TABLE IF EXISTS user_access_logs CASCADE;
       DROP TABLE IF EXISTS user_challenges CASCADE;
       DROP TABLE IF EXISTS user_amulets CASCADE;

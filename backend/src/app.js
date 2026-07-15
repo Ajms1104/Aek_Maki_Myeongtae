@@ -65,6 +65,39 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// 🔒 [현업 수준 APM 글로벌 모니터링 미들웨어]
+const db = require('./db');
+app.use((req, res, next) => {
+  if (req.path.startsWith('/uploads') || req.path.startsWith('/api-docs') || req.path === '/favicon.ico') {
+    return next();
+  }
+
+  const dbContext = { count: 0, totalLatency: 0 };
+  const start = process.hrtime();
+
+  res.on('finish', () => {
+    // 관리자 자신의 대시보드 통계 조회 행위는 트래픽 분석 노이즈 배제를 위해 APM 저장 스킵
+    if (req.path.startsWith('/api/v1/admin/stats')) {
+      return;
+    }
+
+    const diff = process.hrtime(start);
+    const latencyMs = (diff[0] * 1e9 + diff[1]) / 1e6;
+
+    db.query(
+      `INSERT INTO system_performance_logs 
+       (method, path, status, latency_ms, query_count, total_query_latency_ms) 
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [req.method, req.path, res.statusCode, latencyMs, dbContext.count, dbContext.totalLatency]
+    ).catch(err => console.error('[APM Logging Failed]', err.message));
+  });
+
+  db.dbStorage.run(dbContext, () => {
+    next();
+  });
+});
+
+
 // ✅ 이미지 정적 파일 서비스 (캐싱 및 CORS 설정 추가)
 app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
   maxAge: '30d', // 30일간 강력 캐싱

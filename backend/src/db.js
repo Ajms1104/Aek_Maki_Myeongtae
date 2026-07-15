@@ -1,5 +1,8 @@
 require('dotenv').config();
 const { Pool } = require('pg');
+const { AsyncLocalStorage } = require('async_hooks');
+
+const dbStorage = new AsyncLocalStorage();
 
 const pool = new Pool({
   user: process.env.DB_USER,
@@ -70,6 +73,14 @@ pool.connect()
           duration_seconds INTEGER DEFAULT 0,
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )`);
+
+        // 🔒 [포트폴리오 인프라 튜닝] referrer 물리 컬럼화 및 JSONB meta_data 추가
+        await client.query('ALTER TABLE user_access_logs ADD COLUMN IF NOT EXISTS referrer VARCHAR(50) DEFAULT NULL');
+        await client.query('ALTER TABLE user_access_logs ADD COLUMN IF NOT EXISTS meta_data JSONB DEFAULT \'{}\'::jsonb');
+
+        // 복합 인덱스 순서 정정 (action, created_at) - 등치 조건 선행으로 Index Only Scan 유도
+        await client.query('CREATE INDEX IF NOT EXISTS idx_user_access_logs_action_created ON user_access_logs(action, created_at)');
+        await client.query('CREATE INDEX IF NOT EXISTS idx_user_access_logs_referrer ON user_access_logs(referrer) WHERE referrer IS NOT NULL');
         
         // 시스템 오류 및 활동 로그 테이블 생성
         await client.query(`CREATE TABLE IF NOT EXISTS system_logs (
@@ -80,6 +91,19 @@ pool.connect()
           data JSONB,
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )`);
+
+        // 🔒 [APM 성능 모니터링 테이블 생성]
+        await client.query(`CREATE TABLE IF NOT EXISTS system_performance_logs (
+          id SERIAL PRIMARY KEY,
+          method VARCHAR(10) NOT NULL,
+          path VARCHAR(255) NOT NULL,
+          status INTEGER NOT NULL,
+          latency_ms DOUBLE PRECISION NOT NULL,
+          query_count INTEGER DEFAULT 0,
+          total_query_latency_ms DOUBLE PRECISION DEFAULT 0,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )`);
+        await client.query('CREATE INDEX IF NOT EXISTS idx_sys_perf_created_path ON system_performance_logs(created_at, path)');
         
         console.log('DB schema checked & migrated successfully');
       } catch (err) {
@@ -91,7 +115,24 @@ pool.connect()
   .catch((err) => console.error('DB connection failed', err));
 
 module.exports = {
-  query: (text, params) => pool.query(text, params),
+  query: async (text, params) => {
+    const start = process.hrtime();
+    try {
+      const res = await pool.query(text, params);
+      const diff = process.hrtime(start);
+      const latencyMs = (diff[0] * 1e9 + diff[1]) / 1e6;
+
+      const store = dbStorage.getStore();
+      if (store) {
+        store.count += 1;
+        store.totalLatency += latencyMs;
+      }
+      return res;
+    } catch (err) {
+      throw err;
+    }
+  },
   pool,
   transaction,
+  dbStorage,
 };

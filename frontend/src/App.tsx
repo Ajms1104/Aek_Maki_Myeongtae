@@ -41,11 +41,19 @@ export default function App() {
 
   // ✅ [수정] 앱 시작 시 자동 로그인 제거 (사용자 경험 개선) & 진입 로그 전송
   useEffect(() => {
+    // URL에서 ?referrer=추천인 파라미터를 읽어 임시 세션스토리지에 보관합니다.
+    const urlParams = new URLSearchParams(window.location.search);
+    const ref = urlParams.get('referrer');
+    if (ref) {
+      sessionStorage.setItem('referrer', ref);
+    }
+
     const checkToken = async () => {
       const token = tokenStorage.get();
       if (token) {
         remoteLog('[App] 기존 로그인 세션 확인 - 동기화 진행');
-        logAccessLog('APP_ENTER');
+        const storedReferrer = sessionStorage.getItem('referrer') || null;
+        logAccessLog('APP_ENTER', 0, storedReferrer);
         try {
           await refreshCollection();
         } catch (e) {

@@ -39,13 +39,13 @@ exports.unlinkCallback = async (req, res) => {
 exports.logAccess = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { action, durationSeconds } = req.body;
+    const { action, durationSeconds, referrer, metaData } = req.body;
     
     if (!action) {
       return res.status(400).json({ error: 'action은 필수 항목입니다.' });
     }
     
-    await meService.logAccess(userId, action, durationSeconds || 0);
+    await meService.logAccess(userId, action, durationSeconds || 0, referrer, metaData);
     return res.status(200).json({ success: true });
   } catch (err) {
     console.error('logAccess 에러:', err);

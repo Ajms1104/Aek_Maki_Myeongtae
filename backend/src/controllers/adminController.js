@@ -229,7 +229,8 @@ exports.updateUserUnlock = async (req, res) => {
 // 관리자 - 통계 조회
 exports.getDashboardStats = async (req, res) => {
   try {
-    const stats = await adminService.getDashboardStats();
+    const { range } = req.query; // '7d', '30d', '90d', 'all'
+    const stats = await adminService.getDashboardStats(range);
     return res.status(200).json(stats);
   } catch (err) {
     console.error('[AdminController] getDashboardStats 에러:', err);

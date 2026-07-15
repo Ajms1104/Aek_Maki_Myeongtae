@@ -12,7 +12,7 @@ import { GRADE_COLORS } from '../constants/talisman';
 import { getAmuletImage } from '../utils/amuletAssets';
 import type { Grade } from '../types';
 import { useTossBanner } from '../hooks/useTossBanner';
-import { remoteLog } from '../utils/api';
+import { remoteLog, logAccessLog } from '../utils/api';
 import { saveBase64Data } from '@apps-in-toss/web-bridge';
 
 const floatingAnimation = keyframes`
@@ -128,6 +128,7 @@ const ResultStep: React.FC = () => {
     if (isSaving && !isDebug) return;
     if (!isDebug) setIsSaving(true);
     remoteLog('[Canvas] 정통 부적 합성 시작 (프리미엄 퀄리티)');
+    logAccessLog('AMULET_DOWNLOAD');
     try {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -360,7 +361,7 @@ const ResultStep: React.FC = () => {
       </div>
       <div style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', minHeight: 0, marginBottom: '16px' }}><ResultTextBox style={{ border: `1px solid ${theme.sub}80` }}><p style={{ color: '#191f28', textAlign: 'center', lineHeight: 1.6, fontSize: displayComment.length > 120 ? '13px' : '15px', fontWeight: 600, margin: 0, whiteSpace: 'pre-wrap' }}>{displayedText}<TypingCursor $visible={displayedText.length < displayComment.length} /></p></ResultTextBox></div>
       
-      <div style={{ flexShrink: 0, width: '100%', paddingBottom: '20px' }}><div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '16px' }}><C.MainButton onClick={() => handleSaveCompositeImage(false)} disabled={isSaving} style={{ flex: 1, height: '54px' }}>{isSaving ? '준비 중...' : '부적 소장 및 공유하기'}</C.MainButton><button onClick={() => { if (!isFlying) { setIsFlying(true); setTimeout(() => navigateTo('collection'), 700); } }} style={{ width: '56px', height: '54px', borderRadius: '18px', border: '2px solid #3182f6', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><IoArchiveOutline size={24} color="#3182f6" /></button></div><div ref={bannerRef} style={{ width: '100%', height: '96px', background: '#f9fafb', borderRadius: '16px', overflow: 'hidden' }} /></div>
+      <div style={{ flexShrink: 0, width: '100%', paddingBottom: '20px' }}><div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '16px' }}><C.MainButton onClick={() => handleSaveCompositeImage(false)} disabled={isSaving} style={{ flex: 1, height: '54px' }}>{isSaving ? '준비 중...' : '부적 소장 및 공유하기'}</C.MainButton><button onClick={() => { if (!isFlying) { logAccessLog('COLLECTION_PAGE_ENTER'); setIsFlying(true); setTimeout(() => navigateTo('collection'), 700); } }} style={{ width: '56px', height: '54px', borderRadius: '18px', border: '2px solid #3182f6', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><IoArchiveOutline size={24} color="#3182f6" /></button></div><div ref={bannerRef} style={{ width: '100%', height: '96px', background: '#f9fafb', borderRadius: '16px', overflow: 'hidden' }} /></div>
     </L.Content>
   );
 };
