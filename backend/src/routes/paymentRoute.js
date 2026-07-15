@@ -73,12 +73,8 @@ router.post('/reward/attendance', authMiddleware, async (req, res) => {
     );
 
     // 🔒 [출석 보상 크레딧 지급]
-    // 무료 크레딧이 무한히 쌓이는 것을 방지하기 위해, 보유 크레딧이 1개 미만(0개)인 경우에만 1크레딧을 추가 지급합니다.
-    let creditAdded = false;
-    if (user.credits < 1) {
-      await userRepository.addCredit(userId, 1);
-      creditAdded = true;
-    }
+    // 출석 시 무조건 1크레딧을 추가 지급합니다.
+    await userRepository.addCredit(userId, 1);
 
     await userRepository.updateAttendance(userId, attendanceStreak);
 
@@ -94,15 +90,9 @@ router.post('/reward/attendance', authMiddleware, async (req, res) => {
     const updatedUser = await userRepository.findById(userId);
 
     const hasAward = challengeResult.awards.length > 0;
-    let msg = hasAward
+    const msg = hasAward
       ? `🎉 ${challengeResult.awards[challengeResult.awards.length - 1].title} 달성! 보상으로 크레딧을 받았어요!`
-      : `오늘의 출석 체크가 완료되었습니다! (${attendanceStreak}일 연속)`;
-
-    if (creditAdded) {
-      msg += ` (🎁 1 크레딧이 충전되었습니다!)`;
-    } else if (!hasAward) {
-      msg += ` (💡 무료 크레딧은 최대 1개까지 보관할 수 있어요!)`;
-    }
+      : `오늘의 출석 체크가 완료되었습니다! (${attendanceStreak}일 연속) (🎁 1 크레딧이 충전되었습니다!)`;
 
     return res.status(200).json({
       success: true,
