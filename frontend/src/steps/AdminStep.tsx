@@ -118,7 +118,7 @@ export default function AdminStep() {
   };
 
   return (
-    <div style={{ backgroundColor: '#f2f4f6', minHeight: '100vh', width: '100%', display: 'flex', flexDirection: 'column', fontFamily: '"Pretendard", sans-serif' }}>
+    <div style={{ backgroundColor: '#f2f4f6', minHeight: '100vh', width: '100%', fontFamily: '"Pretendard", sans-serif' }}>
       {/* 1. 상단 바 헤더 */}
       <div style={{ padding: '20px 40px', backgroundColor: '#fff', borderBottom: '1px solid #e5e8eb', position: 'sticky', top: 0, zIndex: 10 }}>
         <div style={{ maxWidth: '1440px', margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -163,7 +163,7 @@ export default function AdminStep() {
       </div>
 
       {/* 2. 대시보드 본문 (PC 대화면에 적합하도록 1440px 확장) */}
-      <div style={{ flex: 1, padding: '24px 40px', maxWidth: '1440px', margin: '0 auto', width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ padding: '24px 40px', maxWidth: '1440px', margin: '0 auto', width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         
         {/* [A] 상단 통합 지표 카드 (접속 즉시 한눈에 노출) */}
         {stats ? (
