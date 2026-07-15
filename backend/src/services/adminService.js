@@ -88,7 +88,7 @@ exports.getDashboardStats = async (range = '30d') => {
              EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) AS duration
       FROM user_access_logs
       WHERE created_at >= NOW() - INTERVAL '${daysLimit} days'
-      GROUP BY user_id, DATE(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul')
+      GROUP BY user_id, DATE(created_at AT TIME ZONE 'Asia/Seoul')
       HAVING EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) > 0
          AND EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) < 3600
     ) sub
@@ -97,7 +97,7 @@ exports.getDashboardStats = async (range = '30d') => {
 
   // [DAU 지표] 최근 N일간 일별 활동 유저 수 (DAU)
   const { rows: dauStats } = await db.query(
-    `SELECT DATE(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul')::text AS date, COUNT(DISTINCT user_id) AS count 
+    `SELECT DATE(created_at AT TIME ZONE 'Asia/Seoul')::text AS date, COUNT(DISTINCT user_id) AS count 
      FROM user_access_logs 
      WHERE created_at >= NOW() - INTERVAL '${daysLimit} days'
      GROUP BY date 
@@ -117,19 +117,19 @@ exports.getDashboardStats = async (range = '30d') => {
        FROM generate_series(0, ${daysLimit - 1}) i
      ) d
      LEFT JOIN (
-       SELECT DATE(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul') AS date, COUNT(*) AS new_users 
+       SELECT DATE(created_at AT TIME ZONE 'Asia/Seoul') AS date, COUNT(*) AS new_users 
        FROM users WHERE is_deleted = FALSE GROUP BY date
      ) u ON d.date = u.date
      LEFT JOIN (
-       SELECT DATE(first_acquired_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul') AS date, SUM(count) AS amulets_issued 
+       SELECT DATE(first_acquired_at AT TIME ZONE 'Asia/Seoul') AS date, SUM(count) AS amulets_issued 
        FROM user_amulets GROUP BY date
      ) a ON d.date = a.date
      LEFT JOIN (
-       SELECT DATE(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul') AS date, COUNT(*) AS consultations 
+       SELECT DATE(created_at AT TIME ZONE 'Asia/Seoul') AS date, COUNT(*) AS consultations 
        FROM consultations GROUP BY date
      ) c ON d.date = c.date
      LEFT JOIN (
-       SELECT DATE(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul') AS date, COUNT(DISTINCT user_id) AS dau_count
+       SELECT DATE(created_at AT TIME ZONE 'Asia/Seoul') AS date, COUNT(DISTINCT user_id) AS dau_count
        FROM user_access_logs GROUP BY date
      ) dau ON d.date = dau.date
      ORDER BY d.date ASC`
@@ -198,7 +198,7 @@ exports.getDashboardStats = async (range = '30d') => {
   // 🔒 [사용 시간대 및 요일 패턴 (usage_temporal_patterns)]
   // A. 요일별 트래픽 분포 (KST 기준)
   const { rows: dayOfWeekStats } = await db.query(`
-    SELECT to_char(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul', 'DY') AS day_name, COUNT(*)::int AS count 
+    SELECT to_char(created_at AT TIME ZONE 'Asia/Seoul', 'DY') AS day_name, COUNT(*)::int AS count 
     FROM user_access_logs 
     WHERE created_at >= NOW() - INTERVAL '${daysLimit} days'
     GROUP BY day_name
@@ -206,7 +206,7 @@ exports.getDashboardStats = async (range = '30d') => {
 
   // B. 24시간 시간대별 트래픽 분포 (KST 기준)
   const { rows: hourOfDayStats } = await db.query(`
-    SELECT EXTRACT(HOUR FROM created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul')::int AS hour, COUNT(*)::int AS count 
+    SELECT EXTRACT(HOUR FROM created_at AT TIME ZONE 'Asia/Seoul')::int AS hour, COUNT(*)::int AS count 
     FROM user_access_logs 
     WHERE created_at >= NOW() - INTERVAL '${daysLimit} days'
     GROUP BY hour 
@@ -217,13 +217,13 @@ exports.getDashboardStats = async (range = '30d') => {
   const { rows: cohortStats } = await db.query(`
     WITH user_cohort AS (
       SELECT id AS user_id, 
-             DATE(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul') AS join_date
+             DATE(created_at AT TIME ZONE 'Asia/Seoul') AS join_date
       FROM users
       WHERE is_deleted = FALSE AND created_at >= NOW() - INTERVAL '${daysLimit} days'
     ),
     user_activity AS (
       SELECT DISTINCT user_id, 
-             DATE(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul') AS activity_date
+             DATE(created_at AT TIME ZONE 'Asia/Seoul') AS activity_date
       FROM user_access_logs
       WHERE created_at >= NOW() - INTERVAL '${daysLimit} days'
     ),
