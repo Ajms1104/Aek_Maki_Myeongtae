@@ -286,7 +286,7 @@ const MainStep: React.FC = () => {
 
   return (
     <L.Content style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '0 16px 16px', justifyContent: 'flex-start', overflow: 'hidden' }}> 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingTop: '16px', width: '100%' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingTop: '16px', width: '100%', flex: 1, overflowY: 'auto', paddingBottom: '12px' }}>
         <div style={{
           background: 'linear-gradient(135deg, #f9fafb 0%, #f2f4f6 100%)',
           borderRadius: '24px',
