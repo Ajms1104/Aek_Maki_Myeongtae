@@ -347,30 +347,7 @@ export default function AdminStep() {
               </div>
             </Section>
 
-            {/* 시스템 에러 로그 모니터링 */}
-            <Section title="🚨 최근 서버 에러 로그 모니터링">
-              <div style={{ maxHeight: '120px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {stats && stats.recentSystemLogs && stats.recentSystemLogs.length > 0 ? (
-                  stats.recentSystemLogs.map((log: any) => (
-                    <div 
-                      key={log.id} 
-                      style={{ 
-                        padding: '6px 8px', 
-                        backgroundColor: '#fff0f0', 
-                        borderLeft: '3px solid #f04452', 
-                        borderRadius: '4px',
-                        fontSize: '11px',
-                        textAlign: 'left'
-                      }}
-                    >
-                      <div style={{ color: '#f04452', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{log.message}</div>
-                    </div>
-                  ))
-                ) : (
-                  <p style={{ textAlign: 'center', color: '#8b95a1', fontSize: '11px', padding: '10px 0' }}>에러 없음</p>
-                )}
-              </div>
-            </Section>
+
 
           </div>
         </div>
@@ -524,19 +501,17 @@ export default function AdminStep() {
                   <div style={{ fontSize: '13px', fontWeight: 800, color: '#4e5968', marginBottom: '10px' }}>
                     🗓️ 요일별 트래픽 분포
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'flex-end', height: '100px', gap: '12px', paddingBottom: '16px', borderBottom: '1px solid #e5e8eb' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', borderBottom: '1px solid #e5e8eb', paddingBottom: '24px', marginBottom: '4px' }}>
                     {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map(day => {
                       const found = stats.temporalPatterns.dayOfWeek.find((d: any) => d.day_name.toUpperCase().startsWith(day));
                       const count = found ? parseInt(found.count) : 0;
                       const maxVal = Math.max(...stats.temporalPatterns.dayOfWeek.map((d: any) => parseInt(d.count)), 1);
-                      const pct = Math.round((count / maxVal) * 80); // 최대 높이 80% 제한
-                      
+                      const barH = count > 0 ? Math.max(Math.round((count / maxVal) * 70), 4) : 4;
                       const dayKorMap: Record<string, string> = { MON: '월', TUE: '화', WED: '수', THU: '목', FRI: '금', SAT: '토', SUN: '일' };
-                      
                       return (
-                        <div key={day} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                          <div style={{ fontSize: '10px', fontWeight: 700, color: '#8b95a1' }}>{count}</div>
-                          <div style={{ width: '100%', height: `${pct}px`, background: count > 0 ? '#3182f6' : '#e5e8eb', borderRadius: '4px 4px 0 0' }} />
+                        <div key={day} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                          <div style={{ fontSize: '10px', fontWeight: 700, color: count > 0 ? '#3182f6' : '#c0c8d2' }}>{count > 0 ? count : ''}</div>
+                          <div style={{ width: '100%', height: `${barH}px`, background: count > 0 ? '#3182f6' : '#e5e8eb', borderRadius: '4px 4px 0 0', transition: 'height 0.3s' }} />
                           <div style={{ fontSize: '12px', fontWeight: 800, color: '#191f28' }}>{dayKorMap[day]}</div>
                         </div>
                       );

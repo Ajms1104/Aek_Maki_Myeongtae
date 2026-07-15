@@ -90,8 +90,10 @@ exports.getDashboardStats = async (range = '30d') => {
       WHERE created_at >= NOW() - INTERVAL '${daysLimit} days'
       GROUP BY user_id, DATE(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul')
       HAVING EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) > 0
+         AND EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) < 3600
     ) sub
   `);
+
 
   // [DAU 지표] 최근 N일간 일별 활동 유저 수 (DAU)
   const { rows: dauStats } = await db.query(
