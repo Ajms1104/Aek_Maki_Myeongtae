@@ -6,6 +6,21 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>액막이 명태 - 관리자 콘솔 (APM)</title>
+    <!-- 🖥️ [PC 어드민 전용] GlobalStyle의 모바일 앱 전용 스크롤 차단 CSS를 !important로 완전 무력화 -->
+    <style>
+      html, body {
+        overflow: auto !important;
+        position: static !important;
+        height: auto !important;
+        min-height: 100vh;
+        display: block !important;
+        touch-action: auto !important;
+      }
+      #root {
+        height: auto !important;
+        display: block !important;
+      }
+    </style>
   </head>
   <body style="margin: 0; background-color: #f9fafb;">
     <div id="root"></div>
