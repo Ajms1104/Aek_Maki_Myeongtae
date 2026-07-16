@@ -334,21 +334,44 @@ export default function AdminStep() {
                     SHARE_ATTEMPT:  { label: '공유 시도',    color: '#e67e22', bg: '#fef5e7', icon: '🔗' },
                     RESULT_DOWNLOAD:{ label: '이미지 저장',  color: '#1abc9c', bg: '#e8f8f5', icon: '💾' },
                     VAULT_VISIT:    { label: '보관함 열람',  color: '#34495e', bg: '#f2f3f4', icon: '📦' },
+                    LOGIN_ATTEMPT:  { label: '로그인 시도',  color: '#ff922b', bg: '#fff4e6', icon: '🔑' },
+                    LOGIN_SUCCESS:  { label: '로그인 성공',  color: '#00d082', bg: '#e6fcf5', icon: '🔓' },
+                    LOGIN_CANCEL:   { label: '로그인 취소',  color: '#8b95a1', bg: '#f1f3f5', icon: '🚫' },
+                    LOGIN_ERROR:    { label: '로그인 실패',  color: '#fa5252', bg: '#fff5f5', icon: '🚨' },
                   };
                   return stats && stats.recentAccessLogs && stats.recentAccessLogs.length > 0 ? (
                     stats.recentAccessLogs.map((log: any) => {
                       const a = actionMap[log.action] || { label: log.action, color: '#8b95a1', bg: '#f9fafb', icon: '•' };
                       const timeStr = new Date(log.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                       const dateStr = new Date(log.createdAt).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' });
+                      
+                      // meta_data 문자열 또는 객체 파싱
+                      let errMsg = '';
+                      if (log.metaData) {
+                        try {
+                          const parsed = typeof log.metaData === 'object' ? log.metaData : JSON.parse(log.metaData);
+                          errMsg = parsed.errorMessage || '';
+                        } catch (e) {}
+                      }
+
                       return (
                         <div key={log.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', backgroundColor: a.bg, borderRadius: '8px', border: `1px solid ${a.color}22` }}>
                           <span style={{ fontSize: '16px', flexShrink: 0 }}>{a.icon}</span>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <span style={{ fontSize: '12px', fontWeight: 800, color: a.color, background: `${a.color}18`, padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap' }}>{a.label}</span>
-                              <span style={{ fontSize: '11px', color: '#8b95a1', whiteSpace: 'nowrap' }}>유저 #{log.userId}</span>
-                              {log.action === 'APP_LEAVE' && log.durationSeconds && (
-                                <span style={{ fontSize: '11px', fontWeight: 700, color: '#e74c3c' }}>{log.durationSeconds}초 체류</span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ fontSize: '12px', fontWeight: 800, color: a.color, background: `${a.color}18`, padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap' }}>{a.label}</span>
+                                <span style={{ fontSize: '11px', color: '#8b95a1', whiteSpace: 'nowrap' }}>
+                                  {log.userId ? `유저 #${log.userId}` : '비회원 (게스트)'}
+                                </span>
+                                {log.action === 'APP_LEAVE' && log.durationSeconds && (
+                                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#e74c3c' }}>{log.durationSeconds}초 체류</span>
+                                )}
+                              </div>
+                              {errMsg && (
+                                <div style={{ fontSize: '11px', color: '#e74c3c', fontWeight: 600, marginTop: '2px' }}>
+                                  ⚠️ 에러 원인: {errMsg}
+                                </div>
                               )}
                             </div>
                           </div>
