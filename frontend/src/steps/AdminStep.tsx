@@ -325,19 +325,23 @@ export default function AdminStep() {
               <div style={{ maxHeight: '280px', overflowY: 'auto', overscrollBehavior: 'contain', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {(() => {
                   const actionMap: Record<string, { label: string; color: string; bg: string; icon: string }> = {
-                    APP_ENTER:      { label: '앱 진입',      color: '#3182f6', bg: '#e8f3ff', icon: '🚪' },
-                    APP_LEAVE:      { label: '앱 이탈',      color: '#e74c3c', bg: '#fff0f0', icon: '👋' },
-                    MAIN_VISIT:     { label: '메인 화면',    color: '#2ecc71', bg: '#eafaf1', icon: '🏠' },
-                    GUIDE_CLICK:    { label: '가이드 열람',  color: '#f39c12', bg: '#fef9e7', icon: '📖' },
-                    PAYMENT_VISIT:  { label: '충전소 진입',  color: '#9b59b6', bg: '#f5eef8', icon: '💳' },
-                    PAYMENT_DONE:   { label: '결제 완료',    color: '#27ae60', bg: '#e9f7ef', icon: '✅' },
-                    SHARE_ATTEMPT:  { label: '공유 시도',    color: '#e67e22', bg: '#fef5e7', icon: '🔗' },
-                    RESULT_DOWNLOAD:{ label: '이미지 저장',  color: '#1abc9c', bg: '#e8f8f5', icon: '💾' },
-                    VAULT_VISIT:    { label: '보관함 열람',  color: '#34495e', bg: '#f2f3f4', icon: '📦' },
-                    LOGIN_ATTEMPT:  { label: '로그인 시도',  color: '#ff922b', bg: '#fff4e6', icon: '🔑' },
-                    LOGIN_SUCCESS:  { label: '로그인 성공',  color: '#00d082', bg: '#e6fcf5', icon: '🔓' },
-                    LOGIN_CANCEL:   { label: '로그인 취소',  color: '#8b95a1', bg: '#f1f3f5', icon: '🚫' },
-                    LOGIN_ERROR:    { label: '로그인 실패',  color: '#fa5252', bg: '#fff5f5', icon: '🚨' },
+                    APP_ENTER:           { label: '앱 진입',      color: '#3182f6', bg: '#e8f3ff', icon: '🚪' },
+                    APP_LEAVE:           { label: '앱 이탈',      color: '#e74c3c', bg: '#fff0f0', icon: '👋' },
+                    MAIN_VISIT:          { label: '메인 화면',    color: '#2ecc71', bg: '#eafaf1', icon: '🏠' },
+                    GUIDE_CLICK:         { label: '가이드 열람',  color: '#f39c12', bg: '#fef9e7', icon: '📖' },
+                    PAYMENT_VISIT:       { label: '충전소 진입',  color: '#9b59b6', bg: '#f5eef8', icon: '💳' },
+                    RECHARGE_PAGE_ENTER: { label: '충전소 진입',  color: '#9b59b6', bg: '#f5eef8', icon: '💳' }, // 실제 로그 규격 호환
+                    PAYMENT_DONE:        { label: '결제 완료',    color: '#27ae60', bg: '#e9f7ef', icon: '✅' },
+                    PAYMENT_SUCCESS:     { label: '결제 완료',    color: '#27ae60', bg: '#e9f7ef', icon: '✅' }, // 실제 로그 규격 호환
+                    SHARE_ATTEMPT:       { label: '공유 시도',    color: '#e67e22', bg: '#fef5e7', icon: '🔗' },
+                    VIRAL_SHARE_CLICK:   { label: '공유 유입',    color: '#e67e22', bg: '#fef5e7', icon: '🔗' }, // 실제 로그 규격 호환
+                    RESULT_DOWNLOAD:     { label: '이미지 저장',  color: '#1abc9c', bg: '#e8f8f5', icon: '💾' },
+                    VAULT_VISIT:         { label: '보관함 열람',  color: '#34495e', bg: '#f2f3f4', icon: '📦' },
+                    COLLECTION_PAGE_ENTER:{ label: '보관함 열람',  color: '#34495e', bg: '#f2f3f4', icon: '📦' }, // 실제 로그 규격 호환
+                    LOGIN_ATTEMPT:       { label: '로그인 시도',  color: '#ff922b', bg: '#fff4e6', icon: '🔑' },
+                    LOGIN_SUCCESS:       { label: '로그인 성공',  color: '#00d082', bg: '#e6fcf5', icon: '🔓' },
+                    LOGIN_CANCEL:        { label: '로그인 취소',  color: '#8b95a1', bg: '#f1f3f5', icon: '🚫' },
+                    LOGIN_ERROR:         { label: '로그인 실패',  color: '#fa5252', bg: '#fff5f5', icon: '🚨' },
                   };
                   return stats && stats.recentAccessLogs && stats.recentAccessLogs.length > 0 ? (
                     stats.recentAccessLogs.map((log: any) => {
