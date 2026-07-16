@@ -25,6 +25,20 @@ router.post('/record', authMiddleware, async (req, res) => {
       await userRepository.addCredit(userId, 10);
     }
 
+    // 🔒 [결제 완료 감사 로그 적재]
+    await db.query(
+      "INSERT INTO user_access_logs (user_id, action, meta_data) VALUES ($1, $2, $3)",
+      [
+        userId,
+        'PAYMENT_SUCCESS',
+        JSON.stringify({
+          productType,
+          grantedCredits: productType === 'credit' ? 10 : 0,
+          unlockedHiddenPass: productType === 'hidden'
+        })
+      ]
+    );
+
     // 🔒 [결제 도전과제 평가]
     let awards = [];
     if (productType === 'hidden' || productType === 'credit') {

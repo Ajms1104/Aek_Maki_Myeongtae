@@ -49,12 +49,65 @@ exports.getUserDetail = async (userId) => {
 
 exports.updateUserUnlock = async (userId, unlocked) => {
   await db.query('UPDATE users SET has_hidden_pass = $1 WHERE id = $2', [unlocked, userId]);
+  
+  // 🔒 [관리자 수동 패스 변경 감사 로그]
+  await db.query(
+    "INSERT INTO user_access_logs (user_id, action, meta_data) VALUES ($1, 'ADMIN_PASS_GRANT', $2)",
+    [userId, JSON.stringify({ hasHiddenPass: unlocked, grantedBy: 'admin' })]
+  );
   return { success: true };
 };
 
 exports.updateUserCredit = async (userId, credits) => {
+  // 변경 전 기존 크레딧 조회
+  const { rows: userRows } = await db.query('SELECT credits FROM users WHERE id = $1', [userId]);
+  const oldCredits = userRows[0]?.credits || 0;
+  const diff = credits - oldCredits;
+
   await db.query('UPDATE users SET credits = $1 WHERE id = $2', [credits, userId]);
+
+  // 🔒 [관리자 수동 크레딧 변경 감사 로그]
+  await db.query(
+    "INSERT INTO user_access_logs (user_id, action, meta_data) VALUES ($1, $2, $3)",
+    [
+      userId,
+      'ADMIN_CREDIT_GRANT',
+      JSON.stringify({
+        oldCredits,
+        newCredits: credits,
+        diff: diff > 0 ? `+${diff}` : `${diff}`,
+        grantedBy: 'admin'
+      })
+    ]
+  );
   return { userId, credits };
+};
+
+exports.giveAmuletToUser = async (userId, amuletId) => {
+  await amuletRepository.giveToUser(userId, amuletId);
+  
+  // 🔒 [관리자 수동 부적 지급 감사 로그]
+  await db.query(
+    "INSERT INTO user_access_logs (user_id, action, meta_data) VALUES ($1, 'ADMIN_AMULET_GRANT', $2)",
+    [userId, JSON.stringify({ amuletId, grantedBy: 'admin' })]
+  );
+};
+
+exports.revokeUserAmulet = async (userAmuletId) => {
+  // 해당 부적 정보 조회
+  const { rows: userAmuletRows } = await db.query(
+    'SELECT user_id, amulet_id FROM user_amulets WHERE id = $1', [userAmuletId]
+  );
+  if (userAmuletRows.length > 0) {
+    const { user_id: userId, amulet_id: amuletId } = userAmuletRows[0];
+    await amuletRepository.removeUserAmulet(userAmuletId);
+    
+    // 🔒 [관리자 수동 부적 회수 감사 로그]
+    await db.query(
+      "INSERT INTO user_access_logs (user_id, action, meta_data) VALUES ($1, 'ADMIN_AMULET_REVOKE', $2)",
+      [userId, JSON.stringify({ amuletId, revokedBy: 'admin' })]
+    );
+  }
 };
 
 exports.getDashboardStats = async (range = '30d') => {

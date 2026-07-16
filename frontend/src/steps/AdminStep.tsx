@@ -332,7 +332,7 @@ export default function AdminStep() {
                     PAYMENT_VISIT:       { label: '충전소 진입',  color: '#9b59b6', bg: '#f5eef8', icon: '💳' },
                     RECHARGE_PAGE_ENTER: { label: '충전소 진입',  color: '#9b59b6', bg: '#f5eef8', icon: '💳' }, // 실제 로그 규격 호환
                     PAYMENT_DONE:        { label: '결제 완료',    color: '#27ae60', bg: '#e9f7ef', icon: '✅' },
-                    PAYMENT_SUCCESS:     { label: '결제 완료',    color: '#27ae60', bg: '#e9f7ef', icon: '✅' }, // 실제 로그 규격 호환
+                    PAYMENT_SUCCESS:     { label: '결제 완료 (실결제)', color: '#00d082', bg: '#e6fcf5', icon: '💳' }, // 실제 PG 결제 성공
                     SHARE_ATTEMPT:       { label: '공유 시도',    color: '#e67e22', bg: '#fef5e7', icon: '🔗' },
                     VIRAL_SHARE_CLICK:   { label: '공유 유입',    color: '#e67e22', bg: '#fef5e7', icon: '🔗' }, // 실제 로그 규격 호환
                     RESULT_DOWNLOAD:     { label: '이미지 저장',  color: '#1abc9c', bg: '#e8f8f5', icon: '💾' },
@@ -342,6 +342,10 @@ export default function AdminStep() {
                     LOGIN_SUCCESS:       { label: '로그인 성공',  color: '#00d082', bg: '#e6fcf5', icon: '🔓' },
                     LOGIN_CANCEL:        { label: '로그인 취소',  color: '#8b95a1', bg: '#f1f3f5', icon: '🚫' },
                     LOGIN_ERROR:         { label: '로그인 실패',  color: '#fa5252', bg: '#fff5f5', icon: '🚨' },
+                    ADMIN_CREDIT_GRANT:  { label: '수동 크레딧 지급', color: '#9b59b6', bg: '#f5eef8', icon: '🛠️' },
+                    ADMIN_PASS_GRANT:    { label: '수동 패스 해금', color: '#9b59b6', bg: '#f5eef8', icon: '🛠️' },
+                    ADMIN_AMULET_GRANT:  { label: '수동 부적 지급', color: '#9b59b6', bg: '#f5eef8', icon: '🛠️' },
+                    ADMIN_AMULET_REVOKE: { label: '수동 부적 회수', color: '#e74c3c', bg: '#fff0f0', icon: '🛠️' },
                   };
                   return stats && stats.recentAccessLogs && stats.recentAccessLogs.length > 0 ? (
                     stats.recentAccessLogs.map((log: any) => {
@@ -351,10 +355,23 @@ export default function AdminStep() {
                       
                       // meta_data 문자열 또는 객체 파싱
                       let errMsg = '';
+                      let detailMsg = '';
                       if (log.metaData) {
                         try {
                           const parsed = typeof log.metaData === 'object' ? log.metaData : JSON.parse(log.metaData);
                           errMsg = parsed.errorMessage || '';
+                          
+                          if (log.action === 'PAYMENT_SUCCESS') {
+                            detailMsg = `💰 실결제 완료 ➔ 상품: ${parsed.productType === 'credit' ? '10 크레딧 충전' : '히든 패스 해금'}`;
+                          } else if (log.action === 'ADMIN_CREDIT_GRANT') {
+                            detailMsg = `🛠️ 운영자 수동 지급 ➔ 크레딧: ${parsed.oldCredits} ➡️ ${parsed.newCredits} (${parsed.diff})`;
+                          } else if (log.action === 'ADMIN_PASS_GRANT') {
+                            detailMsg = `🛠️ 운영자 수동 설정 ➔ 히든 패스: ${parsed.hasHiddenPass ? '해금 완료' : '잠금 설정'}`;
+                          } else if (log.action === 'ADMIN_AMULET_GRANT') {
+                            detailMsg = `🛠️ 운영자 강제 지급 ➔ 부적 ID: ${parsed.amuletId}`;
+                          } else if (log.action === 'ADMIN_AMULET_REVOKE') {
+                            detailMsg = `🛠️ 운영자 강제 회수 ➔ 부적 ID: ${parsed.amuletId}`;
+                          }
                         } catch (e) {}
                       }
 
@@ -372,6 +389,11 @@ export default function AdminStep() {
                                   <span style={{ fontSize: '11px', fontWeight: 700, color: '#e74c3c' }}>{log.durationSeconds}초 체류</span>
                                 )}
                               </div>
+                              {detailMsg && (
+                                <div style={{ fontSize: '11px', color: '#4e5968', fontWeight: 700, marginTop: '2px' }}>
+                                  {detailMsg}
+                                </div>
+                              )}
                               {errMsg && (
                                 <div style={{ fontSize: '11px', color: '#e74c3c', fontWeight: 600, marginTop: '2px' }}>
                                   ⚠️ 에러 원인: {errMsg}
