@@ -95,7 +95,7 @@ exports.getUsers = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const search = req.query.search || '';
-    const limit = 10;
+    const limit = 50; // 기본 표시 한도를 50개로 대폭 확장
     const offset = (page - 1) * limit;
 
     const result = await adminService.getUsers({ page, search, limit, offset });

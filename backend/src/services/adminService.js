@@ -24,12 +24,12 @@ exports.publishProbabilities = async ({ effectiveAt }) => {
 
 exports.getUsers = async ({ search, limit, offset }) => {
   const { rows } = await db.query(
-    `SELECT id, toss_user_key AS "tossUserKey", created_at AS "createdAt", 
-            last_seen_at AS "lastSeenAt", is_deleted AS "isDeleted"
+    `SELECT id, toss_user_key AS "tossUserKey", credits AS "credits", has_hidden_pass AS "hasHiddenPass",
+            created_at AS "createdAt", last_seen_at AS "lastSeenAt", is_deleted AS "isDeleted"
      FROM users 
-     WHERE ($1 = '' OR toss_user_key LIKE $1 OR id::text = $1)
+     WHERE ($1 = '' OR toss_user_key LIKE '%' || $1 || '%' OR id::text LIKE '%' || $1 || '%')
      ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
-    [search ? `%${search}%` : '', limit, offset]
+    [search || '', limit, offset]
   );
   const { rows: countRows } = await db.query('SELECT COUNT(*) FROM users WHERE is_deleted = FALSE');
   const totalCount = parseInt(countRows[0].count);
