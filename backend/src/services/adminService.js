@@ -129,7 +129,8 @@ exports.getDashboardStats = async (range = '30d') => {
   const { rows: amuletStats } = await db.query('SELECT COUNT(*) AS count FROM user_amulets');
   const { rows: consultStats } = await db.query('SELECT COUNT(*) AS count FROM consultations');
   const { rows: todayUsers } = await db.query(
-    'SELECT COUNT(*) AS count FROM users WHERE created_at >= DATE_TRUNC(\'day\', NOW() AT TIME ZONE \'Asia/Seoul\')'
+    `SELECT COUNT(*) AS count FROM users 
+     WHERE created_at >= (NOW() AT TIME ZONE 'Asia/Seoul')::date`
   );
   
   // 부적 등급 분포 집계
