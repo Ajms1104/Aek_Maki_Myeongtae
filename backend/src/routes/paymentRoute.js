@@ -125,43 +125,61 @@ router.post('/reward/viral', authMiddleware, async (req, res) => {
   const userId = req.user.userId;
 
   try {
-    const user = await userRepository.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found.' });
-    }
+    const result = await db.transaction(async (client) => {
+      // 1. 유저 정보 조회와 동시에 비관적 락(FOR UPDATE) 획득
+      const { rows: userRows } = await client.query(
+        'SELECT id, credits FROM users WHERE id = $1 FOR UPDATE',
+        [userId]
+      );
+      
+      if (userRows.length === 0) {
+        const err = new Error('User not found.');
+        err.status = 404;
+        throw err;
+      }
 
-    // 🔒 [보안 추가] 무차별 API 오작동 및 매크로 방지용 일일 보상 횟수 제약 (하루 최대 5회, 즉 10 크레딧까지만 가능)
-    const kstToday = challengeService.toKoreaDateKey(new Date());
-    const { rows: countRows } = await db.query(
-      `SELECT COUNT(*) FROM user_access_logs 
-       WHERE user_id = $1 AND action = 'VIRAL_REWARD' 
-         AND DATE(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul') = DATE($2)`,
-      [userId, kstToday]
-    );
-    
-    const todayCount = parseInt(countRows[0].count || '0');
-    if (todayCount >= 5) {
-      return res.status(400).json({
-        error: '친구 공유 보상은 하루에 최대 5회까지만 받을 수 있어요. 내일 다시 도전해 주세요!',
-      });
-    }
+      // 2. 일일 공유 보상 횟수 검증 (KST 기준 하루 최대 5회)
+      const kstToday = challengeService.toKoreaDateKey(new Date());
+      const { rows: countRows } = await client.query(
+        `SELECT COUNT(*) FROM user_access_logs 
+         WHERE user_id = $1 AND action = 'VIRAL_REWARD' 
+           AND DATE(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul') = DATE($2)`,
+        [userId, kstToday]
+      );
+      
+      const todayCount = parseInt(countRows[0].count || '0');
+      if (todayCount >= 5) {
+        const err = new Error('친구 공유 보상은 하루에 최대 5회까지만 받을 수 있어요. 내일 다시 도전해 주세요!');
+        err.status = 400;
+        throw err;
+      }
 
-    // 1 크레딧 가산 (리워드 밸런스 조정)
-    const updatedCredits = await userRepository.addCredit(userId, 1);
-    
-    // 이력 로깅 (Idempotency 및 한도 계산용)
-    await db.query(
-      "INSERT INTO user_access_logs (user_id, action, duration_seconds) VALUES ($1, 'VIRAL_REWARD', 0)",
-      [userId]
-    );
+      // 3. 1 크레딧 가산
+      const { rows: updateRows } = await client.query(
+        'UPDATE users SET credits = credits + 1 WHERE id = $1 RETURNING credits',
+        [userId]
+      );
+      const updatedCredits = updateRows[0].credits;
+      
+      // 4. 이력 로깅 (Idempotency 및 한도 계산용)
+      await client.query(
+        "INSERT INTO user_access_logs (user_id, action, duration_seconds) VALUES ($1, 'VIRAL_REWARD', 0)",
+        [userId]
+      );
 
-    return res.status(200).json({
-      success: true,
-      credits: updatedCredits,
-      message: '친구 공유 완료 보상으로 1 크레딧을 받았어요!',
+      return {
+        success: true,
+        credits: updatedCredits,
+        message: '친구 공유 완료 보상으로 1 크레딧을 받았어요!',
+      };
     });
+
+    return res.status(200).json(result);
   } catch (err) {
     console.error('[VIRAL REWARD ERROR]', err);
+    if (err.status) {
+      return res.status(err.status).json({ error: err.message });
+    }
     return res.status(500).json({ error: 'Failed to grant viral reward.' });
   }
 });
