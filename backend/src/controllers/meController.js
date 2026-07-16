@@ -36,9 +36,23 @@ exports.unlinkCallback = async (req, res) => {
 };
 
 // 접속 로그 저장
+const jwt = require('jsonwebtoken');
+
 exports.logAccess = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    let userId = null;
+    
+    // Authorization 헤더가 있으면 토큰 검증하여 userId 추출
+    if (req.headers.authorization) {
+      try {
+        const token = req.headers.authorization.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'myeongtae-jwt-secret-2026');
+        userId = decoded.userId;
+      } catch (e) {
+        // 검증 실패 시에도 게스트 로그 적재를 위해 에러 무시하고 null 유지
+      }
+    }
+
     const { action, durationSeconds, referrer, metaData } = req.body;
     
     if (!action) {

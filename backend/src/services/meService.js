@@ -43,8 +43,10 @@ exports.logAccess = async (userId, action, durationSeconds, referrer = null, met
     [userId, action, durationSeconds, referrer, JSON.stringify(metaData)]
   );
   
-  await db.query(
-    'UPDATE users SET last_seen_at = NOW() WHERE id = $1',
-    [userId]
-  );
+  if (userId) {
+    await db.query(
+      'UPDATE users SET last_seen_at = NOW() WHERE id = $1',
+      [userId]
+    );
+  }
 };
