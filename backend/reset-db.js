@@ -3,6 +3,13 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
+// 🚨 [상용 데이터베이스 보호 장치] 실제 서비스 배포 환경에서는 초기화가 절대 실행되지 못하도록 강력히 방어합니다.
+if (process.env.NODE_ENV === 'production' || process.env.DB_HOST?.includes('rds') || process.env.DB_HOST === '172.31.45.154') {
+  console.error('\n🚨 [CRITICAL ERROR] 실제 서비스 환경(Production)에서 DB 초기화 스크립트를 작동할 수 없습니다!');
+  console.error('이 스크립트는 로컬 개발 테스트용이며 상용 DB 리셋 시도는 즉각 차단됩니다.\n');
+  process.exit(1);
+}
+
 const client = new Client({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
