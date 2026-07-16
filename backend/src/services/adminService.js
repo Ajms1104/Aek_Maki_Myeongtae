@@ -27,7 +27,15 @@ exports.getUsers = async ({ search, limit, offset }) => {
     `SELECT id, toss_user_key AS "tossUserKey", credits AS "credits", has_hidden_pass AS "hasHiddenPass",
             created_at AS "createdAt", last_seen_at AS "lastSeenAt", is_deleted AS "isDeleted"
      FROM users 
-     WHERE ($1 = '' OR toss_user_key LIKE '%' || $1 || '%' OR id::text LIKE '%' || $1 || '%')
+     WHERE (
+       $1 = '' 
+       OR (
+         CASE 
+           WHEN $1 ~ '^\\d+$' THEN (id = $1::integer OR toss_user_key = $1)
+           ELSE (toss_user_key LIKE '%' || $1 || '%')
+         END
+       )
+     )
      ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
     [search || '', limit, offset]
   );
