@@ -124,6 +124,11 @@ router.post('/reward/attendance', authMiddleware, async (req, res) => {
 router.post('/reward/viral', authMiddleware, async (req, res) => {
   const userId = req.user.userId;
 
+  // ⚠️ [긴급 점검 핫픽스] 토스 AIT 승인 대기 시간 동안 유저 불만 방지용 임시 점검 공지 차단
+  return res.status(400).json({
+    error: '⚠️ 현재 공유 보상 지급 시스템 긴급 정비 중입니다. 최신 버전 승인 완료 후 즉시 지급 재개됩니다!'
+  });
+
   try {
     const result = await db.transaction(async (client) => {
       // 1. 유저 정보 조회와 동시에 비관적 락(FOR UPDATE) 획득
