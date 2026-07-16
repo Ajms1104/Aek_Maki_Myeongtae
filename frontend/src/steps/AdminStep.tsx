@@ -21,8 +21,11 @@ export default function AdminStep() {
   const [range, setRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    const delayDebounceFn = setTimeout(() => {
+      fetchUsers();
+    }, 250); // 250ms 디바운스 적용하여 실시간 자동 검색
+    return () => clearTimeout(delayDebounceFn);
+  }, [search]);
 
   useEffect(() => {
     fetchStats(range);
