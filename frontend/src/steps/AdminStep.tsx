@@ -600,6 +600,68 @@ export default function AdminStep() {
 
         </div>
 
+        {/* 🔑 [토스 로그인 전환율 & 이탈 원인 분석] */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px', width: '100%', boxSizing: 'border-box', marginBottom: '4px' }}>
+          <Section title="🔑 토스 로그인 퍼널 및 이탈 분석 (Toss Login Funnel)">
+            {stats ? (() => {
+              const actions = stats.actionStats || [];
+              const attempt = actions.find((a: any) => a.action === 'LOGIN_ATTEMPT')?.count || 0;
+              const success = actions.find((a: any) => a.action === 'LOGIN_SUCCESS')?.count || 0;
+              const cancel = actions.find((a: any) => a.action === 'LOGIN_CANCEL')?.count || 0;
+              const error = actions.find((a: any) => a.action === 'LOGIN_ERROR')?.count || 0;
+              
+              const successRate = attempt > 0 ? Math.round((success / attempt) * 100) : 0;
+              const cancelRate = attempt > 0 ? Math.round((cancel / attempt) * 100) : 0;
+              const errorRate = attempt > 0 ? Math.round((error / attempt) * 100) : 0;
+
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {/* 로그인 상태 요약 4단계 */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+                    {[
+                      { label: '로그인 시도', value: `${attempt}회`, color: '#ff922b', icon: '🔑' },
+                      { label: '최종 가입성공', value: `${success}명`, color: '#00d082', icon: '🔓' },
+                      { label: '단순 취소(이탈)', value: `${cancel}회`, color: '#8b95a1', icon: '🚫' },
+                      { label: '연동 오류(튕김)', value: `${error}회`, color: '#fa5252', icon: '🚨' },
+                    ].map(m => (
+                      <div key={m.label} style={{ textAlign: 'center', padding: '14px 8px', background: '#f9fafb', borderRadius: '12px', border: '1px solid #e5e8eb' }}>
+                        <div style={{ fontSize: '20px', marginBottom: '4px' }}>{m.icon}</div>
+                        <div style={{ fontSize: '22px', fontWeight: 900, color: m.color }}>{m.value}</div>
+                        <div style={{ fontSize: '11px', color: '#8b95a1', marginTop: '4px', fontWeight: 600 }}>{m.label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* 로그인 결과 비율 비주얼 막대 그래프 */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 700, marginBottom: '6px' }}>
+                      <span style={{ color: '#4e5968' }}>📊 로그인 시도 대비 최종 결과 비율 (성공률 / 취소율 / 실패율)</span>
+                    </div>
+                    <div style={{ width: '100%', height: '14px', background: '#f2f4f6', borderRadius: '7px', overflow: 'hidden', display: 'flex' }}>
+                      <div style={{ width: `${successRate}%`, height: '100%', background: '#00d082' }} title={`성공: ${successRate}%`} />
+                      <div style={{ width: `${cancelRate}%`, height: '100%', background: '#adb5bd' }} title={`취소(이탈): ${cancelRate}%`} />
+                      <div style={{ width: `${errorRate}%`, height: '100%', background: '#fa5252' }} title={`오류(장애): ${errorRate}%`} />
+                    </div>
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '8px', fontSize: '11px', color: '#6b7684', fontWeight: 600 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <div style={{ width: '8px', height: '8px', background: '#00d082', borderRadius: '50%' }} /> 가입성공 ({successRate}%)
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <div style={{ width: '8px', height: '8px', background: '#adb5bd', borderRadius: '50%' }} /> 단순 취소/이탈 ({cancelRate}%)
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <div style={{ width: '8px', height: '8px', background: '#fa5252', borderRadius: '50%' }} /> 시스템 장애/오류 ({errorRate}%)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })() : (
+              <p style={{ textAlign: 'center', color: '#8b95a1', fontSize: '13px' }}>로그인 통계 로딩 중...</p>
+            )}
+          </Section>
+        </div>
+
         {/* 🔒 [결제 전환율 & 유입 공유인 랭킹] */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(600px, 1fr))', gap: '20px', width: '100%', boxSizing: 'border-box' }}>
           
