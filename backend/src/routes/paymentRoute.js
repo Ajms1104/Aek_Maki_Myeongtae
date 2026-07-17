@@ -74,7 +74,9 @@ router.post('/reward/attendance', authMiddleware, async (req, res) => {
       const nowKey = challengeService.toKoreaDateKey(now);
 
       if (lastKey === nowKey) {
-        return res.status(400).json({
+        return res.status(200).json({
+          success: false,
+          alreadyClaimed: true,
           error: '오늘의 출석 체크를 이미 완료했어요. 내일 자정(00시) 이후에 다시 만나요!',
         });
       }

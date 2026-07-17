@@ -34,7 +34,7 @@ export const loginWithToss = async (): Promise<any> => {
     
     // 에러 원인이 단순 유저의 취소/닫기인지, 아니면 진짜 시스템 오류인지 감별
     const errMsg = err.message || String(err);
-    const isUserCancel = errMsg.includes('cancel') || errMsg.includes('취소') || errMsg.includes('close');
+    const isUserCancel = errMsg.includes('cancel') || errMsg.includes('취소') || errMsg.includes('close') || errMsg.includes('완료할 수 없습니다');
     const actionType = isUserCancel ? 'LOGIN_CANCEL' : 'LOGIN_ERROR';
     
     // 4. 로그인 에러/취소 로그 기록 (비회원 자격으로 원격 적재)
