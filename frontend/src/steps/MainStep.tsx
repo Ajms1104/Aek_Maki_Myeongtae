@@ -284,7 +284,7 @@ const MainStep: React.FC = () => {
         if (credits <= 0) {
           openDialog('크레딧 부족', '고민을 털어놓으려면 크레딧이 필요해요.\n충전소로 이동하시겠습니까?', {
             showCancel: true,
-            cancelText: '구경하기',
+            cancelText: '닫기',
             confirmText: '충전소 가기',
             onConfirm: () => navigateTo('payment')
           });

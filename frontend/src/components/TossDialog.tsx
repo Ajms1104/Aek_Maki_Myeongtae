@@ -18,7 +18,7 @@ export const TossDialog: React.FC<TossDialogProps> = ({
   showCancel,
   onConfirm,
   onClose,
-  cancelText = '머무르기',
+  cancelText = '닫기',
   confirmText,
 }) => {
   const displayConfirmText = confirmText || (showCancel ? '나가기' : '확인했습니다');
