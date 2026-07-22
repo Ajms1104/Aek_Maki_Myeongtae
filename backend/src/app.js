@@ -68,7 +68,13 @@ app.use(express.json());
 // 🔒 [현업 수준 APM 글로벌 모니터링 미들웨어]
 const db = require('./db');
 app.use((req, res, next) => {
-  if (req.path.startsWith('/uploads') || req.path.startsWith('/api-docs') || req.path === '/favicon.ico') {
+  if (
+    req.path.startsWith('/uploads') ||
+    req.path.startsWith('/api-docs') ||
+    req.path === '/favicon.ico' ||
+    req.path.startsWith('/api/v1/debug/log') ||
+    req.path.startsWith('/api/v1/admin/stats')
+  ) {
     return next();
   }
 
@@ -76,8 +82,11 @@ app.use((req, res, next) => {
   const start = process.hrtime();
 
   res.on('finish', () => {
-    // 관리자 자신의 대시보드 통계 조회 행위는 트래픽 분석 노이즈 배제를 위해 APM 저장 스킵
-    if (req.path.startsWith('/api/v1/admin/stats')) {
+    // 💡 [비용/성능 최적화] DB 쓰기 IOPS 감소: 에러(4xx/5xx)는 100% 수집, 일반 요청은 10% 샘플링만 집계
+    const isError = res.statusCode >= 400;
+    const shouldLog = isError || Math.random() < 0.1;
+
+    if (!shouldLog) {
       return;
     }
 
